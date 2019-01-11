@@ -16,48 +16,6 @@
 
 package com.here.app.tcs;
 
-import java.io.File;
-import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.List;
-
-import com.here.android.mpa.common.GeoBoundingBox;
-import com.here.android.mpa.common.GeoCoordinate;
-import com.here.android.mpa.common.GeoPosition;
-import com.here.android.mpa.common.LocationDataSource;
-import com.here.android.mpa.common.MatchedGeoPosition;
-import com.here.android.mpa.common.PositioningManager;
-import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
-import com.here.android.mpa.common.RoadElement;
-import com.here.android.mpa.common.Image;
-import com.here.android.mpa.common.OnEngineInitListener;
-import com.here.android.mpa.guidance.NavigationManager;
-import com.here.android.mpa.guidance.LaneInformation;
-import com.here.android.mpa.mapping.Map;
-import com.here.android.mpa.mapping.MapFragment;
-import com.here.android.mpa.mapping.PositionIndicator;
-import com.here.android.mpa.mapping.MapObject;
-import com.here.android.mpa.mapping.MapMarker;
-import com.here.android.mpa.mapping.MapCircle;
-import com.here.android.mpa.mapping.MapRoute;
-import com.here.android.mpa.routing.CoreRouter;
-import com.here.android.mpa.routing.Maneuver;
-import com.here.android.mpa.routing.Route;
-import com.here.android.mpa.routing.RouteOptions;
-import com.here.android.mpa.routing.RoutePlan;
-import com.here.android.mpa.routing.RouteResult;
-import com.here.android.mpa.routing.RouteWaypoint;
-import com.here.android.mpa.routing.Router;
-import com.here.android.mpa.routing.RoutingError;
-import com.here.android.mpa.guidance.VoiceCatalog;
-import com.here.android.mpa.guidance.VoicePackage;
-import com.here.android.mpa.guidance.VoiceSkin;
-import com.here.android.mpa.guidance.VoiceGuidanceOptions;
-import com.here.msdkui.guidance.GuidanceManeuverData;
-import com.here.msdkui.guidance.GuidanceManeuverListener;
-import com.here.msdkui.guidance.GuidanceManeuverPresenter;
-import com.here.msdkui.guidance.GuidanceManeuverView;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -66,7 +24,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PointF;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
@@ -74,6 +31,40 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.here.android.mpa.common.GeoBoundingBox;
+import com.here.android.mpa.common.GeoCoordinate;
+import com.here.android.mpa.common.GeoPosition;
+import com.here.android.mpa.common.Image;
+import com.here.android.mpa.common.LocationDataSource;
+import com.here.android.mpa.common.OnEngineInitListener;
+import com.here.android.mpa.common.PositioningManager;
+import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
+import com.here.android.mpa.common.RoadElement;
+import com.here.android.mpa.guidance.LaneInformation;
+import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapCircle;
+import com.here.android.mpa.mapping.MapFragment;
+import com.here.android.mpa.mapping.MapMarker;
+import com.here.android.mpa.mapping.MapRoute;
+import com.here.android.mpa.routing.CoreRouter;
+import com.here.android.mpa.routing.Route;
+import com.here.android.mpa.routing.RouteOptions;
+import com.here.android.mpa.routing.RoutePlan;
+import com.here.android.mpa.routing.RouteResult;
+import com.here.android.mpa.routing.RouteWaypoint;
+import com.here.android.mpa.routing.Router;
+import com.here.android.mpa.routing.RoutingError;
+import com.here.msdkui.guidance.GuidanceManeuverData;
+import com.here.msdkui.guidance.GuidanceManeuverListener;
+import com.here.msdkui.guidance.GuidanceManeuverPresenter;
+import com.here.msdkui.guidance.GuidanceManeuverView;
+
+import java.io.File;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
@@ -97,6 +88,21 @@ public class MapFragmentView {
     private boolean m_foregroundServiceStarted;
     private MapCircle m_PositionMarker;
     private LocationDataSource m_locationDataSource;
+    GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
+        @Override
+        public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
+            if (guidanceManeuverData != null) {
+                Log.d("guidanceManeuverData", "onDataChanged: 1st line: " + guidanceManeuverData.getInfo1());
+                Log.d("guidanceManeuverData", "onDataChanged: 2nd line: " + guidanceManeuverData.getInfo2());
+            }
+            guidanceManeuverView.setManeuverData(guidanceManeuverData);
+        }
+
+        @Override
+        public void onDestinationReached() {
+            guidanceManeuverView.highLightManeuver(Color.BLUE);
+        }
+    };
 
     public MapFragmentView(Activity activity) {
         m_activity = activity;
@@ -104,12 +110,7 @@ public class MapFragmentView {
         initNaviControlButton();
     }
 
-    // Google has deprecated android.app.Fragment class. It is used in current SDK implementation.
-    // Will be fixed in future SDK version.
-    @SuppressWarnings("deprecation")
-    private MapFragment getMapFragment() {
-        return (MapFragment) m_activity.getFragmentManager().findFragmentById(R.id.mapFragment);
-    }
+    private long simulationSpeedMs = 30;
 
     private void initMapFragment() {
         /* Locate the mapFragment UI element */
@@ -201,6 +202,106 @@ public class MapFragmentView {
         });
     }
     */
+    private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
+        @Override
+        public void onNewInstructionEvent() {
+            /*
+            Log.d("Test", "=======================================================================================");
+            Log.d("Test", "Next Maneuver and Road information");
+            Log.d("Test", "---------------------------------------------------------------------------------------");
+            Log.d("Test getNextManeuver()", m_navigationManager.getNextManeuver().toString());
+            Log.d("Test getCoordinate()", m_navigationManager.getNextManeuver().getCoordinate().toString());
+            Log.d("Test Distance()", "Distance: " + m_navigationManager.getNextManeuverDistance() + "m");
+            Log.d("Test getNextRoadName()", m_navigationManager.getNextManeuver().getNextRoadName());
+            Log.d("Test RoadNumber()", m_navigationManager.getNextManeuver().getNextRoadNumber());
+            Log.d("Test getTurn()", m_navigationManager.getNextManeuver().getTurn().toString());
+            Log.d("Test getIcon()", m_navigationManager.getNextManeuver().getIcon().toString());
+            Toast.makeText(m_activity, m_navigationManager.getNextManeuver().getTurn().toString() + " at " + m_navigationManager.getNextManeuver().getNextRoadName(), Toast.LENGTH_LONG).show();
+            Maneuver maneuver = m_navigationManager.getAfterNextManeuver();
+            */
+            /*
+            if(maneuver != null) {
+                Log.d("Test", "---------------------------------------------------------------------------------------");
+                Log.d("Test", "After Next Maneuver and Road information");
+                Log.d("Test", "---------------------------------------------------------------------------------------");
+                Log.d("Test getAfterNextManeuver()",maneuver.toString());
+                Log.d("Test getAfterNextManeuverDistance()", "Distance: " + m_navigationManager.getAfterNextManeuverDistance() + "m");
+                Log.d("Test getNextRoadName()", maneuver.getNextRoadName());
+                Log.d("Test getNextRoadNumber()", maneuver.getNextRoadNumber());
+                Log.d("Test getTurn()", maneuver.getTurn().toString());
+            }
+            */
+            Log.d("Test", "=======================================================================================");
+        }
+    };
+    private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
+        @Override
+        public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
+            /*
+            Log.d("Test Speed", "" + geoPosition.getSpeed() + "\tHeading: " + geoPosition.getHeading());
+            RoadElement roadElement = m_positioningManager.getRoadElement();
+            Log.d("Test RoadName", "" + roadElement.getRoadName() + "\tLaneNumber: " + roadElement.getNumberOfLanes());
+            Log.d("Test SpeedLimit", "" + roadElement.getSpeedLimit() + "\tLinkId: " + roadElement.getPermanentLinkId());
+            */
+        }
+
+        @Override
+        public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
+
+        }
+    };
+    private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
+        @Override
+        public void onPositionUpdated(GeoPosition geoPosition) {
+            //Log.d("Test Speed", "" + geoPosition.getSpeed());
+
+        }
+    };
+
+    // Google has deprecated android.app.Fragment class. It is used in current SDK implementation.
+    // Will be fixed in future SDK version.
+    @SuppressWarnings("deprecation")
+    private MapFragment getMapFragment() {
+        return (MapFragment) m_activity.getFragmentManager().findFragmentById(R.id.mapFragmentView);
+    }
+
+    void mapOffset(Map map) {
+        map.setTransformCenter(new PointF(
+                (float) (map.getWidth() / 2),
+                (float) (map.getHeight() * 9 / 10)
+        ));
+    }
+
+    /*
+     * Android 8.0 (API level 26) limits how frequently background apps can retrieve the user's
+     * current location. Apps can receive location updates only a few times each hour.
+     * See href="https://developer.android.com/about/versions/oreo/background-location-limits.html
+     * In order to retrieve location updates more frequently start a foreground service.
+     * See https://developer.android.com/guide/components/services.html#Foreground
+     */
+    private void startForegroundService() {
+        if (!m_foregroundServiceStarted) {
+            m_foregroundServiceStarted = true;
+            Intent startIntent = new Intent(m_activity, ForegroundService.class);
+            startIntent.setAction(ForegroundService.START_ACTION);
+            m_activity.getApplicationContext().startService(startIntent);
+        }
+    }
+
+    private void stopForegroundService() {
+        if (m_foregroundServiceStarted) {
+            m_foregroundServiceStarted = false;
+            Intent stopIntent = new Intent(m_activity, ForegroundService.class);
+            stopIntent.setAction(ForegroundService.STOP_ACTION);
+            m_activity.getApplicationContext().startService(stopIntent);
+        }
+    }
+
+    private void initGuidanceManeuverView(Route route) {
+        guidanceManeuverView = m_activity.findViewById(R.id.guidanceManeuverView);
+        guidanceManeuverPresenter = new GuidanceManeuverPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
+        guidanceManeuverPresenter.addListener(guidanceManeuverListener);
+    }
 
     private void createRoute() {
         /* Initialize a CoreRouter */
@@ -230,8 +331,8 @@ public class MapFragmentView {
         //GeoCoordinate gc1 = new GeoCoordinate(25.06343,121.5513);
 
         ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-        waypointList.add(new GeoCoordinate(25.12967,121.73993));
-        waypointList.add(new GeoCoordinate(25.06343,121.5513));
+        waypointList.add(new GeoCoordinate(25.12967, 121.73993));
+        waypointList.add(new GeoCoordinate(25.06343, 121.5513));
         for (int i = 0; i < waypointList.size(); i++) {
             GeoCoordinate coord = waypointList.get(i);
             RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
@@ -253,6 +354,7 @@ public class MapFragmentView {
         */
 
         m_map.getPositionIndicator().setVisible(true);
+
 
         /* Trigger the route calculation,results will be called back via the listener */
         coreRouter.calculateRoute(routePlan,
@@ -305,33 +407,10 @@ public class MapFragmentView {
                 });
 
 
-
-    }
-
-    GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
-        @Override
-        public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
-            if (guidanceManeuverData != null) {
-                Log.d("guidanceManeuverData", "onDataChanged: 1st line: " + guidanceManeuverData.getInfo1());
-                Log.d("guidanceManeuverData", "onDataChanged: 2nd line: " + guidanceManeuverData.getInfo2());
-            }
-            guidanceManeuverView.setManeuverData(guidanceManeuverData);
-        }
-
-        @Override
-        public void onDestinationReached() {
-            guidanceManeuverView.highLightManeuver(Color.BLUE);
-        }
-    };
-
-    private void initGuidanceManeuverView(Route route) {
-        guidanceManeuverView = m_activity.findViewById(R.id.guidanceManeuverView);
-        guidanceManeuverPresenter = new GuidanceManeuverPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
-        guidanceManeuverPresenter.addListener(guidanceManeuverListener);
     }
 
     private void initNaviControlButton() {
-        m_naviControlButton = (Button) m_activity.findViewById(R.id.naviCtrlButton);
+        m_naviControlButton = m_activity.findViewById(R.id.naviCtrlButton);
         m_naviControlButton.setText(R.string.start_navi);
         m_naviControlButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -343,34 +422,10 @@ public class MapFragmentView {
                     m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
                     m_naviControlButton.setText(R.string.start_navi);
                     m_route = null;
+                    guidanceManeuverPresenter.pause();
                 }
             }
         });
-    }
-
-    /*
-     * Android 8.0 (API level 26) limits how frequently background apps can retrieve the user's
-     * current location. Apps can receive location updates only a few times each hour.
-     * See href="https://developer.android.com/about/versions/oreo/background-location-limits.html
-     * In order to retrieve location updates more frequently start a foreground service.
-     * See https://developer.android.com/guide/components/services.html#Foreground
-     */
-    private void startForegroundService() {
-        if (!m_foregroundServiceStarted) {
-            m_foregroundServiceStarted = true;
-            Intent startIntent = new Intent(m_activity, ForegroundService.class);
-            startIntent.setAction(ForegroundService.START_ACTION);
-            m_activity.getApplicationContext().startService(startIntent);
-        }
-    }
-
-    private void stopForegroundService() {
-        if (m_foregroundServiceStarted) {
-            m_foregroundServiceStarted = false;
-            Intent stopIntent = new Intent(m_activity, ForegroundService.class);
-            stopIntent.setAction(ForegroundService.STOP_ACTION);
-            m_activity.getApplicationContext().startService(stopIntent);
-        }
     }
 
     private void startNavigation() {
@@ -392,20 +447,17 @@ public class MapFragmentView {
         alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 m_navigationManager.startNavigation(m_route);
-                m_map.setTilt(60);
                 startForegroundService();
             }
 
-            ;
         });
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
-                m_navigationManager.simulate(m_route, 30);//Simualtion speed m/s
-                m_map.setTilt(60);
+                guidanceManeuverPresenter.resume();
+                m_navigationManager.simulate(m_route, simulationSpeedMs);//Simualtion speed m/s
                 startForegroundService();
             }
 
-            ;
         });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
@@ -415,11 +467,11 @@ public class MapFragmentView {
          * recommended to set the map update mode to NONE first. Other supported update mode can be
          * found in HERE Android SDK API doc
          */
+
+        m_map.setTilt(60);
         m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-        m_map.setTransformCenter(new PointF(
-                (float) (m_map.getWidth() / 2),
-                (float) (m_map.getHeight() * 4 / 5)
-        ));
+        mapOffset(m_map);
+
         /*
          * NavigationManager contains a number of listeners which we can use to monitor the
          * navigation status and getting relevant instructions.In this example, we will add 2
@@ -427,7 +479,6 @@ public class MapFragmentView {
          */
         addNavigationListeners();
     }
-
 
     private void addNavigationListeners() {
 
@@ -441,69 +492,12 @@ public class MapFragmentView {
 
         m_navigationManager.addLaneInformationListener(new WeakReference<NavigationManager.LaneInformationListener>(m_LaneInformationListener));
         m_navigationManager.addNewInstructionEventListener(new WeakReference<NavigationManager.NewInstructionEventListener>(m_newInstructionEventListener));
-        //m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
-        //m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
-        //m_navigationManager.addRealisticViewListener(new WeakReference<NavigationManager.RealisticViewListener>(m_realisticViewListener));
-        //m_navigationManager.addPositionListener(new WeakReference<NavigationManager.PositionListener>(m_positionListener));
+        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
+        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
+        m_navigationManager.addRealisticViewListener(new WeakReference<NavigationManager.RealisticViewListener>(m_realisticViewListener));
+        m_navigationManager.addPositionListener(new WeakReference<NavigationManager.PositionListener>(m_positionListener));
         m_positioningManager.addListener(new WeakReference<OnPositionChangedListener>(positionListener));
     }
-
-    private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
-        @Override
-        public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-            /*
-            Log.d("Test Speed", "" + geoPosition.getSpeed() + "\tHeading: " + geoPosition.getHeading());
-            RoadElement roadElement = m_positioningManager.getRoadElement();
-            Log.d("Test RoadName", "" + roadElement.getRoadName() + "\tLaneNumber: " + roadElement.getNumberOfLanes());
-            Log.d("Test SpeedLimit", "" + roadElement.getSpeedLimit() + "\tLinkId: " + roadElement.getPermanentLinkId());
-            */
-        }
-
-        @Override
-        public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
-
-        }
-    };
-
-    private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
-        @Override
-        public void onPositionUpdated(GeoPosition geoPosition) {
-            //Log.d("Test Speed", "" + geoPosition.getSpeed());
-
-        }
-    };
-
-
-    private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
-        @Override
-        public void onNewInstructionEvent() {
-            Log.d("Test", "=======================================================================================");
-            Log.d("Test", "Next Maneuver and Road information");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test getNextManeuver()", m_navigationManager.getNextManeuver().toString());
-            Log.d("Test getCoordinate()", m_navigationManager.getNextManeuver().getCoordinate().toString());
-            Log.d("Test Distance()", "Distance: " + m_navigationManager.getNextManeuverDistance() + "m");
-            Log.d("Test getNextRoadName()", m_navigationManager.getNextManeuver().getNextRoadName());
-            Log.d("Test RoadNumber()", m_navigationManager.getNextManeuver().getNextRoadNumber());
-            Log.d("Test getTurn()", m_navigationManager.getNextManeuver().getTurn().toString());
-            Log.d("Test getIcon()", m_navigationManager.getNextManeuver().getIcon().toString());
-            Toast.makeText(m_activity, m_navigationManager.getNextManeuver().getTurn().toString() + " at " + m_navigationManager.getNextManeuver().getNextRoadName(), Toast.LENGTH_LONG).show();
-            Maneuver maneuver = m_navigationManager.getAfterNextManeuver();
-            /*
-            if(maneuver != null) {
-                Log.d("Test", "---------------------------------------------------------------------------------------");
-                Log.d("Test", "After Next Maneuver and Road information");
-                Log.d("Test", "---------------------------------------------------------------------------------------");
-                Log.d("Test getAfterNextManeuver()",maneuver.toString());
-                Log.d("Test getAfterNextManeuverDistance()", "Distance: " + m_navigationManager.getAfterNextManeuverDistance() + "m");
-                Log.d("Test getNextRoadName()", maneuver.getNextRoadName());
-                Log.d("Test getNextRoadNumber()", maneuver.getNextRoadNumber());
-                Log.d("Test getTurn()", maneuver.getTurn().toString());
-            }
-            */
-            Log.d("Test", "=======================================================================================");
-        }
-    };
 
 
     private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
@@ -513,8 +507,6 @@ public class MapFragmentView {
             Log.d("Test", "=======================================================================================");
             Log.d("Test", "Lane information");
             Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Road Name " + roadElement.getRoadName());
-            Log.d("Test", "Road Attribs " + roadElement.getAttributes());
             for (LaneInformation laneInformation : list) {
                 Log.d("Test", "Lane Directions " + laneInformation.getDirections());
                 Log.d("Test", "Recommended " + laneInformation.getRecommendationState());
