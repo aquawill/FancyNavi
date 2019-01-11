@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.here.app.tcs">
+
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!--To allow starting foreground services on Android P+ -->
+    <!--https://developer.android.com/preview/behavior-changes#fg-svc -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--Developers should put application credentials here.To obtain them, please register the application
+         at https://developer.here.com/develop/mobile-sdks-->
+        <meta-data
+            android:name="com.here.android.maps.appid"
+            android:value="1v4bYi8JuZ1N1XJdGJuR" />
+        <meta-data
+            android:name="com.here.android.maps.apptoken"
+            android:value="-k4AO57zcSA5Gv8S8122Xg" />
+        <meta-data
+            android:name="com.here.android.maps.license.key"
+            android:value="GapZPdBEaolITy+WNxj//koK7SeIYfS3XCGRalvqc78T6D+QVubg6EPXAe+E0G+2V3WOoGXvbtI5mZLQFAplywm6k5rNHxOtT05KCFkwMu8nFilDMHFz2K45Zp4ak9FkYJ0G8cccel5qGbEiuAj0V0yHLuO9salzsyT0X5VAito7dN81MK/+I6CHOWjEO7CAqj+169pUwmLgDuG7gkaAqwdFI/4+JGr8Ap4C0wtf4gKcW6qA/ANg1GiDwTsBqzoMYWb5A+Pb4OEFMi2CkrZo3UvAggmtxyAlIvb/5GTXRI8ah6hkVFo0J/Z+XB+XFFiPvZUaoFlUKohccotU89C8m1i6XK9n3Dn6o4QfD2KqBXnqWqizMcWwlTJnwwim9B/ntuiwfhcqlRI0DEfWkcWVn8eJpL0N/8n5ZjPsmoUru04Jg5IHgT+841sbOlEDLLkuq5kZHNH/1FGIPtgKymgzDkJnybAqUQIBRX6lF2MP7EcMNIxijS8tOhGgwQRBcC7aVRip1aKQDlch1YSUw+aWdQfBZyhARvKuRtrHvOs6iVesObjpep0nQMpzIWimgeVHK47dBzsQFFxk/Y51y1IWTWmgIV5WCZXaLo1R9IlbA08vwCtb08EUMsv6BT0+YxqjOqiv4pR2F22wlPn0jY9c4nJ3m3kgGXmHJkq6uPt3vWI=" />
+
+         <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
+         Do not reuse HERE SDK defaults.-->
+        <meta-data
+            android:name="INTENT_NAME"
+            android:value="HERE_Android_TBT" />
+        <service
+            android:name="com.here.android.mpa.service.MapService"
+            android:label="HERE_Android_TBT"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="HERE_Android_TBT"></action>
+            </intent-filter>
+        </service>
+
+        <service android:name=".ForegroundService" />
+    </application>
+</manifest>
