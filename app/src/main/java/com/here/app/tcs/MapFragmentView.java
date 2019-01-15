@@ -93,10 +93,6 @@ class MapFragmentView {
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
         public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
-            if (guidanceManeuverData != null) {
-                Log.d("guidanceManeuverData", "onDataChanged: 1st line: " + guidanceManeuverData.getInfo1());
-                Log.d("guidanceManeuverData", "onDataChanged: 2nd line: " + guidanceManeuverData.getInfo2());
-            }
             guidanceManeuverView.setManeuverData(guidanceManeuverData);
         }
 
@@ -301,20 +297,6 @@ class MapFragmentView {
         guidanceManeuverPresenter = new GuidanceManeuverPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
         guidanceManeuverPresenter.addListener(guidanceManeuverListener);
     }
-    /*
-    private void initGuidanceStreetLabelView(Route route) {
-        guidanceStreetLabelView = m_activity.findViewById(R.id.guidanceStreetLabelView);
-        guidanceStreetLabelPresenter = new GuidanceStreetLabelPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
-        guidanceStreetLabelPresenter.addListener(guidanceStreetLabelListener);
-    }
-
-
-    private void initGuidanceSpeedView() {
-        guidanceSpeedView = m_activity.findViewById(R.id.guidanceSpeedView);
-        guidanceSpeedPresenter = new GuidanceSpeedPresenter(m_navigationManager, m_positioningManager);
-        guidanceSpeedPresenter.addListener(guidanceSpeedListener);
-    }
-    */
 
 
     private void createRoute() {
@@ -420,10 +402,7 @@ class MapFragmentView {
                     m_naviControlButton.setText(R.string.start_navi);
                     m_route = null;
                     guidanceManeuverPresenter.pause();
-                    //guidanceSpeedPresenter.pause();
-                    //guidanceStreetLabelPresenter.pause();
                     m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.GONE);
-                    //m_activity.findViewById(R.id.guidanceStreetLabelView).setVisibility(View.GONE);
                 }
             }
         });
@@ -456,7 +435,7 @@ class MapFragmentView {
             public void onClick(DialogInterface dialoginterface, int i) {
                 guidanceManeuverPresenter.resume();
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
-                m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+                //m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
                 m_map.setTilt(60);
                 m_map.setTransformCenter(new PointF(
                         (float) (m_map.getWidth() * 0.5),
