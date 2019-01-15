@@ -36,7 +36,6 @@ import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
-import com.here.android.mpa.common.LocationDataSource;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
@@ -44,7 +43,6 @@ import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
-import com.here.android.mpa.mapping.MapCircle;
 import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
@@ -56,6 +54,8 @@ import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.routing.RouteWaypoint;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
+
+//HERE SDK UI KIT components
 import com.here.msdkui.guidance.GuidanceManeuverData;
 import com.here.msdkui.guidance.GuidanceManeuverListener;
 import com.here.msdkui.guidance.GuidanceManeuverPresenter;
@@ -74,10 +74,8 @@ import static java.util.Locale.TRADITIONAL_CHINESE;
  * bundled within the SDK package to be used out-of-box, please refer to the Developer's guide for
  * the usage.
  */
-public class MapFragmentView {
+class MapFragmentView {
     private MapFragment m_mapFragment;
-    private GuidanceManeuverView guidanceManeuverView;
-    private GuidanceManeuverPresenter guidanceManeuverPresenter;
     private Activity m_activity;
     private Button m_naviControlButton;
     private Map m_map;
@@ -86,9 +84,13 @@ public class MapFragmentView {
     private GeoBoundingBox m_geoBoundingBox;
     private Route m_route;
     private boolean m_foregroundServiceStarted;
-    private MapCircle m_PositionMarker;
-    private LocationDataSource m_locationDataSource;
-    GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
+    //HERE SDK UI KIT components
+    private GuidanceManeuverView guidanceManeuverView;
+    private GuidanceManeuverPresenter guidanceManeuverPresenter;
+
+
+    //HERE UI Kit, Guidance Maneuver View
+    private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
         public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
             if (guidanceManeuverData != null) {
@@ -104,13 +106,16 @@ public class MapFragmentView {
         }
     };
 
-    public MapFragmentView(Activity activity) {
+
+    MapFragmentView(Activity activity) {
         m_activity = activity;
         initMapFragment();
         initNaviControlButton();
     }
 
-    private long simulationSpeedMs = 30;
+    ;
+
+    private long simulationSpeedMs = 20; //defines the speed of navigation simulation
 
     private void initMapFragment() {
         /* Locate the mapFragment UI element */
@@ -157,7 +162,9 @@ public class MapFragmentView {
                 });
             }
         }
+
     }
+
     /*
     private void downloadVoice(final long skin_id) {
         Log.d("Test", "Downloading voice skin ID: " + skin_id);
@@ -205,7 +212,7 @@ public class MapFragmentView {
     private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
         @Override
         public void onNewInstructionEvent() {
-            /*
+
             Log.d("Test", "=======================================================================================");
             Log.d("Test", "Next Maneuver and Road information");
             Log.d("Test", "---------------------------------------------------------------------------------------");
@@ -217,8 +224,7 @@ public class MapFragmentView {
             Log.d("Test getTurn()", m_navigationManager.getNextManeuver().getTurn().toString());
             Log.d("Test getIcon()", m_navigationManager.getNextManeuver().getIcon().toString());
             Toast.makeText(m_activity, m_navigationManager.getNextManeuver().getTurn().toString() + " at " + m_navigationManager.getNextManeuver().getNextRoadName(), Toast.LENGTH_LONG).show();
-            Maneuver maneuver = m_navigationManager.getAfterNextManeuver();
-            */
+
             /*
             if(maneuver != null) {
                 Log.d("Test", "---------------------------------------------------------------------------------------");
@@ -265,13 +271,6 @@ public class MapFragmentView {
         return (MapFragment) m_activity.getFragmentManager().findFragmentById(R.id.mapFragmentView);
     }
 
-    void mapOffset(Map map) {
-        map.setTransformCenter(new PointF(
-                (float) (map.getWidth() / 2),
-                (float) (map.getHeight() * 9 / 10)
-        ));
-    }
-
     /*
      * Android 8.0 (API level 26) limits how frequently background apps can retrieve the user's
      * current location. Apps can receive location updates only a few times each hour.
@@ -302,6 +301,21 @@ public class MapFragmentView {
         guidanceManeuverPresenter = new GuidanceManeuverPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
         guidanceManeuverPresenter.addListener(guidanceManeuverListener);
     }
+    /*
+    private void initGuidanceStreetLabelView(Route route) {
+        guidanceStreetLabelView = m_activity.findViewById(R.id.guidanceStreetLabelView);
+        guidanceStreetLabelPresenter = new GuidanceStreetLabelPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
+        guidanceStreetLabelPresenter.addListener(guidanceStreetLabelListener);
+    }
+
+
+    private void initGuidanceSpeedView() {
+        guidanceSpeedView = m_activity.findViewById(R.id.guidanceSpeedView);
+        guidanceSpeedPresenter = new GuidanceSpeedPresenter(m_navigationManager, m_positioningManager);
+        guidanceSpeedPresenter.addListener(guidanceSpeedListener);
+    }
+    */
+
 
     private void createRoute() {
         /* Initialize a CoreRouter */
@@ -344,67 +358,50 @@ public class MapFragmentView {
             routePlan.addWaypoint(waypoint);
         }
 
-        /*
-        m_PositionMarker = new MapCircle();
-        m_PositionMarker.setFillColor(0xffff0000);
-        m_PositionMarker.setLineColor(0xffffff00);
-        m_PositionMarker.setLineWidth(3);
-        m_PositionMarker.setRadius(10);
-        m_map.addMapObject(m_PositionMarker);
-        */
-
         m_map.getPositionIndicator().setVisible(true);
 
 
         /* Trigger the route calculation,results will be called back via the listener */
-        coreRouter.calculateRoute(routePlan,
-                new Router.Listener<List<RouteResult>, RoutingError>() {
+        coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
+            @Override
+            public void onProgress(int i) {
+                /* The calculation progress can be retrieved in this callback. */
+            }
 
-                    @Override
-                    public void onProgress(int i) {
-                        /* The calculation progress can be retrieved in this callback. */
+            @Override
+            public void onCalculateRouteFinished(List<RouteResult> routeResults,
+                                                 RoutingError routingError) {
+                /* Calculation is done.Let's handle the result */
+                if (routingError == RoutingError.NONE) {
+                    if (routeResults.get(0).getRoute() != null) {
+                        m_route = routeResults.get(0).getRoute();
+                        initGuidanceManeuverView(m_route); //啟動顯示導引文字
+                        /* Create a MapRoute so that it can be placed on the map */
+                        MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
+                        /* Show the maneuver number on top of the route */
+                        mapRoute.setManeuverNumberVisible(true);
+                        /* Add the MapRoute to the map */
+                        m_map.addMapObject(mapRoute);
+                        /*
+                         * We may also want to make sure the map view is orientated properly
+                         * so the entire route can be easily seen.
+                         */
+                        m_geoBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
+                        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE,
+                                Map.MOVE_PRESERVE_ORIENTATION);
+                        startNavigation();
+                    } else {
+                        Toast.makeText(m_activity,
+                                "Error:route results returned is not valid",
+                                Toast.LENGTH_LONG).show();
                     }
-
-                    @Override
-                    public void onCalculateRouteFinished(List<RouteResult> routeResults,
-                                                         RoutingError routingError) {
-                        /* Calculation is done.Let's handle the result */
-                        if (routingError == RoutingError.NONE) {
-                            if (routeResults.get(0).getRoute() != null) {
-
-                                m_route = routeResults.get(0).getRoute();
-                                initGuidanceManeuverView(m_route);
-                                /* Create a MapRoute so that it can be placed on the map */
-                                MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
-
-                                /* Show the maneuver number on top of the route */
-                                mapRoute.setManeuverNumberVisible(true);
-
-                                /* Add the MapRoute to the map */
-                                m_map.addMapObject(mapRoute);
-
-                                /*
-                                 * We may also want to make sure the map view is orientated properly
-                                 * so the entire route can be easily seen.
-                                 */
-                                m_geoBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
-                                m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE,
-                                        Map.MOVE_PRESERVE_ORIENTATION);
-
-                                startNavigation();
-                            } else {
-                                Toast.makeText(m_activity,
-                                        "Error:route results returned is not valid",
-                                        Toast.LENGTH_LONG).show();
-                            }
-                        } else {
-                            Toast.makeText(m_activity,
-                                    "Error:route calculation returned error code: " + routingError,
-                                    Toast.LENGTH_LONG).show();
-
-                        }
-                    }
-                });
+                } else {
+                    Toast.makeText(m_activity,
+                            "Error:route calculation returned error code: " + routingError,
+                            Toast.LENGTH_LONG).show();
+                }
+            }
+        });
 
 
     }
@@ -423,6 +420,10 @@ public class MapFragmentView {
                     m_naviControlButton.setText(R.string.start_navi);
                     m_route = null;
                     guidanceManeuverPresenter.pause();
+                    //guidanceSpeedPresenter.pause();
+                    //guidanceStreetLabelPresenter.pause();
+                    m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.GONE);
+                    //m_activity.findViewById(R.id.guidanceStreetLabelView).setVisibility(View.GONE);
                 }
             }
         });
@@ -454,7 +455,13 @@ public class MapFragmentView {
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 guidanceManeuverPresenter.resume();
-                m_navigationManager.simulate(m_route, simulationSpeedMs);//Simualtion speed m/s
+                m_navigationManager.simulate(m_route, simulationSpeedMs);
+                m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+                m_map.setTilt(60);
+                m_map.setTransformCenter(new PointF(
+                        (float) (m_map.getWidth() * 0.5),
+                        (float) (m_map.getHeight() * 0.9)
+                ));
                 startForegroundService();
             }
 
@@ -468,9 +475,7 @@ public class MapFragmentView {
          * found in HERE Android SDK API doc
          */
 
-        m_map.setTilt(60);
         m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-        mapOffset(m_map);
 
         /*
          * NavigationManager contains a number of listeners which we can use to monitor the
@@ -481,24 +486,20 @@ public class MapFragmentView {
     }
 
     private void addNavigationListeners() {
-
         /*
          * Register a NavigationManagerEventListener to monitor the status change on
          * NavigationManager
          */
-        m_navigationManager.addNavigationManagerEventListener(
-                new WeakReference<NavigationManager.NavigationManagerEventListener>(
-                        m_navigationManagerEventListener));
+        m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
 
-        m_navigationManager.addLaneInformationListener(new WeakReference<NavigationManager.LaneInformationListener>(m_LaneInformationListener));
-        m_navigationManager.addNewInstructionEventListener(new WeakReference<NavigationManager.NewInstructionEventListener>(m_newInstructionEventListener));
+        m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
+        m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
         m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
         m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
-        m_navigationManager.addRealisticViewListener(new WeakReference<NavigationManager.RealisticViewListener>(m_realisticViewListener));
-        m_navigationManager.addPositionListener(new WeakReference<NavigationManager.PositionListener>(m_positionListener));
-        m_positioningManager.addListener(new WeakReference<OnPositionChangedListener>(positionListener));
+        m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
+        m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
+        m_positioningManager.addListener(new WeakReference<>(positionListener));
     }
-
 
     private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
         @Override
@@ -589,7 +590,7 @@ public class MapFragmentView {
         }
     };
 
-    public void onDestroy() {
+    void onDestroy() {
         /* Stop the navigation when app is destroyed */
         if (m_navigationManager != null) {
             stopForegroundService();

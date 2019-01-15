@@ -20,11 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.widget.Toast;
 
 /**
@@ -36,10 +42,28 @@ public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
     private MapFragmentView m_mapFragmentView;
 
+    public void hideGuidanceView() {
+        View guidanceView = findViewById(R.id.guidanceManeuverView);
+        guidanceView.setVisibility(View.GONE);
+    }
+
+    public void showGuidanceView() {
+        View guidanceView = findViewById(R.id.guidanceManeuverView);
+        guidanceView.setVisibility(View.VISIBLE);
+    }
+
+    Bundle mViewBundle = new Bundle();
+
+    public void setData(Bundle data) {
+        mViewBundle = data;
+
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        hideGuidanceView();
         requestPermissions();
     }
 
@@ -63,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-            @NonNull int[] grantResults) {
+                                           @NonNull int[] grantResults) {
         switch (requestCode) {
             case REQUEST_CODE_ASK_PERMISSIONS: {
                 for (int index = 0; index < permissions.length; index++) {

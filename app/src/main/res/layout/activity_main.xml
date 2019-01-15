@@ -19,9 +19,9 @@
 
     <fragment
         class="com.here.android.mpa.mapping.MapFragment"
-        android:id="@+id/mapFragment"
+        android:id="@+id/mapFragmentView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_height="match_parent"
+        />
 
 </LinearLayout>
