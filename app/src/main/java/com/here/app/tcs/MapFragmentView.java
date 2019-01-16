@@ -42,10 +42,17 @@ import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.guidance.VoiceCatalog;
+import com.here.android.mpa.guidance.VoiceGuidanceOptions;
+import com.here.android.mpa.guidance.VoicePackage;
+import com.here.android.mpa.guidance.VoiceSkin;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
+import com.here.android.mpa.mapping.customization.CustomizableScheme;
+import com.here.android.mpa.mapping.customization.CustomizableVariables;
+import com.here.android.mpa.mapping.customization.ZoomRange;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
@@ -64,6 +71,7 @@ import com.here.msdkui.guidance.GuidanceManeuverView;
 import java.io.File;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
@@ -87,8 +95,6 @@ class MapFragmentView {
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
-
-
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
@@ -130,6 +136,7 @@ class MapFragmentView {
             Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
         }
 
+
         boolean success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
         if (!success) {
             // Setting the isolated disk cache was not successful, please check if the path is valid and
@@ -142,13 +149,15 @@ class MapFragmentView {
                 m_mapFragment.init(new OnEngineInitListener() {
                     @Override
                     public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
-
                         if (error == Error.NONE) {
                             m_map = m_mapFragment.getMap();
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
+                            //m_map.setTrafficInfoVisible(true);
+
                             m_navigationManager = NavigationManager.getInstance();
                             m_positioningManager = PositioningManager.getInstance();
-
+                            VoiceActivation voiceActivation = new VoiceActivation();
+                            voiceActivation.downloadCatalogAndSkin();
                         } else {
                             Toast.makeText(m_activity,
                                     "ERROR: Cannot initialize Map with error " + error,
@@ -158,57 +167,85 @@ class MapFragmentView {
                 });
             }
         }
-
     }
 
-    /*
-    private void downloadVoice(final long skin_id) {
-        Log.d("Test", "Downloading voice skin ID: " + skin_id);
-        final VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
-        voiceCatalog.downloadVoice(skin_id, new VoiceCatalog.OnDownloadDoneListener() {
-            @Override
-            public void onDownloadDone(VoiceCatalog.Error error) {
-                if (error != VoiceCatalog.Error.NONE) {
-                    Log.d("Test", "Failed downloading voice skin");
-                } else {
-                    Log.d("Test", "Voice skin downloaded and activated");
-                    //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(skin_id)); //Deprecated in SDK 3.7
-                    VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
-                    voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(skin_id));
+    class VoiceActivation {
+        VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
 
+        void retryVoiceDownload(final long id) {
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
+            alertDialogBuilder.setTitle("Voice Download Failed");
+            alertDialogBuilder.setNegativeButton("Retry", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialoginterface, int i) {
+                    downloadVoice(id);
                 }
-            }
-        });
-    }
+            });
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
+        }
 
-    private void downloadCatalogAndSkin() {
-        // First get the voice catalog from the backend that contains all available languages (so called voiceskins) for download
-        VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
-            @Override
-            public void onDownloadDone(VoiceCatalog.Error error) {
-                if (error != VoiceCatalog.Error.NONE) {
-                    Log.d("Test", "Failed to download catalog");
-                } else {
-                    Log.d("Test", "Catalog downloaded");
-                    List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
-                    Log.d("Test", "# of available packages: " + packages.size());
-                    for (VoicePackage lang : packages)
-                        Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
-                    List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-                    Log.d("Test", "# of local skins: " + localInstalledSkins.size());
-                    for (VoiceSkin voice : localInstalledSkins) {
-                        Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+        void downloadVoice(final long skin_id) {
+            Log.d("Test", "Downloading voice skin ID: " + skin_id);
+            Toast.makeText(m_activity, "Downloading voice skin ID: " + skin_id, Toast.LENGTH_SHORT).show();
+            voiceCatalog.downloadVoice(skin_id, new VoiceCatalog.OnDownloadDoneListener() {
+                @Override
+                public void onDownloadDone(VoiceCatalog.Error error) {
+                    if (error != VoiceCatalog.Error.NONE) {
+                        retryVoiceDownload(skin_id);
+                        Toast.makeText(m_activity, "Failed downloading voice skin " + skin_id, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(m_activity, "Voice skin " + skin_id + " downloaded and activated", Toast.LENGTH_SHORT).show();
+                        Log.d("Test", "Voice skin downloaded and activated");
+                        //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(skin_id)); //Deprecated in SDK 3.7
+                        VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
+                        voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(skin_id));
                     }
-                    downloadVoice(1101);
                 }
-            }
-        });
+            });
+        }
+
+        void downloadCatalogAndSkin() {
+            int desiredVoiceId = 217;
+            final Boolean[] localVoiceSkinExisted = {false};
+            VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
+                @Override
+                public void onDownloadDone(VoiceCatalog.Error error) {
+                    if (error != VoiceCatalog.Error.NONE) {
+                        Log.d("Test", "Failed to download catalog");
+                    } else {
+                        Log.d("Test", "Catalog downloaded");
+                        List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
+                        Log.d("Test", "# of available packages: " + packages.size());
+                        for (VoicePackage lang : packages)
+                            Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+                        List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
+                        Log.d("Test", "# of local skins: " + localInstalledSkins.size());
+                        for (VoiceSkin voice : localInstalledSkins) {
+                            //Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+                            if (voice.getId() == desiredVoiceId) {
+                                localVoiceSkinExisted[0] = true;
+                            }
+                        }
+                        Log.d("Test", "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId).getId());
+                        if (!localVoiceSkinExisted[0]) {
+                            downloadVoice(desiredVoiceId);
+                        } else {
+                            Toast.makeText(m_activity, "Voice skin " + desiredVoiceId + " downloaded and activated", Toast.LENGTH_SHORT).show();
+                            Log.d("Test", "Voice skin downloaded and activated");
+                            VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
+                            voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
+                        }
+                    }
+                }
+            });
+        }
     }
-    */
+
+
     private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
         @Override
         public void onNewInstructionEvent() {
-
+            m_navigationManager.getNextManeuver();
             Log.d("Test", "=======================================================================================");
             Log.d("Test", "Next Maneuver and Road information");
             Log.d("Test", "---------------------------------------------------------------------------------------");
@@ -219,7 +256,7 @@ class MapFragmentView {
             Log.d("Test RoadNumber()", m_navigationManager.getNextManeuver().getNextRoadNumber());
             Log.d("Test getTurn()", m_navigationManager.getNextManeuver().getTurn().toString());
             Log.d("Test getIcon()", m_navigationManager.getNextManeuver().getIcon().toString());
-            Toast.makeText(m_activity, m_navigationManager.getNextManeuver().getTurn().toString() + " at " + m_navigationManager.getNextManeuver().getNextRoadName(), Toast.LENGTH_LONG).show();
+            //Toast.makeText(m_activity, m_navigationManager.getNextManeuver().getTurn().toString() + " at " + m_navigationManager.getNextManeuver().getNextRoadName(), Toast.LENGTH_LONG).show();
 
             /*
             if(maneuver != null) {
@@ -357,20 +394,15 @@ class MapFragmentView {
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         m_route = routeResults.get(0).getRoute();
-                        initGuidanceManeuverView(m_route); //啟動顯示導引文字
-                        /* Create a MapRoute so that it can be placed on the map */
+                        initGuidanceManeuverView(m_route);
                         MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
-                        /* Show the maneuver number on top of the route */
                         mapRoute.setManeuverNumberVisible(true);
-                        /* Add the MapRoute to the map */
+                        mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
+                        mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
+                        mapRoute.setTraveledColor(Color.DKGRAY);
                         m_map.addMapObject(mapRoute);
-                        /*
-                         * We may also want to make sure the map view is orientated properly
-                         * so the entire route can be easily seen.
-                         */
                         m_geoBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
-                        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE,
-                                Map.MOVE_PRESERVE_ORIENTATION);
+                        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
                         startNavigation();
                     } else {
                         Toast.makeText(m_activity,
@@ -408,10 +440,56 @@ class MapFragmentView {
         });
     }
 
+    private void naviMapScheme(Map map) {
+        /*Map Customization - Start*/
+        CustomizableScheme m_colorScheme;
+        String m_colorSchemeName = "colorScheme";
+        if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
+            map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT);
+            m_colorScheme = map.getCustomizableScheme(m_colorSchemeName);
+            ZoomRange range = new ZoomRange(0.0, 20.0);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_WIDTH, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_WIDTH, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_WIDTH, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_WIDTH, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_WIDTH, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_TUNNELCOLOR, Color.GRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_TUNNELCOLOR, Color.GRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_TUNNELCOLOR, Color.GRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_TUNNELCOLOR, Color.GRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_TUNNELCOLOR, Color.GRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+
+            map.setMapScheme(m_colorScheme);
+            map.setLandmarksVisible(false);
+            map.setExtrudedBuildingsVisible(false);
+            map.setCartoMarkersVisible(false);
+
+            EnumSet<Map.LayerCategory> invisibleLayerCategory = EnumSet.of(
+                    Map.LayerCategory.ABSTRACT_CITY_MODEL
+            );
+            map.setVisibleLayers(invisibleLayerCategory, false);
+        } else {
+            map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
+        }
+        /*Map Customization - End*/
+    }
+
     private void startNavigation() {
         m_naviControlButton.setText(R.string.stop_navi);
-        /* Configure Navigation manager to launch navigation on current map */
         m_navigationManager.setMap(m_map);
+        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE,
+                Map.MOVE_PRESERVE_ORIENTATION);
 
         /*
          * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
@@ -434,13 +512,15 @@ class MapFragmentView {
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 guidanceManeuverPresenter.resume();
-                m_navigationManager.simulate(m_route, simulationSpeedMs);
-                //m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
-                m_map.setTilt(60);
+                m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+                naviMapScheme(m_map);
+                m_map.setTilt(0);
+                m_map.setZoomLevel(18);
                 m_map.setTransformCenter(new PointF(
                         (float) (m_map.getWidth() * 0.5),
                         (float) (m_map.getHeight() * 0.9)
                 ));
+                m_navigationManager.simulate(m_route, simulationSpeedMs);
                 startForegroundService();
             }
 
@@ -470,7 +550,6 @@ class MapFragmentView {
          * NavigationManager
          */
         m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
-
         m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
         m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
         m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
@@ -553,8 +632,7 @@ class MapFragmentView {
 
         @Override
         public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode,
-                    Toast.LENGTH_SHORT).show();
+            //Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
         }
 
         @Override
