@@ -29,9 +29,11 @@ import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
@@ -50,6 +52,7 @@ import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
+import com.here.android.mpa.mapping.MapView;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.mapping.customization.CustomizableVariables;
 import com.here.android.mpa.mapping.customization.ZoomRange;
@@ -61,8 +64,6 @@ import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.routing.RouteWaypoint;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
-
-//HERE SDK UI KIT components
 import com.here.msdkui.guidance.GuidanceManeuverData;
 import com.here.msdkui.guidance.GuidanceManeuverListener;
 import com.here.msdkui.guidance.GuidanceManeuverPresenter;
@@ -76,6 +77,8 @@ import java.util.List;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
+//HERE SDK UI KIT components
+
 /**
  * This class encapsulates the properties and functionality of the Map view.It also triggers a
  * turn-by-turn navigation from HERE Burnaby office to Langley BC.There is a sample voice skin
@@ -87,6 +90,7 @@ class MapFragmentView {
     private Activity m_activity;
     private Button m_naviControlButton;
     private Map m_map;
+    private MapView mapView;
     private NavigationManager m_navigationManager;
     private PositioningManager m_positioningManager;
     private GeoBoundingBox m_geoBoundingBox;
@@ -115,59 +119,13 @@ class MapFragmentView {
         initNaviControlButton();
     }
 
-    ;
-
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
-
-    private void initMapFragment() {
-        /* Locate the mapFragment UI element */
-        m_mapFragment = getMapFragment();
-
-        // Set path of isolated disk cache
-        String diskCacheRoot = Environment.getExternalStorageDirectory().getPath()
-                + File.separator + ".isolated-here-maps";
-        // Retrieve intent name from manifest
-        String intentName = "";
-        try {
-            ApplicationInfo ai = m_activity.getPackageManager().getApplicationInfo(m_activity.getPackageName(), PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            intentName = bundle.getString("INTENT_NAME");
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
+    private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+            shiftMapCenter(m_map);
         }
-
-
-        boolean success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
-        if (!success) {
-            // Setting the isolated disk cache was not successful, please check if the path is valid and
-            // ensure that it does not match the default location
-            // (getExternalStorageDirectory()/.here-maps).
-            // Also, ensure the provided intent name does not match the default intent name.
-        } else {
-            if (m_mapFragment != null) {
-                /* Initialize the MapFragment, results will be given via the called back. */
-                m_mapFragment.init(new OnEngineInitListener() {
-                    @Override
-                    public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
-                        if (error == Error.NONE) {
-                            m_map = m_mapFragment.getMap();
-                            m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
-                            //m_map.setTrafficInfoVisible(true);
-
-                            m_navigationManager = NavigationManager.getInstance();
-                            m_positioningManager = PositioningManager.getInstance();
-                            VoiceActivation voiceActivation = new VoiceActivation();
-                            voiceActivation.downloadCatalogAndSkin();
-                        } else {
-                            Toast.makeText(m_activity,
-                                    "ERROR: Cannot initialize Map with error " + error,
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-            }
-        }
-    }
+    };
 
     class VoiceActivation {
         VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
@@ -335,89 +293,54 @@ class MapFragmentView {
         guidanceManeuverPresenter.addListener(guidanceManeuverListener);
     }
 
-
-    private void createRoute() {
-        /* Initialize a CoreRouter */
-        CoreRouter coreRouter = new CoreRouter();
-
-        /* Initialize a RoutePlan */
-        RoutePlan routePlan = new RoutePlan();
-
-        /*
-         * Initialize a RouteOption.HERE SDK allow users to define their own parameters for the
-         * route calculation,including transport modes,route types and route restrictions etc.Please
-         * refer to API doc for full list of APIs
-         */
-        RouteOptions routeOptions = new RouteOptions();
-        /* Other transport modes are also available e.g Pedestrian */
-        routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
-        /* Disable highway in this route. */
-        routeOptions.setHighwaysAllowed(true);
-        /* Calculate the shortest route available. */
-        routeOptions.setRouteType(RouteOptions.Type.FASTEST);
-        /* Calculate 1 route. */
-        routeOptions.setRouteCount(1);
-        /* Finally set the route option */
-        routePlan.setRouteOptions(routeOptions);
-
-        //GeoCoordinate gc0 = new GeoCoordinate(25.12967,121.73993);
-        //GeoCoordinate gc1 = new GeoCoordinate(25.06343,121.5513);
-
-        ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-        waypointList.add(new GeoCoordinate(25.12967, 121.73993));
-        waypointList.add(new GeoCoordinate(25.06343, 121.5513));
-        for (int i = 0; i < waypointList.size(); i++) {
-            GeoCoordinate coord = waypointList.get(i);
-            RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
-            if (i != 0 && i != waypointList.size() - 1) {
-                waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
-            } else {
-                m_map.addMapObject(new MapMarker().setCoordinate(waypoint.getOriginalPosition()));
-            }
-            routePlan.addWaypoint(waypoint);
+    private void initMapFragment() {
+        /* Locate the mapFragment UI element */
+        m_mapFragment = getMapFragment();
+        m_mapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_RIGHT);
+        // Set path of isolated disk cache
+        String diskCacheRoot = Environment.getExternalStorageDirectory().getPath()
+                + File.separator + ".isolated-here-maps";
+        // Retrieve intent name from manifest
+        String intentName = "";
+        try {
+            ApplicationInfo ai = m_activity.getPackageManager().getApplicationInfo(m_activity.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = ai.metaData;
+            intentName = bundle.getString("INTENT_NAME");
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
         }
 
-        m_map.getPositionIndicator().setVisible(true);
 
+        boolean success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
+        if (!success) {
+            // Setting the isolated disk cache was not successful, please check if the path is valid and
+            // ensure that it does not match the default location
+            // (getExternalStorageDirectory()/.here-maps).
+            // Also, ensure the provided intent name does not match the default intent name.
+        } else {
+            if (m_mapFragment != null) {
+                /* Initialize the MapFragment, results will be given via the called back. */
+                m_mapFragment.init(new OnEngineInitListener() {
+                    @Override
+                    public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
+                        if (error == Error.NONE) {
+                            m_map = m_mapFragment.getMap();
+                            m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
+                            //m_map.setTrafficInfoVisible(true);
 
-        /* Trigger the route calculation,results will be called back via the listener */
-        coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
-            @Override
-            public void onProgress(int i) {
-                /* The calculation progress can be retrieved in this callback. */
-            }
-
-            @Override
-            public void onCalculateRouteFinished(List<RouteResult> routeResults,
-                                                 RoutingError routingError) {
-                /* Calculation is done.Let's handle the result */
-                if (routingError == RoutingError.NONE) {
-                    if (routeResults.get(0).getRoute() != null) {
-                        m_route = routeResults.get(0).getRoute();
-                        initGuidanceManeuverView(m_route);
-                        MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
-                        mapRoute.setManeuverNumberVisible(true);
-                        mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
-                        mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
-                        mapRoute.setTraveledColor(Color.DKGRAY);
-                        m_map.addMapObject(mapRoute);
-                        m_geoBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
-                        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
-                        startNavigation();
-                    } else {
-                        Toast.makeText(m_activity,
-                                "Error:route results returned is not valid",
-                                Toast.LENGTH_LONG).show();
+                            m_navigationManager = NavigationManager.getInstance();
+                            m_positioningManager = PositioningManager.getInstance();
+                            VoiceActivation voiceActivation = new VoiceActivation();
+                            voiceActivation.downloadCatalogAndSkin();
+                        } else {
+                            Toast.makeText(m_activity,
+                                    "ERROR: Cannot initialize Map with error " + error,
+                                    Toast.LENGTH_LONG).show();
+                        }
                     }
-                } else {
-                    Toast.makeText(m_activity,
-                            "Error:route calculation returned error code: " + routingError,
-                            Toast.LENGTH_LONG).show();
-                }
+                });
             }
-        });
-
-
+        }
     }
 
     private void initNaviControlButton() {
@@ -485,6 +408,87 @@ class MapFragmentView {
         /*Map Customization - End*/
     }
 
+    private void createRoute() {
+        /* Initialize a CoreRouter */
+        CoreRouter coreRouter = new CoreRouter();
+
+        /* Initialize a RoutePlan */
+        RoutePlan routePlan = new RoutePlan();
+
+        /*
+         * Initialize a RouteOption.HERE SDK allow users to define their own parameters for the
+         * route calculation,including transport modes,route types and route restrictions etc.Please
+         * refer to API doc for full list of APIs
+         */
+
+        /*Route allows highway*/
+        RouteOptions routeOptionCarAllowHighway = new RouteOptions();
+        routeOptionCarAllowHighway.setTransportMode(RouteOptions.TransportMode.CAR);
+        routeOptionCarAllowHighway.setHighwaysAllowed(true);
+        routeOptionCarAllowHighway.setRouteType(RouteOptions.Type.FASTEST);
+        routeOptionCarAllowHighway.setRouteCount(1);
+        routePlan.setRouteOptions(routeOptionCarAllowHighway);
+
+        ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
+        waypointList.add(new GeoCoordinate(25.12967, 121.73993));
+        waypointList.add(new GeoCoordinate(25.06343, 121.5513));
+        for (int i = 0; i < waypointList.size(); i++) {
+            GeoCoordinate coord = waypointList.get(i);
+            RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
+            if (i != 0 && i != waypointList.size() - 1) {
+                waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
+            } else {
+                m_map.addMapObject(new MapMarker().setCoordinate(waypoint.getOriginalPosition()));
+            }
+            routePlan.addWaypoint(waypoint);
+        }
+
+        m_map.getPositionIndicator().setVisible(true);
+
+
+        /* Trigger the route calculation,results will be called back via the listener */
+        coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
+            @Override
+            public void onProgress(int i) {
+                /* The calculation progress can be retrieved in this callback. */
+            }
+
+            @Override
+            public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
+                /* Calculation is done.Let's handle the result */
+                if (routingError == RoutingError.NONE) {
+                    if (routeResults.get(0).getRoute() != null) {
+                        m_route = routeResults.get(0).getRoute();
+                        initGuidanceManeuverView(m_route);
+                        MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
+                        mapRoute.setManeuverNumberVisible(true);
+                        mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
+                        mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
+                        mapRoute.setTraveledColor(Color.DKGRAY);
+                        m_map.addMapObject(mapRoute);
+                        m_geoBoundingBox = routeResults.get(0).getRoute().getBoundingBox();
+                        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
+                        startNavigation();
+                    } else {
+                        Toast.makeText(m_activity,
+                                "Error:route results returned is not valid", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    Toast.makeText(m_activity, "Error:route calculation returned error code: " + routingError, Toast.LENGTH_LONG).show();
+                }
+            }
+        });
+
+
+    }
+
+    private void shiftMapCenter(Map map) {
+        map.setTransformCenter(new PointF(
+                (float) (map.getWidth() * 0.5),
+                (float) (map.getHeight() * 0.8)
+        ));
+    }
+
     private void startNavigation() {
         m_naviControlButton.setText(R.string.stop_navi);
         m_navigationManager.setMap(m_map);
@@ -513,13 +517,10 @@ class MapFragmentView {
             public void onClick(DialogInterface dialoginterface, int i) {
                 guidanceManeuverPresenter.resume();
                 m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+                shiftMapCenter(m_map);
                 naviMapScheme(m_map);
                 m_map.setTilt(0);
                 m_map.setZoomLevel(18);
-                m_map.setTransformCenter(new PointF(
-                        (float) (m_map.getWidth() * 0.5),
-                        (float) (m_map.getHeight() * 0.9)
-                ));
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
                 startForegroundService();
             }
@@ -542,21 +543,6 @@ class MapFragmentView {
          * listeners for demo purpose,please refer to HERE Android SDK API documentation for details
          */
         addNavigationListeners();
-    }
-
-    private void addNavigationListeners() {
-        /*
-         * Register a NavigationManagerEventListener to monitor the status change on
-         * NavigationManager
-         */
-        m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
-        m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
-        m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
-        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
-        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
-        m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
-        m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
-        m_positioningManager.addListener(new WeakReference<>(positionListener));
     }
 
     private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
@@ -612,6 +598,22 @@ class MapFragmentView {
             Log.d("Test", "=======================================================================================");
         }
     };
+
+    private void addNavigationListeners() {
+        /*
+         * Register a NavigationManagerEventListener to monitor the status change on
+         * NavigationManager
+         */
+        m_activity.findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
+        m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
+        m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
+        m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
+        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
+        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
+        m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
+        m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
+        m_positioningManager.addListener(new WeakReference<>(positionListener));
+    }
 
     private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
