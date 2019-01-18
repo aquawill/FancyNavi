@@ -28,7 +28,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.Toast;
@@ -53,9 +55,8 @@ import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapView;
+import com.here.android.mpa.mapping.PositionIndicator;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
-import com.here.android.mpa.mapping.customization.CustomizableVariables;
-import com.here.android.mpa.mapping.customization.ZoomRange;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
@@ -70,9 +71,9 @@ import com.here.msdkui.guidance.GuidanceManeuverPresenter;
 import com.here.msdkui.guidance.GuidanceManeuverView;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
@@ -89,9 +90,9 @@ class MapFragmentView {
     private MapFragment m_mapFragment;
     private Activity m_activity;
     private Button m_naviControlButton;
-    private Map m_map;
+    public Map m_map;
     private MapView mapView;
-    private NavigationManager m_navigationManager;
+    public NavigationManager m_navigationManager;
     private PositioningManager m_positioningManager;
     private GeoBoundingBox m_geoBoundingBox;
     private Route m_route;
@@ -113,6 +114,9 @@ class MapFragmentView {
     };
 
 
+    public boolean isRoadView;
+
+
     MapFragmentView(Activity activity) {
         m_activity = activity;
         initMapFragment();
@@ -127,77 +131,56 @@ class MapFragmentView {
         }
     };
 
-    class VoiceActivation {
-        VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
-
-        void retryVoiceDownload(final long id) {
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
-            alertDialogBuilder.setTitle("Voice Download Failed");
-            alertDialogBuilder.setNegativeButton("Retry", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialoginterface, int i) {
-                    downloadVoice(id);
-                }
-            });
-            AlertDialog alertDialog = alertDialogBuilder.create();
-            alertDialog.show();
+    private OnTouchListener mapOnTouchListener = new OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            if (m_navigationManager.getMapUpdateMode() == NavigationManager.MapUpdateMode.ROADVIEW) {
+                isRoadView = false;
+                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+                resetMapCenter(m_map);
+                m_map.setTilt(0);
+                m_map.zoomTo(m_route.getBoundingBox(), Map.Animation.LINEAR, 0f);
+            }
+            return false;
+        }
+    };
+    private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
+        @Override
+        public void onRunningStateChanged() {
+            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
         }
 
-        void downloadVoice(final long skin_id) {
-            Log.d("Test", "Downloading voice skin ID: " + skin_id);
-            Toast.makeText(m_activity, "Downloading voice skin ID: " + skin_id, Toast.LENGTH_SHORT).show();
-            voiceCatalog.downloadVoice(skin_id, new VoiceCatalog.OnDownloadDoneListener() {
-                @Override
-                public void onDownloadDone(VoiceCatalog.Error error) {
-                    if (error != VoiceCatalog.Error.NONE) {
-                        retryVoiceDownload(skin_id);
-                        Toast.makeText(m_activity, "Failed downloading voice skin " + skin_id, Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(m_activity, "Voice skin " + skin_id + " downloaded and activated", Toast.LENGTH_SHORT).show();
-                        Log.d("Test", "Voice skin downloaded and activated");
-                        //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(skin_id)); //Deprecated in SDK 3.7
-                        VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
-                        voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(skin_id));
-                    }
-                }
-            });
+        @Override
+        public void onNavigationModeChanged() {
+            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
         }
 
-        void downloadCatalogAndSkin() {
-            int desiredVoiceId = 217;
-            final Boolean[] localVoiceSkinExisted = {false};
-            VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
-                @Override
-                public void onDownloadDone(VoiceCatalog.Error error) {
-                    if (error != VoiceCatalog.Error.NONE) {
-                        Log.d("Test", "Failed to download catalog");
-                    } else {
-                        Log.d("Test", "Catalog downloaded");
-                        List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
-                        Log.d("Test", "# of available packages: " + packages.size());
-                        for (VoicePackage lang : packages)
-                            Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
-                        List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-                        Log.d("Test", "# of local skins: " + localInstalledSkins.size());
-                        for (VoiceSkin voice : localInstalledSkins) {
-                            //Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
-                            if (voice.getId() == desiredVoiceId) {
-                                localVoiceSkinExisted[0] = true;
-                            }
-                        }
-                        Log.d("Test", "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId).getId());
-                        if (!localVoiceSkinExisted[0]) {
-                            downloadVoice(desiredVoiceId);
-                        } else {
-                            Toast.makeText(m_activity, "Voice skin " + desiredVoiceId + " downloaded and activated", Toast.LENGTH_SHORT).show();
-                            Log.d("Test", "Voice skin downloaded and activated");
-                            VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
-                            voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
-                        }
-                    }
-                }
-            });
+        @Override
+        public void onEnded(NavigationManager.NavigationMode navigationMode) {
+            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
+            m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
+            resetMapCenter(m_map);
+            m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
+            stopForegroundService();
         }
-    }
+
+        @Override
+        public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
+            Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
+            Log.d("Test", "RoadView is: " + isRoadView);
+        }
+
+        @Override
+        public void onRouteUpdated(Route route) {
+            Toast.makeText(m_activity, "Route updated", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onCountryInfo(String s, String s1) {
+            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
+                    Toast.LENGTH_SHORT).show();
+        }
+    };
 
 
     private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
@@ -326,7 +309,7 @@ class MapFragmentView {
                         if (error == Error.NONE) {
                             m_map = m_mapFragment.getMap();
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
-                            //m_map.setTrafficInfoVisible(true);
+                            m_map.setTrafficInfoVisible(true);
 
                             m_navigationManager = NavigationManager.getInstance();
                             m_positioningManager = PositioningManager.getInstance();
@@ -345,16 +328,21 @@ class MapFragmentView {
 
     private void initNaviControlButton() {
         m_naviControlButton = m_activity.findViewById(R.id.naviCtrlButton);
-        m_naviControlButton.setText(R.string.start_navi);
+        m_naviControlButton.setText("Start Navi");
         m_naviControlButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (m_route == null) {
-                    createRoute();
+                    try {
+                        createRoute();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
                 } else {
                     m_navigationManager.stop();
                     m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
-                    m_naviControlButton.setText(R.string.start_navi);
+                    m_naviControlButton.setText("Start Navi");
                     m_route = null;
                     guidanceManeuverPresenter.pause();
                     m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.GONE);
@@ -363,12 +351,14 @@ class MapFragmentView {
         });
     }
 
-    private void naviMapScheme(Map map) {
+    private void hudMapScheme(Map map) {
         /*Map Customization - Start*/
         CustomizableScheme m_colorScheme;
         String m_colorSchemeName = "colorScheme";
         if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
-            map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT);
+            map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT_GREY);
+            map.setMapScheme(Map.Scheme.CARNAV_NIGHT_GREY);
+            /*
             m_colorScheme = map.getCustomizableScheme(m_colorSchemeName);
             ZoomRange range = new ZoomRange(0.0, 20.0);
             m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_WIDTH, 20, range);
@@ -402,13 +392,14 @@ class MapFragmentView {
                     Map.LayerCategory.ABSTRACT_CITY_MODEL
             );
             map.setVisibleLayers(invisibleLayerCategory, false);
+            */
         } else {
             map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
         }
         /*Map Customization - End*/
     }
 
-    private void createRoute() {
+    private void createRoute() throws IOException {
         /* Initialize a CoreRouter */
         CoreRouter coreRouter = new CoreRouter();
 
@@ -438,13 +429,34 @@ class MapFragmentView {
             if (i != 0 && i != waypointList.size() - 1) {
                 waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
             } else {
-                m_map.addMapObject(new MapMarker().setCoordinate(waypoint.getOriginalPosition()));
+                try {
+                    Image icon = new Image();
+                    if (i == 0) {
+                        icon.setImageResource(R.drawable.red_pin);
+                    } else if (i == waypointList.size() - 1) {
+                        icon.setImageResource(R.drawable.blue_pin);
+                    }
+                    MapMarker mapMarker = new MapMarker(waypoint.getOriginalPosition(), icon);
+                    m_map.addMapObject(mapMarker);
+                    int iconHeight = (int) mapMarker.getIcon().getHeight();
+                    int iconWidth = (int) mapMarker.getIcon().getWidth();
+                    mapMarker.setAnchorPoint(new PointF((float) (iconWidth / 2), (float) iconHeight));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
             routePlan.addWaypoint(waypoint);
         }
 
-        m_map.getPositionIndicator().setVisible(true);
-
+        PositionIndicator positionIndicator = m_map.getPositionIndicator();
+        try {
+            Image positionIndicatorIcon = new Image();
+            positionIndicatorIcon.setImageResource(R.drawable.yellow_cab);
+            positionIndicator.setMarker(positionIndicatorIcon);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        positionIndicator.setVisible(true);
 
         /* Trigger the route calculation,results will be called back via the listener */
         coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
@@ -482,18 +494,24 @@ class MapFragmentView {
 
     }
 
-    private void shiftMapCenter(Map map) {
+    public void shiftMapCenter(Map map) {
         map.setTransformCenter(new PointF(
                 (float) (map.getWidth() * 0.5),
                 (float) (map.getHeight() * 0.8)
         ));
     }
 
+    public void resetMapCenter(Map map) {
+        map.setTransformCenter(new PointF(
+                (float) (map.getWidth() * 0.5),
+                (float) (map.getHeight() * 0.5)
+        ));
+    }
+
     private void startNavigation() {
-        m_naviControlButton.setText(R.string.stop_navi);
+        m_naviControlButton.setText("Stop Navi");
         m_navigationManager.setMap(m_map);
-        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE,
-                Map.MOVE_PRESERVE_ORIENTATION);
+        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
 
         /*
          * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
@@ -517,11 +535,13 @@ class MapFragmentView {
             public void onClick(DialogInterface dialoginterface, int i) {
                 guidanceManeuverPresenter.resume();
                 m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
                 shiftMapCenter(m_map);
-                naviMapScheme(m_map);
-                m_map.setTilt(0);
+                hudMapScheme(m_map);
+                m_map.setTilt(60);
                 m_map.setZoomLevel(18);
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
+                m_mapFragment.setOnTouchListener(mapOnTouchListener);
                 startForegroundService();
             }
 
@@ -535,13 +555,6 @@ class MapFragmentView {
          * found in HERE Android SDK API doc
          */
 
-        m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-
-        /*
-         * NavigationManager contains a number of listeners which we can use to monitor the
-         * navigation status and getting relevant instructions.In this example, we will add 2
-         * listeners for demo purpose,please refer to HERE Android SDK API documentation for details
-         */
         addNavigationListeners();
     }
 
@@ -558,6 +571,7 @@ class MapFragmentView {
             }
         }
     };
+
 
     private NavigationManager.RealisticViewListener m_realisticViewListener = new NavigationManager.RealisticViewListener() {
         @Override
@@ -615,39 +629,77 @@ class MapFragmentView {
         m_positioningManager.addListener(new WeakReference<>(positionListener));
     }
 
-    private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
-        @Override
-        public void onRunningStateChanged() {
-            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
+    class VoiceActivation {
+        VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
+
+        void retryVoiceDownload(final long id) {
+            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
+            alertDialogBuilder.setTitle("Voice Download Failed");
+            alertDialogBuilder.setNegativeButton("Retry", new DialogInterface.OnClickListener() {
+                public void onClick(DialogInterface dialoginterface, int i) {
+                    downloadVoice(id);
+                }
+            });
+            AlertDialog alertDialog = alertDialogBuilder.create();
+            alertDialog.show();
         }
 
-        @Override
-        public void onNavigationModeChanged() {
-            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
+        void downloadVoice(final long skin_id) {
+            Log.d("Test", "Downloading voice skin ID: " + skin_id);
+            Toast.makeText(m_activity, "Downloading voice skin ID: " + skin_id, Toast.LENGTH_SHORT).show();
+            voiceCatalog.downloadVoice(skin_id, new VoiceCatalog.OnDownloadDoneListener() {
+                @Override
+                public void onDownloadDone(VoiceCatalog.Error error) {
+                    if (error != VoiceCatalog.Error.NONE) {
+                        retryVoiceDownload(skin_id);
+                        Toast.makeText(m_activity, "Failed downloading voice skin " + skin_id, Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(m_activity, "Voice skin " + skin_id + " downloaded and activated", Toast.LENGTH_SHORT).show();
+                        Log.d("Test", "Voice skin downloaded and activated");
+                        //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(skin_id)); //Deprecated in SDK 3.7
+                        VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
+                        voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(skin_id));
+                    }
+                }
+            });
         }
 
-        @Override
-        public void onEnded(NavigationManager.NavigationMode navigationMode) {
-            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
-            stopForegroundService();
+        void downloadCatalogAndSkin() {
+            int desiredVoiceId = 217;
+            final Boolean[] localVoiceSkinExisted = {false};
+            VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
+                @Override
+                public void onDownloadDone(VoiceCatalog.Error error) {
+                    if (error != VoiceCatalog.Error.NONE) {
+                        Log.d("Test", "Failed to download catalog");
+                    } else {
+                        //Log.d("Test", "Catalog downloaded");
+                        List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
+                        //Log.d("Test", "# of available packages: " + packages.size());
+                        //for (VoicePackage lang : packages)
+                        //Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+                        List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
+                        //Log.d("Test", "# of local skins: " + localInstalledSkins.size());
+                        for (VoiceSkin voice : localInstalledSkins) {
+                            //Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+                            if (voice.getId() == desiredVoiceId) {
+                                localVoiceSkinExisted[0] = true;
+                            }
+                        }
+                        Log.d("Test", "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId).getId());
+                        if (!localVoiceSkinExisted[0]) {
+                            downloadVoice(desiredVoiceId);
+                        } else {
+                            Toast.makeText(m_activity, "Voice skin " + desiredVoiceId + " downloaded and activated", Toast.LENGTH_SHORT).show();
+                            Log.d("Test", "Voice skin downloaded and activated");
+                            VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
+                            voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
+                        }
+                    }
+                }
+            });
         }
-
-        @Override
-        public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            //Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onRouteUpdated(Route route) {
-            Toast.makeText(m_activity, "Route updated", Toast.LENGTH_SHORT).show();
-        }
-
-        @Override
-        public void onCountryInfo(String s, String s1) {
-            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
-                    Toast.LENGTH_SHORT).show();
-        }
-    };
+    }
 
     void onDestroy() {
         /* Stop the navigation when app is destroyed */
