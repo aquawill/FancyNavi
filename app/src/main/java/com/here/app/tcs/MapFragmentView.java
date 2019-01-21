@@ -93,9 +93,9 @@ class MapFragmentView {
     private MapFragment m_mapFragment;
     private Activity m_activity;
     private Button m_naviControlButton;
-    public Map m_map;
+    Map m_map;
     private MapView mapView;
-    public NavigationManager m_navigationManager;
+    NavigationManager m_navigationManager;
     private PositioningManager m_positioningManager;
     private GeoBoundingBox m_geoBoundingBox;
     private Route m_route;
@@ -339,11 +339,7 @@ class MapFragmentView {
             @Override
             public void onClick(View v) {
                 if (m_route == null) {
-                    try {
-                        createRoute();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    createRoute();
 
                 } else {
                     m_navigationManager.stop();
