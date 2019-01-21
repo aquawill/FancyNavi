@@ -50,12 +50,13 @@ import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceGuidanceOptions;
 import com.here.android.mpa.guidance.VoicePackage;
 import com.here.android.mpa.guidance.VoiceSkin;
+import com.here.android.mpa.mapping.LocalMesh;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapFragment;
+import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapView;
-import com.here.android.mpa.mapping.PositionIndicator;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
@@ -73,6 +74,8 @@ import com.here.msdkui.guidance.GuidanceManeuverView;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -96,6 +99,7 @@ class MapFragmentView {
     private PositioningManager m_positioningManager;
     private GeoBoundingBox m_geoBoundingBox;
     private Route m_route;
+    private MapLocalModel mapLocalModel;
     private boolean m_foregroundServiceStarted;
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
@@ -223,6 +227,8 @@ class MapFragmentView {
             Log.d("Test RoadName", "" + roadElement.getRoadName() + "\tLaneNumber: " + roadElement.getNumberOfLanes());
             Log.d("Test SpeedLimit", "" + roadElement.getSpeedLimit() + "\tLinkId: " + roadElement.getPermanentLinkId());
             */
+            mapLocalModel.setAnchor(geoPosition.getCoordinate());
+            mapLocalModel.setYaw((float) geoPosition.getHeading() + 180);
         }
 
         @Override
@@ -399,7 +405,72 @@ class MapFragmentView {
         /*Map Customization - End*/
     }
 
-    private void createRoute() throws IOException {
+    private MapLocalModel createPosition3dObj() {
+        float delta = 1f;
+        FloatBuffer buff = FloatBuffer.allocate(12); // Two triangles
+        buff.put(0 - delta);
+        buff.put(0 - delta);
+        buff.put(0.f);
+        buff.put(0 + delta);
+        buff.put(0 - delta);
+        buff.put(0.f);
+        buff.put(0 - delta);
+        buff.put(0 + delta);
+        buff.put(0.f);
+        buff.put(0 + delta);
+        buff.put(0 + delta);
+        buff.put(0.f);
+
+// Two triangles to generate the rectangle. Both front and back face
+        IntBuffer vertIndicieBuffer = IntBuffer.allocate(12);
+        vertIndicieBuffer.put(0);
+        vertIndicieBuffer.put(2);
+        vertIndicieBuffer.put(1);
+        vertIndicieBuffer.put(2);
+        vertIndicieBuffer.put(3);
+        vertIndicieBuffer.put(1);
+        vertIndicieBuffer.put(0);
+        vertIndicieBuffer.put(1);
+        vertIndicieBuffer.put(2);
+        vertIndicieBuffer.put(1);
+        vertIndicieBuffer.put(3);
+        vertIndicieBuffer.put(2);
+
+// Texture coordinates
+        FloatBuffer textCoordBuffer = FloatBuffer.allocate(8);
+        textCoordBuffer.put(0.f);
+        textCoordBuffer.put(0.f);
+        textCoordBuffer.put(1.f);
+        textCoordBuffer.put(0.f);
+        textCoordBuffer.put(0.f);
+        textCoordBuffer.put(1.f);
+        textCoordBuffer.put(1.f);
+        textCoordBuffer.put(1.f);
+
+        LocalMesh myMesh = new LocalMesh();
+        myMesh.setVertices(buff);
+        myMesh.setVertexIndices(vertIndicieBuffer);
+        myMesh.setTextureCoordinates(textCoordBuffer);
+
+        MapLocalModel myObject = new MapLocalModel();
+        myObject.setMesh(myMesh); //a LocalMesh object
+        Image image = null;
+        try {
+            image = new Image();
+            image.setImageResource(R.drawable.yellow_cab);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        myObject.setTexture(image); //an Image object
+        //myObject.setAnchor(geoPosition.getCoordinate()); //a GeoCoordinate object
+        myObject.setScale(2.0f);
+        myObject.setDynamicScalingEnabled(true);
+        myObject.setYaw(0.0f);
+        m_map.addMapObject(myObject);
+        return myObject;
+    }
+
+    private void createRoute() {
         /* Initialize a CoreRouter */
         CoreRouter coreRouter = new CoreRouter();
 
@@ -447,7 +518,7 @@ class MapFragmentView {
             }
             routePlan.addWaypoint(waypoint);
         }
-
+        /*
         PositionIndicator positionIndicator = m_map.getPositionIndicator();
         try {
             Image positionIndicatorIcon = new Image();
@@ -457,7 +528,7 @@ class MapFragmentView {
             e.printStackTrace();
         }
         positionIndicator.setVisible(true);
-
+        */
         /* Trigger the route calculation,results will be called back via the listener */
         coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
@@ -542,6 +613,7 @@ class MapFragmentView {
                 m_map.setZoomLevel(18);
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
                 m_mapFragment.setOnTouchListener(mapOnTouchListener);
+                mapLocalModel = createPosition3dObj();
                 startForegroundService();
             }
 
