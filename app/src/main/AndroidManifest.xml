@@ -30,13 +30,13 @@
          at https://developer.here.com/develop/mobile-sdks-->
         <meta-data
             android:name="com.here.android.maps.appid"
-            android:value="1v4bYi8JuZ1N1XJdGJuR" />
+            android:value="WYLi6ewvJcS9G8FQoM8i" />
         <meta-data
             android:name="com.here.android.maps.apptoken"
-            android:value="-k4AO57zcSA5Gv8S8122Xg" />
+            android:value="l6MS1rmpXhHSehgIds6WiA" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="GapZPdBEaolITy+WNxj//koK7SeIYfS3XCGRalvqc78T6D+QVubg6EPXAe+E0G+2V3WOoGXvbtI5mZLQFAplywm6k5rNHxOtT05KCFkwMu8nFilDMHFz2K45Zp4ak9FkYJ0G8cccel5qGbEiuAj0V0yHLuO9salzsyT0X5VAito7dN81MK/+I6CHOWjEO7CAqj+169pUwmLgDuG7gkaAqwdFI/4+JGr8Ap4C0wtf4gKcW6qA/ANg1GiDwTsBqzoMYWb5A+Pb4OEFMi2CkrZo3UvAggmtxyAlIvb/5GTXRI8ah6hkVFo0J/Z+XB+XFFiPvZUaoFlUKohccotU89C8m1i6XK9n3Dn6o4QfD2KqBXnqWqizMcWwlTJnwwim9B/ntuiwfhcqlRI0DEfWkcWVn8eJpL0N/8n5ZjPsmoUru04Jg5IHgT+841sbOlEDLLkuq5kZHNH/1FGIPtgKymgzDkJnybAqUQIBRX6lF2MP7EcMNIxijS8tOhGgwQRBcC7aVRip1aKQDlch1YSUw+aWdQfBZyhARvKuRtrHvOs6iVesObjpep0nQMpzIWimgeVHK47dBzsQFFxk/Y51y1IWTWmgIV5WCZXaLo1R9IlbA08vwCtb08EUMsv6BT0+YxqjOqiv4pR2F22wlPn0jY9c4nJ3m3kgGXmHJkq6uPt3vWI=" />
+            android:value="fOkXlR1JaX6qFHaUY2kVs/9ZVv/j0O2+4AghOqOa0Oj63cSXnyuPTk9werQGNQ1vvpXQ69dKbmLIJNcBQMFD+Hid96dJ2aAIKDd0KVVD0t4hQCigeaBvxVvlrABCN2i48/IDG6+IjrQjUQAdp/b582jGry7enVcCR90OXxbmCulQX2U0DjB3Agftp2f85TTDCYrpwDKexg4ggTR1nw6idfiIUWt1ggh9HzvnkMjgadkgwYjQl4zZKiKtyMbow2awK42fas6k2qQwB41A+61hQl5Oc8GRIUBQVVXELleDBJkSANCOnUxmxT3akMu1iGN+Udh93EgxFSdditIAbWcBrcaavqag+i7VvnXINGA72GallkD2n3qgk6PXwXv3fwQ2TYjZW3mlrDKlezTbl4Yp1uU7D7Pdq3IWZqgAq8wmKwL51gU+8SM/WN7AkxUy2uMUnLOwMA9bwXIpK4XpO44pb//SLILlw46Rrf/ShbYXjw+5nY6uwjAwllNQeefY9W+LzUa5LNEbA6G8LBIWfi7XYBCpPgCRquYHkfzApCvjdlz6DerUNJlLZFGpSIayG0qabl1ttrc2WnZUzGVARA7Y6BdDEvyyIaeXioYpqRTcOywKseBjD9fIIHnqv0QjCgjoBKTSgVXdcS5SV/mQxcQsVLEDtQQje1t03ng/xZFaDAA=" />
 
          <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
          Do not reuse HERE SDK defaults.-->

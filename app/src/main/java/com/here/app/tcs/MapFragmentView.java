@@ -605,7 +605,7 @@ class MapFragmentView {
                 m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
                 shiftMapCenter(m_map);
                 hudMapScheme(m_map);
-                m_map.setTilt(60);
+                m_map.setTilt(10);
                 m_map.setZoomLevel(18);
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
                 m_mapFragment.setOnTouchListener(mapOnTouchListener);
@@ -622,7 +622,6 @@ class MapFragmentView {
          * recommended to set the map update mode to NONE first. Other supported update mode can be
          * found in HERE Android SDK API doc
          */
-
         addNavigationListeners();
     }
 
