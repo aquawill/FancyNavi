@@ -58,6 +58,8 @@ import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapView;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
+import com.here.android.mpa.mapping.customization.CustomizableVariables;
+import com.here.android.mpa.mapping.customization.ZoomRange;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
@@ -77,6 +79,7 @@ import java.lang.ref.WeakReference;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
@@ -165,6 +168,8 @@ class MapFragmentView {
             m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
             resetMapCenter(m_map);
             m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
+            View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
+            guidanceView.setVisibility(View.GONE);
             stopForegroundService();
         }
 
@@ -360,7 +365,7 @@ class MapFragmentView {
         if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
             map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT_GREY);
             map.setMapScheme(Map.Scheme.CARNAV_NIGHT_GREY);
-            /*
+
             m_colorScheme = map.getCustomizableScheme(m_colorSchemeName);
             ZoomRange range = new ZoomRange(0.0, 20.0);
             m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_WIDTH, 20, range);
@@ -394,7 +399,7 @@ class MapFragmentView {
                     Map.LayerCategory.ABSTRACT_CITY_MODEL
             );
             map.setVisibleLayers(invisibleLayerCategory, false);
-            */
+
         } else {
             map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
         }
@@ -404,9 +409,9 @@ class MapFragmentView {
     private MapLocalModel createPosition3dObj() {
         float delta = 1f;
         FloatBuffer buff = FloatBuffer.allocate(12); // Two triangles
-        buff.put(0 - delta);
-        buff.put(0 - delta);
-        buff.put(0.f);
+        buff.put(0 - delta);    //X
+        buff.put(0 - delta);    //Y
+        buff.put(0.f);          //Z
         buff.put(0 + delta);
         buff.put(0 - delta);
         buff.put(0.f);
@@ -448,8 +453,8 @@ class MapFragmentView {
         myMesh.setVertexIndices(vertIndicieBuffer);
         myMesh.setTextureCoordinates(textCoordBuffer);
 
-        MapLocalModel myObject = new MapLocalModel();
-        myObject.setMesh(myMesh); //a LocalMesh object
+        MapLocalModel mapLocalModel = new MapLocalModel();
+        mapLocalModel.setMesh(myMesh); //a LocalMesh object
         Image image = null;
         try {
             image = new Image();
@@ -457,13 +462,12 @@ class MapFragmentView {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        myObject.setTexture(image); //an Image object
-        //myObject.setAnchor(geoPosition.getCoordinate()); //a GeoCoordinate object
-        myObject.setScale(2.0f);
-        myObject.setDynamicScalingEnabled(true);
-        myObject.setYaw(0.0f);
-        m_map.addMapObject(myObject);
-        return myObject;
+        mapLocalModel.setTexture(image); //an Image object
+        mapLocalModel.setScale(2.0f);
+        mapLocalModel.setDynamicScalingEnabled(true);
+        mapLocalModel.setYaw(0.0f);
+        m_map.addMapObject(mapLocalModel);
+        return mapLocalModel;
     }
 
     private void createRoute() {
@@ -514,17 +518,7 @@ class MapFragmentView {
             }
             routePlan.addWaypoint(waypoint);
         }
-        /*
-        PositionIndicator positionIndicator = m_map.getPositionIndicator();
-        try {
-            Image positionIndicatorIcon = new Image();
-            positionIndicatorIcon.setImageResource(R.drawable.yellow_cab);
-            positionIndicator.setMarker(positionIndicatorIcon);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        positionIndicator.setVisible(true);
-        */
+
         /* Trigger the route calculation,results will be called back via the listener */
         coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
