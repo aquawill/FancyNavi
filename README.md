@@ -5,4 +5,5 @@ Forked https://github.com/heremaps/here-android-sdk-examples/tree/master/advance
 ![](https://i.imgur.com/m6cERoP.png)
 
 Icon made by mynamepong from www.flaticon.com (red_pin.png, blue_pin.png)
+
 Icon made by Smashicons from www.flaticon.com (yellow_cab.png)
