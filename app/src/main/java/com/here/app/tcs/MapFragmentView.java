@@ -395,7 +395,7 @@ class MapFragmentView {
         /*Map Customization - End*/
     }
 
-    private MapLocalModel createPosition3dObj() {
+    private MapLocalModel createPosition3dObj() throws IOException {
         MapLocalModel mapLocalModel = new MapLocalModel();
         LocalModelLoader localModelLoader = new LocalModelLoader();
 
