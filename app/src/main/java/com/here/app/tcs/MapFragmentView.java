@@ -1,19 +1,3 @@
-/*
- * Copyright (c) 2011-2018 HERE Europe B.V.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.here.app.tcs;
 
 import android.app.Activity;
@@ -75,12 +59,17 @@ import com.here.msdkui.guidance.GuidanceManeuverView;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+
+import de.javagl.obj.Obj;
+import de.javagl.obj.ObjData;
+import de.javagl.obj.ObjReader;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
@@ -233,7 +222,7 @@ class MapFragmentView {
             Log.d("Test SpeedLimit", "" + roadElement.getSpeedLimit() + "\tLinkId: " + roadElement.getPermanentLinkId());
             */
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
-            mapLocalModel.setYaw((float) geoPosition.getHeading() + 180);
+            mapLocalModel.setRoll((float) geoPosition.getHeading() - 63);
         }
 
         @Override
@@ -407,67 +396,82 @@ class MapFragmentView {
     }
 
     private MapLocalModel createPosition3dObj() {
-        float delta = 1f;
-        FloatBuffer buff = FloatBuffer.allocate(12); // Two triangles
-        buff.put(0 - delta);    //X
-        buff.put(0 - delta);    //Y
-        buff.put(0.f);          //Z
-        buff.put(0 + delta);
-        buff.put(0 - delta);
-        buff.put(0.f);
-        buff.put(0 - delta);
-        buff.put(0 + delta);
-        buff.put(0.f);
-        buff.put(0 + delta);
-        buff.put(0 + delta);
-        buff.put(0.f);
-
-// Two triangles to generate the rectangle. Both front and back face
-        IntBuffer vertIndicieBuffer = IntBuffer.allocate(12);
-        vertIndicieBuffer.put(0);
-        vertIndicieBuffer.put(2);
-        vertIndicieBuffer.put(1);
-        vertIndicieBuffer.put(2);
-        vertIndicieBuffer.put(3);
-        vertIndicieBuffer.put(1);
-        vertIndicieBuffer.put(0);
-        vertIndicieBuffer.put(1);
-        vertIndicieBuffer.put(2);
-        vertIndicieBuffer.put(1);
-        vertIndicieBuffer.put(3);
-        vertIndicieBuffer.put(2);
-
-// Texture coordinates
-        FloatBuffer textCoordBuffer = FloatBuffer.allocate(8);
-        textCoordBuffer.put(0.f);
-        textCoordBuffer.put(0.f);
-        textCoordBuffer.put(1.f);
-        textCoordBuffer.put(0.f);
-        textCoordBuffer.put(0.f);
-        textCoordBuffer.put(1.f);
-        textCoordBuffer.put(1.f);
-        textCoordBuffer.put(1.f);
-
-        LocalMesh myMesh = new LocalMesh();
-        myMesh.setVertices(buff);
-        myMesh.setVertexIndices(vertIndicieBuffer);
-        myMesh.setTextureCoordinates(textCoordBuffer);
-
         MapLocalModel mapLocalModel = new MapLocalModel();
-        mapLocalModel.setMesh(myMesh); //a LocalMesh object
+        LocalModelLoader localModelLoader = new LocalModelLoader();
+
+        LocalMesh localMesh = new LocalMesh();
+        localMesh.setVertices(localModelLoader.getObjVertices());
+        localMesh.setVertexIndices(localModelLoader.getObjIndices());
+        localMesh.setTextureCoordinates(localModelLoader.getObjTexCoords());
+
+        mapLocalModel.setMesh(localMesh);
         Image image = null;
         try {
             image = new Image();
-            image.setImageResource(R.drawable.yellow_cab);
+            image.setImageResource(R.drawable.green);
         } catch (IOException e) {
             e.printStackTrace();
         }
         mapLocalModel.setTexture(image); //an Image object
-        mapLocalModel.setScale(2.0f);
+        mapLocalModel.setScale(5.0f);
         mapLocalModel.setDynamicScalingEnabled(true);
-        mapLocalModel.setYaw(0.0f);
+        mapLocalModel.setPitch(90f);
+
         m_map.addMapObject(mapLocalModel);
         return mapLocalModel;
+    }
+
+    private void startNavigation() {
+        m_naviControlButton.setText("Stop Navi");
+        m_navigationManager.setMap(m_map);
+        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
+
+        /*
+         * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
+         * route is pedestrian, the NavigationManager automatically triggers the guidance which is
+         * suitable for walking. Simulation and tracking modes can also be launched at this moment
+         * by calling either simulate() or startTracking()
+         */
+
+        /* Choose navigation modes between real time navigation and simulation */
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
+        alertDialogBuilder.setTitle("Navigation");
+        alertDialogBuilder.setMessage("Choose Mode");
+        alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialoginterface, int i) {
+                m_navigationManager.startNavigation(m_route);
+                startForegroundService();
+            }
+
+        });
+        alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialoginterface, int i) {
+                guidanceManeuverPresenter.resume();
+                m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+                shiftMapCenter(m_map);
+                hudMapScheme(m_map);
+                m_map.setTilt(30);
+                m_navigationManager.simulate(m_route, simulationSpeedMs);
+                m_mapFragment.setOnTouchListener(mapOnTouchListener);
+                try {
+                    mapLocalModel = createPosition3dObj();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                startForegroundService();
+            }
+
+        });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+        /*
+         * Set the map update mode to ROADVIEW.This will enable the automatic map movement based on
+         * the current location.If user gestures are expected during the navigation, it's
+         * recommended to set the map update mode to NONE first. Other supported update mode can be
+         * found in HERE Android SDK API doc
+         */
+        addNavigationListeners();
     }
 
     private void createRoute() {
@@ -569,54 +573,45 @@ class MapFragmentView {
         ));
     }
 
-    private void startNavigation() {
-        m_naviControlButton.setText("Stop Navi");
-        m_navigationManager.setMap(m_map);
-        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
+    class LocalModelLoader {
+        InputStream objStream = m_activity.getResources().openRawResource(R.raw.arrow);
+        Obj obj;
 
-        /*
-         * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
-         * route is pedestrian, the NavigationManager automatically triggers the guidance which is
-         * suitable for walking. Simulation and tracking modes can also be launched at this moment
-         * by calling either simulate() or startTracking()
-         */
-
-        /* Choose navigation modes between real time navigation and simulation */
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
-        alertDialogBuilder.setTitle("Navigation");
-        alertDialogBuilder.setMessage("Choose Mode");
-        alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialoginterface, int i) {
-                m_navigationManager.startNavigation(m_route);
-                startForegroundService();
+        {
+            try {
+                obj = ObjReader.read(objStream);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+        }
 
-        });
-        alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialoginterface, int i) {
-                guidanceManeuverPresenter.resume();
-                m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
-                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-                shiftMapCenter(m_map);
-                hudMapScheme(m_map);
-                m_map.setTilt(10);
-                m_map.setZoomLevel(18);
-                m_navigationManager.simulate(m_route, simulationSpeedMs);
-                m_mapFragment.setOnTouchListener(mapOnTouchListener);
-                mapLocalModel = createPosition3dObj();
-                startForegroundService();
+        FloatBuffer getObjTexCoords() {
+            FloatBuffer texCoords = ObjData.getTexCoords(obj, 2);
+            FloatBuffer textCoordBuffer = FloatBuffer.allocate(texCoords.capacity());
+            while (texCoords.hasRemaining()) {
+                textCoordBuffer.put(texCoords.get());
             }
+            return textCoordBuffer;
 
-        });
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
-        /*
-         * Set the map update mode to ROADVIEW.This will enable the automatic map movement based on
-         * the current location.If user gestures are expected during the navigation, it's
-         * recommended to set the map update mode to NONE first. Other supported update mode can be
-         * found in HERE Android SDK API doc
-         */
-        addNavigationListeners();
+        }
+
+        FloatBuffer getObjVertices() {
+            FloatBuffer vertices = ObjData.getVertices(obj);
+            FloatBuffer buff = FloatBuffer.allocate(vertices.capacity());
+            while (vertices.hasRemaining()) {
+                buff.put(vertices.get());
+            }
+            return buff;
+        }
+
+        IntBuffer getObjIndices() {
+            IntBuffer indices = ObjData.getFaceVertexIndices(obj);
+            IntBuffer vertIndicieBuffer = IntBuffer.allocate(indices.capacity());
+            while (indices.hasRemaining()) {
+                vertIndicieBuffer.put(indices.get());
+            }
+            return vertIndicieBuffer;
+        }
     }
 
     private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
