@@ -44,6 +44,11 @@ public class MainActivity extends AppCompatActivity {
         guidanceView.setVisibility(View.GONE);
     }
 
+    public void hideJunctionView() {
+        View junctionView = findViewById(R.id.junctionImageView);
+        junctionView.setVisibility(View.GONE);
+    }
+
     public void showGuidanceView() {
         View guidanceView = findViewById(R.id.guidanceManeuverView);
         guidanceView.setVisibility(View.VISIBLE);
@@ -61,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         hideGuidanceView();
+        hideJunctionView();
         requestPermissions();
     }
 

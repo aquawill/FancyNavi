@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.here.android.mpa.common.CopyrightLogoPosition;
@@ -94,6 +96,9 @@ class MapFragmentView {
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
+
+    public boolean isRoadView = false;
+
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
@@ -106,9 +111,7 @@ class MapFragmentView {
             guidanceManeuverView.highLightManeuver(Color.BLUE);
         }
     };
-
-
-    public boolean isRoadView;
+    boolean overView = false;
 
 
     MapFragmentView(Activity activity) {
@@ -124,16 +127,17 @@ class MapFragmentView {
             shiftMapCenter(m_map);
         }
     };
-
+    private ImageView imageView;
     private OnTouchListener mapOnTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
-            if (m_navigationManager.getMapUpdateMode() == NavigationManager.MapUpdateMode.ROADVIEW) {
+            if (m_navigationManager.getMapUpdateMode() != NavigationManager.MapUpdateMode.NONE) {
                 isRoadView = false;
                 m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
                 resetMapCenter(m_map);
                 m_map.setTilt(0);
-                m_map.zoomTo(m_route.getBoundingBox(), Map.Animation.LINEAR, 0f);
+                m_map.zoomTo(m_route.getBoundingBox(), Map.Animation.NONE, 0f);
+                overView = true;
             }
             return false;
         }
@@ -163,8 +167,8 @@ class MapFragmentView {
 
         @Override
         public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
-            Log.d("Test", "RoadView is: " + isRoadView);
+            //Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
+            Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
         }
 
         @Override
@@ -179,22 +183,9 @@ class MapFragmentView {
         }
     };
 
-
     private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
         @Override
         public void onNewInstructionEvent() {
-            m_navigationManager.getNextManeuver();
-            Log.d("Test", "=======================================================================================");
-            Log.d("Test", "Next Maneuver and Road information");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test getNextManeuver()", m_navigationManager.getNextManeuver().toString());
-            Log.d("Test getCoordinate()", m_navigationManager.getNextManeuver().getCoordinate().toString());
-            Log.d("Test Distance()", "Distance: " + m_navigationManager.getNextManeuverDistance() + "m");
-            Log.d("Test getNextRoadName()", m_navigationManager.getNextManeuver().getNextRoadName());
-            Log.d("Test RoadNumber()", m_navigationManager.getNextManeuver().getNextRoadNumber());
-            Log.d("Test getTurn()", m_navigationManager.getNextManeuver().getTurn().toString());
-            Log.d("Test getIcon()", m_navigationManager.getNextManeuver().getIcon().toString());
-            Log.d("Test", "=======================================================================================");
         }
     };
     private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
@@ -203,6 +194,7 @@ class MapFragmentView {
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
             mapLocalModel.setYaw((float) geoPosition.getHeading());
         }
+
 
         @Override
         public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
@@ -248,11 +240,38 @@ class MapFragmentView {
         }
     }
 
-    private void initGuidanceManeuverView(Route route) {
-        guidanceManeuverView = m_activity.findViewById(R.id.guidanceManeuverView);
-        guidanceManeuverPresenter = new GuidanceManeuverPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
-        guidanceManeuverPresenter.addListener(guidanceManeuverListener);
-    }
+    private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
+        @Override
+        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
+            super.onLaneInformation(list, roadElement);
+            /*
+            Log.d("Test", "=======================================================================================");
+            Log.d("Test", "Lane information");
+            Log.d("Test", "---------------------------------------------------------------------------------------");
+            for (LaneInformation laneInformation : list) {
+                Log.d("Test", "Lane Directions " + laneInformation.getDirections());
+                Log.d("Test", "Recommended " + laneInformation.getRecommendationState());
+            }
+            */
+        }
+    };
+    private NavigationManager.RealisticViewListener m_realisticViewListener = new NavigationManager.RealisticViewListener() {
+        @Override
+        public void onRealisticViewNextManeuver(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
+        }
+
+        @Override
+        public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
+            imageView.setVisibility(View.VISIBLE);
+            Bitmap bmp = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
+            imageView.setImageBitmap(bmp);
+        }
+
+        @Override
+        public void onRealisticViewHide() {
+            imageView.setVisibility(View.GONE);
+        }
+    };
 
     private void initMapFragment() {
         /* Locate the mapFragment UI element */
@@ -393,16 +412,82 @@ class MapFragmentView {
         mapLocalModel.setTexture(image); //an Image object
         mapLocalModel.setScale(5.0f);
         mapLocalModel.setDynamicScalingEnabled(true);
-        //mapLocalModel.setPitch(90f);
 
         m_map.addMapObject(mapLocalModel);
         return mapLocalModel;
     }
 
+    private void initJunctionView() {
+        imageView = m_activity.findViewById(R.id.junctionImageView);
+        imageView.setVisibility(View.GONE);
+    }
+
+    private void initGuidanceManeuverView(Route route) {
+        guidanceManeuverView = m_activity.findViewById(R.id.guidanceManeuverView);
+        guidanceManeuverPresenter = new GuidanceManeuverPresenter(m_activity.getApplicationContext(), m_navigationManager, route);
+        guidanceManeuverPresenter.addListener(guidanceManeuverListener);
+    }
+
+    public void shiftMapCenter(Map map) {
+        map.setTransformCenter(new PointF(
+                (float) (map.getWidth() * 0.5),
+                (float) (map.getHeight() * 0.8)
+        ));
+    }
+
+    public void resetMapCenter(Map map) {
+        map.setTransformCenter(new PointF(
+                (float) (map.getWidth() * 0.5),
+                (float) (map.getHeight() * 0.5)
+        ));
+    }
+
+    class LocalModelLoader {
+        InputStream objStream = m_activity.getResources().openRawResource(R.raw.arrow_modified);
+        Obj obj;
+
+        {
+            try {
+                obj = ObjReader.read(objStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        FloatBuffer getObjTexCoords() {
+            FloatBuffer texCoords = ObjData.getTexCoords(obj, 2);
+            FloatBuffer textCoordBuffer = FloatBuffer.allocate(texCoords.capacity());
+            while (texCoords.hasRemaining()) {
+                textCoordBuffer.put(texCoords.get());
+            }
+            return textCoordBuffer;
+
+        }
+
+        FloatBuffer getObjVertices() {
+            FloatBuffer vertices = ObjData.getVertices(obj);
+            FloatBuffer buff = FloatBuffer.allocate(vertices.capacity());
+            while (vertices.hasRemaining()) {
+                buff.put(vertices.get());
+            }
+            return buff;
+        }
+
+        IntBuffer getObjIndices() {
+            IntBuffer indices = ObjData.getFaceVertexIndices(obj);
+            IntBuffer vertIndicieBuffer = IntBuffer.allocate(indices.capacity());
+            while (indices.hasRemaining()) {
+                vertIndicieBuffer.put(indices.get());
+            }
+            return vertIndicieBuffer;
+        }
+    }
+
     private void startNavigation() {
+        resetMapCenter(m_map);
         m_naviControlButton.setText("Stop Navi");
         m_navigationManager.setMap(m_map);
-        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
+        m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
 
         /*
          * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
@@ -420,13 +505,13 @@ class MapFragmentView {
                 m_navigationManager.startNavigation(m_route);
                 startForegroundService();
             }
-
         });
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 guidanceManeuverPresenter.resume();
                 m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
                 m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+                isRoadView = true;
                 shiftMapCenter(m_map);
                 hudMapScheme(m_map);
                 m_map.setTilt(60);
@@ -439,7 +524,6 @@ class MapFragmentView {
                 }
                 startForegroundService();
             }
-
         });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
@@ -515,6 +599,7 @@ class MapFragmentView {
                     if (routeResults.get(0).getRoute() != null) {
                         m_route = routeResults.get(0).getRoute();
                         initGuidanceManeuverView(m_route);
+                        initJunctionView();
                         MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
                         mapRoute.setManeuverNumberVisible(true);
                         mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
@@ -533,119 +618,7 @@ class MapFragmentView {
                 }
             }
         });
-
-
     }
-
-    public void shiftMapCenter(Map map) {
-        map.setTransformCenter(new PointF(
-                (float) (map.getWidth() * 0.5),
-                (float) (map.getHeight() * 0.8)
-        ));
-    }
-
-    public void resetMapCenter(Map map) {
-        map.setTransformCenter(new PointF(
-                (float) (map.getWidth() * 0.5),
-                (float) (map.getHeight() * 0.5)
-        ));
-    }
-
-    class LocalModelLoader {
-        InputStream objStream = m_activity.getResources().openRawResource(R.raw.arrow_modified);
-        Obj obj;
-
-        {
-            try {
-                obj = ObjReader.read(objStream);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        FloatBuffer getObjTexCoords() {
-            FloatBuffer texCoords = ObjData.getTexCoords(obj, 2);
-            FloatBuffer textCoordBuffer = FloatBuffer.allocate(texCoords.capacity());
-            while (texCoords.hasRemaining()) {
-                textCoordBuffer.put(texCoords.get());
-            }
-            return textCoordBuffer;
-
-        }
-
-        FloatBuffer getObjVertices() {
-            FloatBuffer vertices = ObjData.getVertices(obj);
-            FloatBuffer buff = FloatBuffer.allocate(vertices.capacity());
-            while (vertices.hasRemaining()) {
-                buff.put(vertices.get());
-            }
-            return buff;
-        }
-
-        IntBuffer getObjIndices() {
-            IntBuffer indices = ObjData.getFaceVertexIndices(obj);
-            IntBuffer vertIndicieBuffer = IntBuffer.allocate(indices.capacity());
-            while (indices.hasRemaining()) {
-                vertIndicieBuffer.put(indices.get());
-            }
-            return vertIndicieBuffer;
-        }
-    }
-
-    private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
-        @Override
-        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
-            super.onLaneInformation(list, roadElement);
-            Log.d("Test", "=======================================================================================");
-            Log.d("Test", "Lane information");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            for (LaneInformation laneInformation : list) {
-                Log.d("Test", "Lane Directions " + laneInformation.getDirections());
-                Log.d("Test", "Recommended " + laneInformation.getRecommendationState());
-            }
-        }
-    };
-
-
-    private NavigationManager.RealisticViewListener m_realisticViewListener = new NavigationManager.RealisticViewListener() {
-        @Override
-        public void onRealisticViewNextManeuver(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            Log.d("Test", "=======================================================================================");
-            Log.d("Test", "Aspect Ratio: " + aspectRatio.toString());
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Junction Image");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Type: " + junction.getType().toString());
-            Log.d("Test", "Width: " + junction.getWidth());
-            Log.d("Test", "Height: " + junction.getHeight());
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Signpost Image");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Type: " + signpost.getType().toString());
-            Log.d("Test", "Width: " + signpost.getWidth());
-            Log.d("Test", "Height: " + signpost.getHeight());
-            Log.d("Test", "=======================================================================================");
-        }
-
-        @Override
-        public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            Log.d("Test", "=======================================================================================");
-            Log.d("Test", "Aspect Ratio: " + aspectRatio.toString());
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Junction Image");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Type: " + junction.getType().toString());
-            Log.d("Test", "Width: " + junction.getWidth());
-            Log.d("Test", "Height: " + junction.getHeight());
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Signpost Image");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            Log.d("Test", "Type: " + signpost.getType().toString());
-            Log.d("Test", "Width: " + signpost.getWidth());
-            Log.d("Test", "Height: " + signpost.getHeight());
-            Log.d("Test", "=======================================================================================");
-        }
-    };
 
     private void addNavigationListeners() {
         /*
