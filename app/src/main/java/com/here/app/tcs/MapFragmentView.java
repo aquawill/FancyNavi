@@ -42,8 +42,6 @@ import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapView;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
-import com.here.android.mpa.mapping.customization.CustomizableVariables;
-import com.here.android.mpa.mapping.customization.ZoomRange;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
@@ -195,34 +193,14 @@ class MapFragmentView {
             Log.d("Test RoadNumber()", m_navigationManager.getNextManeuver().getNextRoadNumber());
             Log.d("Test getTurn()", m_navigationManager.getNextManeuver().getTurn().toString());
             Log.d("Test getIcon()", m_navigationManager.getNextManeuver().getIcon().toString());
-            //Toast.makeText(m_activity, m_navigationManager.getNextManeuver().getTurn().toString() + " at " + m_navigationManager.getNextManeuver().getNextRoadName(), Toast.LENGTH_LONG).show();
-
-            /*
-            if(maneuver != null) {
-                Log.d("Test", "---------------------------------------------------------------------------------------");
-                Log.d("Test", "After Next Maneuver and Road information");
-                Log.d("Test", "---------------------------------------------------------------------------------------");
-                Log.d("Test getAfterNextManeuver()",maneuver.toString());
-                Log.d("Test getAfterNextManeuverDistance()", "Distance: " + m_navigationManager.getAfterNextManeuverDistance() + "m");
-                Log.d("Test getNextRoadName()", maneuver.getNextRoadName());
-                Log.d("Test getNextRoadNumber()", maneuver.getNextRoadNumber());
-                Log.d("Test getTurn()", maneuver.getTurn().toString());
-            }
-            */
             Log.d("Test", "=======================================================================================");
         }
     };
     private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-            /*
-            Log.d("Test Speed", "" + geoPosition.getSpeed() + "\tHeading: " + geoPosition.getHeading());
-            RoadElement roadElement = m_positioningManager.getRoadElement();
-            Log.d("Test RoadName", "" + roadElement.getRoadName() + "\tLaneNumber: " + roadElement.getNumberOfLanes());
-            Log.d("Test SpeedLimit", "" + roadElement.getSpeedLimit() + "\tLinkId: " + roadElement.getPermanentLinkId());
-            */
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
-            mapLocalModel.setRoll((float) geoPosition.getHeading() - 63);
+            mapLocalModel.setYaw((float) geoPosition.getHeading());
         }
 
         @Override
@@ -234,7 +212,6 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
             //Log.d("Test Speed", "" + geoPosition.getSpeed());
-
         }
     };
 
@@ -354,7 +331,7 @@ class MapFragmentView {
         if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
             map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT_GREY);
             map.setMapScheme(Map.Scheme.CARNAV_NIGHT_GREY);
-
+            /*
             m_colorScheme = map.getCustomizableScheme(m_colorSchemeName);
             ZoomRange range = new ZoomRange(0.0, 20.0);
             m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_WIDTH, 20, range);
@@ -383,7 +360,7 @@ class MapFragmentView {
             map.setLandmarksVisible(false);
             map.setExtrudedBuildingsVisible(false);
             map.setCartoMarkersVisible(false);
-
+            */
             EnumSet<Map.LayerCategory> invisibleLayerCategory = EnumSet.of(
                     Map.LayerCategory.ABSTRACT_CITY_MODEL
             );
@@ -415,7 +392,7 @@ class MapFragmentView {
         mapLocalModel.setTexture(image); //an Image object
         mapLocalModel.setScale(5.0f);
         mapLocalModel.setDynamicScalingEnabled(true);
-        mapLocalModel.setPitch(90f);
+        //mapLocalModel.setPitch(90f);
 
         m_map.addMapObject(mapLocalModel);
         return mapLocalModel;
@@ -451,7 +428,7 @@ class MapFragmentView {
                 m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
                 shiftMapCenter(m_map);
                 hudMapScheme(m_map);
-                m_map.setTilt(30);
+                m_map.setTilt(60);
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
                 m_mapFragment.setOnTouchListener(mapOnTouchListener);
                 try {
@@ -574,7 +551,7 @@ class MapFragmentView {
     }
 
     class LocalModelLoader {
-        InputStream objStream = m_activity.getResources().openRawResource(R.raw.arrow);
+        InputStream objStream = m_activity.getResources().openRawResource(R.raw.arrow_modified);
         Obj obj;
 
         {
