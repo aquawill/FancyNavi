@@ -154,6 +154,7 @@ class MapFragmentView {
             Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
             m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
             resetMapCenter(m_map);
+            m_map.removeMapObject(mapLocalModel);
             m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
             View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
             guidanceView.setVisibility(View.GONE);
