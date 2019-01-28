@@ -264,6 +264,7 @@ class MapFragmentView {
         public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
             imageView.setVisibility(View.VISIBLE);
             Bitmap bmp = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
+            //Bitmap bmp = junction.getBitmap();
             imageView.setImageBitmap(bmp);
         }
 
