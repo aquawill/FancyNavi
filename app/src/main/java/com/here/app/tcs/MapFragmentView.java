@@ -32,6 +32,8 @@ import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.guidance.SafetySpotNotification;
+import com.here.android.mpa.guidance.SafetySpotNotificationInfo;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceGuidanceOptions;
 import com.here.android.mpa.guidance.VoicePackage;
@@ -42,7 +44,6 @@ import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
-import com.here.android.mpa.mapping.MapView;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
@@ -86,7 +87,6 @@ class MapFragmentView {
     private Activity m_activity;
     private Button m_naviControlButton;
     Map m_map;
-    private MapView mapView;
     NavigationManager m_navigationManager;
     private PositioningManager m_positioningManager;
     private GeoBoundingBox m_geoBoundingBox;
@@ -97,13 +97,18 @@ class MapFragmentView {
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
 
-    public boolean isRoadView = false;
+    boolean isRoadView = false;
 
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
         public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
             guidanceManeuverView.setManeuverData(guidanceManeuverData);
+            if (guidanceManeuverData != null) {
+                //Log.d("Test", "guidanceManeuverData.getInfo1(): " + guidanceManeuverData.getInfo1());
+                //Log.d("Test", "guidanceManeuverData.getInfo2(): " + guidanceManeuverData.getInfo2());
+            }
+
         }
 
         @Override
@@ -111,8 +116,6 @@ class MapFragmentView {
             guidanceManeuverView.highLightManeuver(Color.BLUE);
         }
     };
-    boolean overView = false;
-
 
     MapFragmentView(Activity activity) {
         m_activity = activity;
@@ -137,7 +140,6 @@ class MapFragmentView {
                 resetMapCenter(m_map);
                 m_map.setTilt(0);
                 m_map.zoomTo(m_route.getBoundingBox(), Map.Animation.NONE, 0f);
-                overView = true;
             }
             return false;
         }
@@ -156,9 +158,10 @@ class MapFragmentView {
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
             Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
-            m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
+            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
             resetMapCenter(m_map);
             m_map.removeMapObject(mapLocalModel);
+            m_map.setTilt(0);
             m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
             View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
             guidanceView.setVisibility(View.GONE);
@@ -186,6 +189,8 @@ class MapFragmentView {
     private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
         @Override
         public void onNewInstructionEvent() {
+            Log.d("Test", "getNextManeuver().getRoadName(): " + m_navigationManager.getNextManeuver().getRoadName());
+            Log.d("Test", "getNextManeuver().getNextRoadName(): " + m_navigationManager.getNextManeuver().getNextRoadName());
         }
     };
     private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
@@ -201,6 +206,20 @@ class MapFragmentView {
 
         }
     };
+
+    private NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
+        @Override
+        public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
+            super.onSafetySpot(safetySpotNotification);
+            List<SafetySpotNotificationInfo> safetySpotInfos = safetySpotNotification.getSafetySpotNotificationInfos();
+            for (int i = 0; i < safetySpotInfos.size(); i++) {
+                SafetySpotNotificationInfo safetySpotInfo = safetySpotInfos.get(i);
+                Log.d("Test", "" + safetySpotInfo.getSafetySpot().getType().toString());
+            }
+
+        }
+    };
+
     private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
@@ -308,7 +327,8 @@ class MapFragmentView {
                             m_map = m_mapFragment.getMap();
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                             m_map.setTrafficInfoVisible(true);
-
+                            m_map.setSafetySpotsVisible(true);
+                            m_map.setExtrudedBuildingsVisible(false);
                             m_navigationManager = NavigationManager.getInstance();
                             m_positioningManager = PositioningManager.getInstance();
                             VoiceActivation voiceActivation = new VoiceActivation();
@@ -393,7 +413,7 @@ class MapFragmentView {
         /*Map Customization - End*/
     }
 
-    private MapLocalModel createPosition3dObj() throws IOException {
+    private MapLocalModel createPosition3dObj() {
         MapLocalModel mapLocalModel = new MapLocalModel();
         LocalModelLoader localModelLoader = new LocalModelLoader();
 
@@ -513,16 +533,27 @@ class MapFragmentView {
                 m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
                 m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
                 isRoadView = true;
+                m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
+                EnumSet<NavigationManager.NaturalGuidanceMode> naturalGuidanceModes = EnumSet.of(
+                        NavigationManager.NaturalGuidanceMode.JUNCTION,
+                        NavigationManager.NaturalGuidanceMode.STOP_SIGN,
+                        NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
+                );
+                m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
+                m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
                 shiftMapCenter(m_map);
                 hudMapScheme(m_map);
                 m_map.setTilt(60);
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
+                EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
+                        NavigationManager.AudioEvent.MANEUVER,
+                        NavigationManager.AudioEvent.ROUTE,
+                        NavigationManager.AudioEvent.SAFETY_SPOT,
+                        NavigationManager.AudioEvent.SPEED_LIMIT
+                );
+                m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
                 m_mapFragment.setOnTouchListener(mapOnTouchListener);
-                try {
-                    mapLocalModel = createPosition3dObj();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                mapLocalModel = createPosition3dObj();
                 startForegroundService();
             }
         });
@@ -559,8 +590,8 @@ class MapFragmentView {
         routePlan.setRouteOptions(routeOptionCarAllowHighway);
 
         ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-        waypointList.add(new GeoCoordinate(25.12967, 121.73993));
-        waypointList.add(new GeoCoordinate(25.06343, 121.5513));
+        waypointList.add(new GeoCoordinate(24.9964003, 121.500093));
+        waypointList.add(new GeoCoordinate(24.9752592, 121.396661));
         for (int i = 0; i < waypointList.size(); i++) {
             GeoCoordinate coord = waypointList.get(i);
             RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
@@ -602,7 +633,7 @@ class MapFragmentView {
                         initGuidanceManeuverView(m_route);
                         initJunctionView();
                         MapRoute mapRoute = new MapRoute(routeResults.get(0).getRoute());
-                        mapRoute.setManeuverNumberVisible(true);
+                        //mapRoute.setManeuverNumberVisible(true);
                         mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
                         mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
                         mapRoute.setTraveledColor(Color.DKGRAY);
@@ -630,6 +661,7 @@ class MapFragmentView {
         m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
         m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
         m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
+        m_navigationManager.addSafetySpotListener(new WeakReference<>(safetySpotListener));
         m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
         m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
         m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
