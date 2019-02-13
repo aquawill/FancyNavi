@@ -51,7 +51,6 @@ import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.PositionIndicator;
-import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
@@ -83,14 +82,7 @@ import de.javagl.obj.ObjReader;
 import static com.here.app.tcs.MainActivity.updatedLatLng;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
-//HERE SDK UI KIT components
 
-/**
- * This class encapsulates the properties and functionality of the Map view.It also triggers a
- * turn-by-turn navigation from HERE Burnaby office to Langley BC.There is a sample voice skin
- * bundled within the SDK package to be used out-of-box, please refer to the Developer's guide for
- * the usage.
- */
 class MapFragmentView {
     private MapFragment m_mapFragment;
     private Activity m_activity;
@@ -120,7 +112,6 @@ class MapFragmentView {
                 //Log.d("Test", "guidanceManeuverData.getInfo1(): " + guidanceManeuverData.getInfo1());
                 //Log.d("Test", "guidanceManeuverData.getInfo2(): " + guidanceManeuverData.getInfo2());
             }
-
         }
 
         @Override
@@ -287,8 +278,7 @@ class MapFragmentView {
             m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
             View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
             guidanceView.setVisibility(View.GONE);
-            FleetConnectivityJobFinishedEvent fleetConnectivityJobFinishedEvent = new FleetConnectivityJobFinishedEvent();
-            fleetConnectivityService.sendEvent(fleetConnectivityJobFinishedEvent);
+            fleetConnectivityService.sendEvent(new FleetConnectivityJobFinishedEvent());
             stopForegroundService();
         }
 
@@ -348,7 +338,6 @@ class MapFragmentView {
 
     private void hudMapScheme(Map map) {
         /*Map Customization - Start*/
-        CustomizableScheme m_colorScheme;
         String m_colorSchemeName = "colorScheme";
         if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
             map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT_GREY);
@@ -389,7 +378,9 @@ class MapFragmentView {
             map.setVisibleLayers(invisibleLayerCategory, false);
 
         } else {
-            map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
+            if (map != null) {
+                map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
+            }
         }
         /*Map Customization - End*/
     }
@@ -430,14 +421,14 @@ class MapFragmentView {
         guidanceManeuverPresenter.addListener(guidanceManeuverListener);
     }
 
-    public void shiftMapCenter(Map map) {
+    void shiftMapCenter(Map map) {
         map.setTransformCenter(new PointF(
                 (float) (map.getWidth() * 0.5),
                 (float) (map.getHeight() * 0.8)
         ));
     }
 
-    public void resetMapCenter(Map map) {
+    private void resetMapCenter(Map map) {
         map.setTransformCenter(new PointF(
                 (float) (map.getWidth() * 0.5),
                 (float) (map.getHeight() * 0.5)
