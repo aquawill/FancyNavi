@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <!--To allow starting foreground services on Android P+ -->
     <!--https://developer.android.com/preview/behavior-changes#fg-svc -->
@@ -38,15 +39,16 @@
             android:name="com.here.android.maps.license.key"
             android:value="fOkXlR1JaX6qFHaUY2kVs/9ZVv/j0O2+4AghOqOa0Oj63cSXnyuPTk9werQGNQ1vvpXQ69dKbmLIJNcBQMFD+Hid96dJ2aAIKDd0KVVD0t4hQCigeaBvxVvlrABCN2i48/IDG6+IjrQjUQAdp/b582jGry7enVcCR90OXxbmCulQX2U0DjB3Agftp2f85TTDCYrpwDKexg4ggTR1nw6idfiIUWt1ggh9HzvnkMjgadkgwYjQl4zZKiKtyMbow2awK42fas6k2qQwB41A+61hQl5Oc8GRIUBQVVXELleDBJkSANCOnUxmxT3akMu1iGN+Udh93EgxFSdditIAbWcBrcaavqag+i7VvnXINGA72GallkD2n3qgk6PXwXv3fwQ2TYjZW3mlrDKlezTbl4Yp1uU7D7Pdq3IWZqgAq8wmKwL51gU+8SM/WN7AkxUy2uMUnLOwMA9bwXIpK4XpO44pb//SLILlw46Rrf/ShbYXjw+5nY6uwjAwllNQeefY9W+LzUa5LNEbA6G8LBIWfi7XYBCpPgCRquYHkfzApCvjdlz6DerUNJlLZFGpSIayG0qabl1ttrc2WnZUzGVARA7Y6BdDEvyyIaeXioYpqRTcOywKseBjD9fIIHnqv0QjCgjoBKTSgVXdcS5SV/mQxcQsVLEDtQQje1t03ng/xZFaDAA=" />
 
-         <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
-         Do not reuse HERE SDK defaults.-->
+        <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
+        Do not reuse HERE SDK defaults.-->
         <meta-data
             android:name="INTENT_NAME"
             android:value="HERE_Android_TBT" />
+
         <service
             android:name="com.here.android.mpa.service.MapService"
-            android:label="HERE_Android_TBT"
-            android:exported="false">
+            android:exported="false"
+            android:label="HERE_Android_TBT">
             <intent-filter>
                 <action android:name="HERE_Android_TBT"></action>
             </intent-filter>
