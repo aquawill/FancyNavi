@@ -1,6 +1,5 @@
 package com.here.app.tcs;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,6 +11,7 @@ import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,12 +30,6 @@ import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
-import com.here.android.mpa.fce.FleetConnectivityError;
-import com.here.android.mpa.fce.FleetConnectivityEvent;
-import com.here.android.mpa.fce.FleetConnectivityJobFinishedEvent;
-import com.here.android.mpa.fce.FleetConnectivityJobStartedEvent;
-import com.here.android.mpa.fce.FleetConnectivityMessage;
-import com.here.android.mpa.fce.FleetConnectivityService;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.SafetySpotNotification;
@@ -46,11 +40,11 @@ import com.here.android.mpa.guidance.VoicePackage;
 import com.here.android.mpa.guidance.VoiceSkin;
 import com.here.android.mpa.mapping.LocalMesh;
 import com.here.android.mpa.mapping.Map;
-import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
-import com.here.android.mpa.mapping.PositionIndicator;
+import com.here.android.mpa.mapping.SupportMapFragment;
+import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
@@ -71,7 +65,6 @@ import java.lang.ref.WeakReference;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -79,13 +72,21 @@ import de.javagl.obj.Obj;
 import de.javagl.obj.ObjData;
 import de.javagl.obj.ObjReader;
 
-import static com.here.app.tcs.MainActivity.updatedLatLng;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
+//HERE SDK UI KIT components
 
+/**
+ * This class encapsulates the properties and functionality of the Map view.It also triggers a
+ * turn-by-turn navigation from HERE Burnaby office to Langley BC.There is a sample voice skin
+ * bundled within the SDK package to be used out-of-box, please refer to the Developer's guide for
+ * the usage.
+ */
 class MapFragmentView {
-    private MapFragment m_mapFragment;
-    private Activity m_activity;
+    //private MapFragment supportMapFragment; //Deprecated
+    private SupportMapFragment supportMapFragment;
+    //private Activity m_activity; //Deprecated
+    private AppCompatActivity m_activity;
     private Button m_naviControlButton;
     Map m_map;
     NavigationManager m_navigationManager;
@@ -94,12 +95,9 @@ class MapFragmentView {
     private Route m_route;
     private MapLocalModel mapLocalModel;
     private boolean m_foregroundServiceStarted;
-    private PositionIndicator positionIndicator;
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
-    private GeoCoordinate routeDestination;
-
 
     boolean isRoadView = false;
 
@@ -112,6 +110,7 @@ class MapFragmentView {
                 //Log.d("Test", "guidanceManeuverData.getInfo1(): " + guidanceManeuverData.getInfo1());
                 //Log.d("Test", "guidanceManeuverData.getInfo2(): " + guidanceManeuverData.getInfo2());
             }
+
         }
 
         @Override
@@ -120,10 +119,71 @@ class MapFragmentView {
         }
     };
 
-    MapFragmentView(Activity activity) {
+    MapFragmentView(AppCompatActivity activity) {
         m_activity = activity;
-        initMapFragment();
+        initSupportMapFragment();
         initNaviControlButton();
+    }
+
+    private void initSupportMapFragment() {
+        /* Locate the mapFragment UI element */
+        supportMapFragment = getMapFragment();
+        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_RIGHT);
+        // Set path of isolated disk cache
+        String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
+        // Retrieve intent name from manifest
+        String intentName = "";
+        try {
+            ApplicationInfo ai = m_activity.getPackageManager().getApplicationInfo(m_activity.getPackageName(), PackageManager.GET_META_DATA);
+            Bundle bundle = ai.metaData;
+            intentName = bundle.getString("INTENT_NAME");
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
+        }
+
+
+        boolean success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
+        if (!success) {
+            // Setting the isolated disk cache was not successful, please check if the path is valid and
+            // ensure that it does not match the default location
+            // (getExternalStorageDirectory()/.here-maps).
+            // Also, ensure the provided intent name does not match the default intent name.
+        } else {
+            if (supportMapFragment != null) {
+                /* Initialize the MapFragment, results will be given via the called back. */
+                supportMapFragment.init(new OnEngineInitListener() {
+                    @Override
+                    public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
+                        if (error == Error.NONE) {
+                            m_map = supportMapFragment.getMap();
+                            m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
+                            //m_map.setTrafficInfoVisible(true);
+                            m_map.setSafetySpotsVisible(true);
+                            m_map.setExtrudedBuildingsVisible(false);
+                            m_positioningManager = PositioningManager.getInstance();
+                            m_positioningManager.addListener(new WeakReference<>(positionListener));
+
+                            EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
+                                    PositioningManager.LogType.RAW,
+                                    PositioningManager.LogType.DATA_SOURCE
+                            );
+
+                            m_positioningManager.setLogType(logTypes);
+                            m_map.getPositionIndicator().setVisible(true);
+                            if (m_positioningManager != null) {
+                                m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
+                            }
+                            //VoiceActivation voiceActivation = new VoiceActivation();
+                            //voiceActivation.downloadCatalogAndSkin();
+                        } else {
+                            Toast.makeText(m_activity,
+                                    "ERROR: Cannot initialize Map with error " + error,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        }
     }
 
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
@@ -147,16 +207,45 @@ class MapFragmentView {
             return false;
         }
     };
-    private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
+    private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
-        public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-
+        public void onRunningStateChanged() {
+            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
         }
 
+        @Override
+        public void onNavigationModeChanged() {
+            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
+        }
 
         @Override
-        public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
+        public void onEnded(NavigationManager.NavigationMode navigationMode) {
+            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
+            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+            resetMapCenter(m_map);
+            m_map.removeMapObject(mapLocalModel);
+            m_map.setTilt(0);
+            m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
+            View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
+            guidanceView.setVisibility(View.GONE);
+            stopForegroundService();
+        }
 
+        @Override
+        public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
+            //Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
+            Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
+        }
+
+        @Override
+        public void onRouteUpdated(Route route) {
+            Toast.makeText(m_activity, "Route updated", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onCountryInfo(String s, String s1) {
+            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
+                    Toast.LENGTH_SHORT).show();
         }
     };
 
@@ -167,14 +256,20 @@ class MapFragmentView {
             Log.d("Test", "getNextManeuver().getNextRoadName(): " + m_navigationManager.getNextManeuver().getNextRoadName());
         }
     };
-    private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
+
+    private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
         @Override
-        public void onPositionUpdated(GeoPosition geoPosition) {
-            //Log.d("Test Speed", "" + geoPosition.getSpeed());
-            if (mapLocalModel != null) {
-                mapLocalModel.setAnchor(geoPosition.getCoordinate());
-                mapLocalModel.setYaw((float) geoPosition.getHeading());
-            }
+        public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
+            Log.d("Test", "Position: " + geoPosition.getCoordinate() + " Method: " + locationMethod + " Speed: " + geoPosition.getSpeed());
+            Toast.makeText(m_activity, "Position: " + geoPosition.getCoordinate() + " Method: " + locationMethod + " Speed: " + geoPosition.getSpeed(), Toast.LENGTH_SHORT).show();
+            m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
+        }
+
+
+        @Override
+        public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
+            Log.d("Test", "locationMethod: " + locationMethod + " locationStatus: " + locationStatus);
+
         }
     };
 
@@ -190,13 +285,21 @@ class MapFragmentView {
 
         }
     };
-    private FleetConnectivityService fleetConnectivityService;
+
+    private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
+        @Override
+        public void onPositionUpdated(GeoPosition geoPosition) {
+            //Log.d("Test Speed", "" + geoPosition.getSpeed());
+            mapLocalModel.setAnchor(geoPosition.getCoordinate());
+            mapLocalModel.setYaw((float) geoPosition.getHeading());
+        }
+    };
 
     // Google has deprecated android.app.Fragment class. It is used in current SDK implementation.
     // Will be fixed in future SDK version.
     @SuppressWarnings("deprecation")
-    private MapFragment getMapFragment() {
-        return (MapFragment) m_activity.getFragmentManager().findFragmentById(R.id.mapFragmentView);
+    private SupportMapFragment getMapFragment() {
+        return (SupportMapFragment) m_activity.getSupportFragmentManager().findFragmentById(R.id.mapFragmentView);
     }
 
     /*
@@ -257,87 +360,35 @@ class MapFragmentView {
             imageView.setVisibility(View.GONE);
         }
     };
-    private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
-        @Override
-        public void onRunningStateChanged() {
-            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
-        }
 
-        @Override
-        public void onNavigationModeChanged() {
-            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
-        }
 
-        @Override
-        public void onEnded(NavigationManager.NavigationMode navigationMode) {
-            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
-            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
-            resetMapCenter(m_map);
-            m_map.removeMapObject(mapLocalModel);
-            m_map.setTilt(0);
-            m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
-            View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
-            guidanceView.setVisibility(View.GONE);
-            fleetConnectivityService.sendEvent(new FleetConnectivityJobFinishedEvent());
-            stopForegroundService();
-        }
 
-        @Override
-        public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            //Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
-            Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
-        }
 
-        @Override
-        public void onRouteUpdated(Route route) {
-            Toast.makeText(m_activity, "Route updated", Toast.LENGTH_SHORT).show();
-        }
+    private void initNaviControlButton() {
+        m_naviControlButton = m_activity.findViewById(R.id.naviCtrlButton);
+        m_naviControlButton.setText("Start Navi");
+        m_naviControlButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (m_route == null) {
+                    m_navigationManager = NavigationManager.getInstance();
+                    createRoute();
 
-        @Override
-        public void onCountryInfo(String s, String s1) {
-            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
-                    Toast.LENGTH_SHORT).show();
-        }
-    };
-    private final FleetConnectivityService.Listener mFleetConnectivityListener = new FleetConnectivityService.Listener() {
-
-        @Override
-        public void onMessageReceived(FleetConnectivityMessage fleetConnectivityMessage) {
-            Log.d("Test FCE", fleetConnectivityMessage.getJobId());
-            Log.d("Test FCE", fleetConnectivityMessage.getDispatcherId());
-            Log.d("Test FCE", fleetConnectivityMessage.getAssetId());
-            Log.d("Test FCE", fleetConnectivityMessage.getMessage());
-            Log.d("Test FCE", String.valueOf(fleetConnectivityMessage.getContent()));
-            FleetConnectivityJobStartedEvent fleetConnectivityJobStartedEvent = new FleetConnectivityJobStartedEvent();
-            fleetConnectivityJobStartedEvent.setJobId(fleetConnectivityMessage.getJobId());
-            boolean startService = fleetConnectivityService.sendEvent(fleetConnectivityJobStartedEvent);
-            if (startService) {
-                String dest = fleetConnectivityMessage.getContent().get("destination");
-                Log.d("Test FCE", Arrays.toString(fleetConnectivityMessage.getContent().keySet().toArray()));
-                Log.d("Test FCE", Arrays.toString(fleetConnectivityMessage.getContent().values().toArray()));
-                ArrayList<String> dest_split = new ArrayList<>();
-                if (dest != null) {
-                    dest_split.add(dest.split(",")[0]);
-                    dest_split.add(dest.split(",")[1]);
+                } else {
+                    m_navigationManager.stop();
+                    m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
+                    m_naviControlButton.setText("Start Navi");
+                    m_route = null;
+                    guidanceManeuverPresenter.pause();
+                    m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.GONE);
                 }
-                double dest_lat = Double.parseDouble(dest_split.get(0));
-                double dest_lng = Double.parseDouble(dest_split.get(1));
-                routeDestination = new GeoCoordinate(dest_lat, dest_lng);
-                createRoute(updatedLatLng, routeDestination);
-            } else {
-                Log.d("Test FCE", "job failed to start.");
             }
-
-        }
-
-        @Override
-        public void onEventAcknowledged(FleetConnectivityEvent fleetConnectivityEvent, FleetConnectivityError fleetConnectivityError) {
-
-        }
-    };
+        });
+    }
 
     private void hudMapScheme(Map map) {
         /*Map Customization - Start*/
+        CustomizableScheme m_colorScheme;
         String m_colorSchemeName = "colorScheme";
         if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
             map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT_GREY);
@@ -378,9 +429,7 @@ class MapFragmentView {
             map.setVisibleLayers(invisibleLayerCategory, false);
 
         } else {
-            if (map != null) {
-                map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
-            }
+            map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
         }
         /*Map Customization - End*/
     }
@@ -476,101 +525,6 @@ class MapFragmentView {
         }
     }
 
-    private void initMapFragment() {
-        /* Locate the mapFragment UI element */
-        m_mapFragment = getMapFragment();
-        m_mapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_RIGHT);
-        // Set path of isolated disk cache
-        String diskCacheRoot = Environment.getExternalStorageDirectory().getPath()
-                + File.separator + ".isolated-here-maps";
-        // Retrieve intent name from manifest
-        String intentName = "";
-        try {
-            ApplicationInfo ai = m_activity.getPackageManager().getApplicationInfo(m_activity.getPackageName(), PackageManager.GET_META_DATA);
-            Bundle bundle = ai.metaData;
-            intentName = bundle.getString("INTENT_NAME");
-        } catch (PackageManager.NameNotFoundException e) {
-            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
-        }
-
-
-        boolean success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
-        if (!success) {
-            // Setting the isolated disk cache was not successful, please check if the path is valid and
-            // ensure that it does not match the default location
-            // (getExternalStorageDirectory()/.here-maps).
-            // Also, ensure the provided intent name does not match the default intent name.
-        } else {
-            if (m_mapFragment != null) {
-                /* Initialize the MapFragment, results will be given via the called back. */
-                m_mapFragment.init(new OnEngineInitListener() {
-                    @Override
-                    public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
-                        if (error == Error.NONE) {
-                            m_map = m_mapFragment.getMap();
-                            Log.d("Test", "" + updatedLatLng.toString());
-                            m_map.setCenter(updatedLatLng, Map.Animation.NONE);
-                            m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
-                            m_map.setTrafficInfoVisible(true);
-                            m_map.setSafetySpotsVisible(true);
-                            m_map.setExtrudedBuildingsVisible(false);
-                            m_navigationManager = NavigationManager.getInstance();
-                            m_navigationManager.startTracking();
-                            m_positioningManager = PositioningManager.getInstance();
-                            m_map.getPositionIndicator().setVisible(true);
-                            VoiceActivation voiceActivation = new VoiceActivation();
-                            voiceActivation.downloadCatalogAndSkin();
-                            fceStart();
-                        } else {
-                            Log.d("Test", "" + error);
-                            Toast.makeText(m_activity,
-                                    "ERROR: Cannot initialize Map with error " + error,
-                                    Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-            }
-        }
-    }
-
-    private void initNaviControlButton() {
-        m_naviControlButton = m_activity.findViewById(R.id.naviCtrlButton);
-        m_naviControlButton.setText("Start Navi");
-        m_naviControlButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (m_route == null) {
-                    createRoute(updatedLatLng, routeDestination);
-
-                } else {
-                    m_navigationManager.stop();
-                    m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
-                    m_naviControlButton.setText("Start Navi");
-                    m_route = null;
-                    guidanceManeuverPresenter.pause();
-                    m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.GONE);
-                }
-            }
-        });
-    }
-
-    private void addNavigationListeners() {
-        /*
-         * Register a NavigationManagerEventListener to monitor the status change on
-         * NavigationManager
-         */
-        m_activity.findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
-        m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
-        m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
-        m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
-        m_navigationManager.addSafetySpotListener(new WeakReference<>(safetySpotListener));
-        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
-        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
-        m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
-        m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
-        m_positioningManager.addListener(new WeakReference<>(positionListener));
-    }
-
     private void startNavigation() {
         resetMapCenter(m_map);
         m_naviControlButton.setText("Stop Navi");
@@ -609,7 +563,7 @@ class MapFragmentView {
                 m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
                 m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
                 shiftMapCenter(m_map);
-                hudMapScheme(m_map);
+                //hudMapScheme(m_map);
                 m_map.setTilt(60);
                 m_navigationManager.simulate(m_route, simulationSpeedMs);
                 EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
@@ -619,8 +573,7 @@ class MapFragmentView {
                         NavigationManager.AudioEvent.SPEED_LIMIT
                 );
                 m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
-                m_mapFragment.setOnTouchListener(mapOnTouchListener);
-                m_map.getPositionIndicator().setVisible(false);
+                supportMapFragment.setOnTouchListener(mapOnTouchListener);
                 mapLocalModel = createPosition3dObj();
                 startForegroundService();
             }
@@ -636,7 +589,7 @@ class MapFragmentView {
         addNavigationListeners();
     }
 
-    private void createRoute(GeoCoordinate origination, GeoCoordinate destination) {
+    private void createRoute() {
         /* Initialize a CoreRouter */
         CoreRouter coreRouter = new CoreRouter();
 
@@ -658,8 +611,14 @@ class MapFragmentView {
         routePlan.setRouteOptions(routeOptionCarAllowHighway);
 
         ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-        waypointList.add(origination);
-        waypointList.add(destination);
+        //waypointList.add(new GeoCoordinate(24.9964003, 121.500093));
+        //waypointList.add(new GeoCoordinate(24.9752592, 121.396661));
+        waypointList.add(new GeoCoordinate(29.3616179, 47.9788175));
+        waypointList.add(new GeoCoordinate(29.3739165, 47.9940586));
+        waypointList.add(new GeoCoordinate(29.3746512, 47.9948909));
+        waypointList.add(new GeoCoordinate(29.3788850, 47.9803288));
+        waypointList.add(new GeoCoordinate(29.3782966, 47.9798253));
+        waypointList.add(new GeoCoordinate(29.3616227, 47.978569));
         for (int i = 0; i < waypointList.size(); i++) {
             GeoCoordinate coord = waypointList.get(i);
             RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
@@ -710,8 +669,7 @@ class MapFragmentView {
                         m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
                         startNavigation();
                     } else {
-                        Toast.makeText(m_activity,
-                                "Error:route results returned is not valid", Toast.LENGTH_LONG).show();
+                        Toast.makeText(m_activity, "Error:route results returned is not valid", Toast.LENGTH_LONG).show();
                     }
                 } else {
                     Toast.makeText(m_activity, "Error:route calculation returned error code: " + routingError, Toast.LENGTH_LONG).show();
@@ -720,18 +678,22 @@ class MapFragmentView {
         });
     }
 
-    private void fceStart() {
-        fleetConnectivityService = FleetConnectivityService.getInstance();
-        fleetConnectivityService.setDispatcherId("DispatcherId-2");
-        fleetConnectivityService.setAssetId("AssetId-2");
-        fleetConnectivityService.setListener(mFleetConnectivityListener);
-        if (fleetConnectivityService.start()) {
-            Log.d("Test FCE", "FCE started.");
-        } else {
-            Log.d("Test FCE", "FCE failed.");
-        }
-    }
+    private void addNavigationListeners() {
+        /*
+         * Register a NavigationManagerEventListener to monitor the status change on
+         * NavigationManager
+         */
+        m_activity.findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
+        m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
+        m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
+        m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
+        m_navigationManager.addSafetySpotListener(new WeakReference<>(safetySpotListener));
+        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
+        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
+        m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
+        m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
 
+    }
 
     class VoiceActivation {
         VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();

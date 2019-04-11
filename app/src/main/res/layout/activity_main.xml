@@ -25,7 +25,7 @@
 
     <fragment
         android:id="@+id/mapFragmentView"
-        class="com.here.android.mpa.mapping.MapFragment"
+        class="com.here.android.mpa.mapping.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 

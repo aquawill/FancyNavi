@@ -16,7 +16,7 @@
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:label="AndroidTBT"
+        android:label="AndroidSdkTest"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
@@ -31,13 +31,13 @@
          at https://developer.here.com/develop/mobile-sdks-->
         <meta-data
             android:name="com.here.android.maps.appid"
-            android:value="WYLi6ewvJcS9G8FQoM8i" />
+            android:value="1v4bYi8JuZ1N1XJdGJuR" />
         <meta-data
             android:name="com.here.android.maps.apptoken"
-            android:value="l6MS1rmpXhHSehgIds6WiA" />
+            android:value="-k4AO57zcSA5Gv8S8122Xg" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="fOkXlR1JaX6qFHaUY2kVs/9ZVv/j0O2+4AghOqOa0Oj63cSXnyuPTk9werQGNQ1vvpXQ69dKbmLIJNcBQMFD+Hid96dJ2aAIKDd0KVVD0t4hQCigeaBvxVvlrABCN2i48/IDG6+IjrQjUQAdp/b582jGry7enVcCR90OXxbmCulQX2U0DjB3Agftp2f85TTDCYrpwDKexg4ggTR1nw6idfiIUWt1ggh9HzvnkMjgadkgwYjQl4zZKiKtyMbow2awK42fas6k2qQwB41A+61hQl5Oc8GRIUBQVVXELleDBJkSANCOnUxmxT3akMu1iGN+Udh93EgxFSdditIAbWcBrcaavqag+i7VvnXINGA72GallkD2n3qgk6PXwXv3fwQ2TYjZW3mlrDKlezTbl4Yp1uU7D7Pdq3IWZqgAq8wmKwL51gU+8SM/WN7AkxUy2uMUnLOwMA9bwXIpK4XpO44pb//SLILlw46Rrf/ShbYXjw+5nY6uwjAwllNQeefY9W+LzUa5LNEbA6G8LBIWfi7XYBCpPgCRquYHkfzApCvjdlz6DerUNJlLZFGpSIayG0qabl1ttrc2WnZUzGVARA7Y6BdDEvyyIaeXioYpqRTcOywKseBjD9fIIHnqv0QjCgjoBKTSgVXdcS5SV/mQxcQsVLEDtQQje1t03ng/xZFaDAA=" />
+            android:value="eCOQ+mKrGOW2r4gTMWhc3bydsS/71XSUAGjywXeg9p9XuCEd1b5Gyche/NCqRGyn2UlxlNSs1di0hoAzR8ZqBzqKlgbtUag3fyhBqgmR976RAg8sPTe7wn8dBdPGzkI8X6lgcyl137sOnIqSg4xzvNdErsrQW0lNvA2jUUE/KrxJjgBzSkkel8W/79lmIsT81cHheI5nj61JGNr1qcbfuahu8P8rhimbNS7uo3lIGEwU3dvyzkYldIX9WyE0SPmQgvguXAwK2bs/GR/0eOJ30a2yZAxWhfEWJu2j5RMDvPwwPRt4f91qRA0A9oaltNoDtcUePYDMAxtBwvMMayLqLnm3+cwSwdq2d92TSPKrd6KuEyYc0man/Hb+sWlugQYnAri1ZzP2Kimd8Vbp1/QsvnjNaiY00mtp81RnGChGr4qMJQHkzlNKhsKap0fXzJ9YLOjJP9ICQnOKQ2zMEMq7qAdqtfhEBtjB/1q/pCR4uT2k7D/ihsrrmsd6v5WaB+bwI5koKqZBCavpxAyKBQ8re/KckJC1CvERbLeyYpfrinEAxQE+VlpYi/5P2D5ehV+/rdohBUf31xxs0NoBZ1FzbMw4bbBlfhj9d+JnsAOQFPpu/+akHMVR7HtEXK//+v/bpO8R2LFLbJvhs/gGyp2NE66y8d+8VcMcuGol7Gxtv9I=" />
 
         <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
         Do not reuse HERE SDK defaults.-->

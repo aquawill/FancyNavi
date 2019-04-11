@@ -125,7 +125,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onLocationChanged(Location location) {
-        updatedLatLng = new GeoCoordinate(location.getLatitude(), location.getLongitude());
+        //updatedLatLng = new GeoCoordinate(location.getLatitude(), location.getLongitude());
     }
 
     public void getLastLocation() {
