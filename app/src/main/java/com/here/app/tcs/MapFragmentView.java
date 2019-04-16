@@ -26,6 +26,7 @@ import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
+import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
@@ -100,6 +101,7 @@ class MapFragmentView {
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
 
     boolean isRoadView = false;
+    boolean isRouteOverView = false;
 
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
@@ -110,7 +112,6 @@ class MapFragmentView {
                 //Log.d("Test", "guidanceManeuverData.getInfo1(): " + guidanceManeuverData.getInfo1());
                 //Log.d("Test", "guidanceManeuverData.getInfo2(): " + guidanceManeuverData.getInfo2());
             }
-
         }
 
         @Override
@@ -142,7 +143,7 @@ class MapFragmentView {
         }
 
 
-        boolean success = com.here.android.mpa.common.MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
+        boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
         if (!success) {
             // Setting the isolated disk cache was not successful, please check if the path is valid and
             // ensure that it does not match the default location
@@ -153,7 +154,7 @@ class MapFragmentView {
                 /* Initialize the MapFragment, results will be given via the called back. */
                 supportMapFragment.init(new OnEngineInitListener() {
                     @Override
-                    public void onEngineInitializationCompleted(OnEngineInitListener.Error error) {
+                    public void onEngineInitializationCompleted(Error error) {
                         if (error == Error.NONE) {
                             m_map = supportMapFragment.getMap();
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
@@ -162,7 +163,7 @@ class MapFragmentView {
                             m_map.setExtrudedBuildingsVisible(false);
                             m_positioningManager = PositioningManager.getInstance();
                             m_positioningManager.addListener(new WeakReference<>(positionListener));
-
+                            
                             EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
                                     PositioningManager.LogType.RAW,
                                     PositioningManager.LogType.DATA_SOURCE
@@ -173,8 +174,8 @@ class MapFragmentView {
                             if (m_positioningManager != null) {
                                 m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
                             }
-                            //VoiceActivation voiceActivation = new VoiceActivation();
-                            //voiceActivation.downloadCatalogAndSkin();
+                            VoiceActivation voiceActivation = new VoiceActivation();
+                            voiceActivation.downloadCatalogAndSkin();
                         } else {
                             Toast.makeText(m_activity,
                                     "ERROR: Cannot initialize Map with error " + error,
@@ -261,7 +262,7 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             Log.d("Test", "Position: " + geoPosition.getCoordinate() + " Method: " + locationMethod + " Speed: " + geoPosition.getSpeed());
-            Toast.makeText(m_activity, "Position: " + geoPosition.getCoordinate() + " Method: " + locationMethod + " Speed: " + geoPosition.getSpeed(), Toast.LENGTH_SHORT).show();
+            //Toast.makeText(m_activity, "Position: " + geoPosition.getCoordinate() + " Method: " + locationMethod + " Speed: " + geoPosition.getSpeed(), Toast.LENGTH_SHORT).show();
             m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
         }
 
@@ -286,12 +287,22 @@ class MapFragmentView {
         }
     };
 
+    private GeoPosition previousKnownPosition;
+
     private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
             //Log.d("Test Speed", "" + geoPosition.getSpeed());
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
             mapLocalModel.setYaw((float) geoPosition.getHeading());
+            previousKnownPosition = geoPosition;
+            if (!isRouteOverView){
+                if(!geoPosition.equals(previousKnownPosition)){
+                    m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
+                }
+
+            }
+
         }
     };
 
@@ -362,8 +373,6 @@ class MapFragmentView {
     };
 
 
-
-
     private void initNaviControlButton() {
         m_naviControlButton = m_activity.findViewById(R.id.naviCtrlButton);
         m_naviControlButton.setText("Start Navi");
@@ -373,7 +382,6 @@ class MapFragmentView {
                 if (m_route == null) {
                     m_navigationManager = NavigationManager.getInstance();
                     createRoute();
-
                 } else {
                     m_navigationManager.stop();
                     m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
@@ -381,6 +389,7 @@ class MapFragmentView {
                     m_route = null;
                     guidanceManeuverPresenter.pause();
                     m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.GONE);
+                    m_map.getPositionIndicator().setVisible(true);
                 }
             }
         });
@@ -525,14 +534,47 @@ class MapFragmentView {
         }
     }
 
+    private void intoNavigationMode(){
+        isRouteOverView = true;
+        m_map.getPositionIndicator().setVisible(false);
+        guidanceManeuverPresenter.resume();
+        m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
+        m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+        isRoadView = true;
+        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
+        EnumSet<NavigationManager.NaturalGuidanceMode> naturalGuidanceModes = EnumSet.of(
+                NavigationManager.NaturalGuidanceMode.JUNCTION,
+                NavigationManager.NaturalGuidanceMode.STOP_SIGN,
+                NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
+        );
+        m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
+        m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
+        shiftMapCenter(m_map);
+        //hudMapScheme(m_map);
+        m_map.setTilt(60);
+        m_navigationManager.startNavigation(m_route);
+        m_positioningManager.setMapMatchingEnabled(true);
+        EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
+                NavigationManager.AudioEvent.MANEUVER,
+                NavigationManager.AudioEvent.ROUTE,
+                NavigationManager.AudioEvent.SAFETY_SPOT,
+                NavigationManager.AudioEvent.SPEED_LIMIT
+        );
+        m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
+        supportMapFragment.setOnTouchListener(mapOnTouchListener);
+        mapLocalModel = createPosition3dObj();
+    }
+
     private void startNavigation() {
         resetMapCenter(m_map);
         m_naviControlButton.setText("Stop Navi");
         m_navigationManager.setMap(m_map);
         m_map.zoomTo(m_geoBoundingBox, Map.Animation.NONE, 0f);
+        isRouteOverView = true;
+
 
         /*
-         * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
+        * Start the turn-by-turn navigation.Please note if the transport mode of the passed-in
          * route is pedestrian, the NavigationManager automatically triggers the guidance which is
          * suitable for walking. Simulation and tracking modes can also be launched at this moment
          * by calling either simulate() or startTracking()
@@ -544,37 +586,17 @@ class MapFragmentView {
         alertDialogBuilder.setMessage("Choose Mode");
         alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
-                m_navigationManager.startNavigation(m_route);
+                intoNavigationMode();
+                NavigationManager.Error error = m_navigationManager.startNavigation(m_route);
+                Toast.makeText(m_activity, "Error: " + error.toString(), Toast.LENGTH_SHORT).show();
                 startForegroundService();
             }
         });
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
-                guidanceManeuverPresenter.resume();
-                m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
-                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-                isRoadView = true;
-                m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
-                EnumSet<NavigationManager.NaturalGuidanceMode> naturalGuidanceModes = EnumSet.of(
-                        NavigationManager.NaturalGuidanceMode.JUNCTION,
-                        NavigationManager.NaturalGuidanceMode.STOP_SIGN,
-                        NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
-                );
-                m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
-                m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
-                shiftMapCenter(m_map);
-                //hudMapScheme(m_map);
-                m_map.setTilt(60);
-                m_navigationManager.simulate(m_route, simulationSpeedMs);
-                EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
-                        NavigationManager.AudioEvent.MANEUVER,
-                        NavigationManager.AudioEvent.ROUTE,
-                        NavigationManager.AudioEvent.SAFETY_SPOT,
-                        NavigationManager.AudioEvent.SPEED_LIMIT
-                );
-                m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
-                supportMapFragment.setOnTouchListener(mapOnTouchListener);
-                mapLocalModel = createPosition3dObj();
+                intoNavigationMode();
+                NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
+                Toast.makeText(m_activity, "Error: " + error.toString(), Toast.LENGTH_SHORT).show();
                 startForegroundService();
             }
         });
@@ -590,19 +612,10 @@ class MapFragmentView {
     }
 
     private void createRoute() {
-        /* Initialize a CoreRouter */
         CoreRouter coreRouter = new CoreRouter();
 
-        /* Initialize a RoutePlan */
         RoutePlan routePlan = new RoutePlan();
 
-        /*
-         * Initialize a RouteOption.HERE SDK allow users to define their own parameters for the
-         * route calculation,including transport modes,route types and route restrictions etc.Please
-         * refer to API doc for full list of APIs
-         */
-
-        /*Route allows highway*/
         RouteOptions routeOptionCarAllowHighway = new RouteOptions();
         routeOptionCarAllowHighway.setTransportMode(RouteOptions.TransportMode.CAR);
         routeOptionCarAllowHighway.setHighwaysAllowed(true);
@@ -611,14 +624,10 @@ class MapFragmentView {
         routePlan.setRouteOptions(routeOptionCarAllowHighway);
 
         ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-        //waypointList.add(new GeoCoordinate(24.9964003, 121.500093));
-        //waypointList.add(new GeoCoordinate(24.9752592, 121.396661));
-        waypointList.add(new GeoCoordinate(29.3616179, 47.9788175));
-        waypointList.add(new GeoCoordinate(29.3739165, 47.9940586));
-        waypointList.add(new GeoCoordinate(29.3746512, 47.9948909));
-        waypointList.add(new GeoCoordinate(29.3788850, 47.9803288));
-        waypointList.add(new GeoCoordinate(29.3782966, 47.9798253));
-        waypointList.add(new GeoCoordinate(29.3616227, 47.978569));
+        
+        waypointList.add(m_positioningManager.getPosition().getCoordinate());
+        waypointList.add(new GeoCoordinate(24.9964003, 121.500093));
+        
         for (int i = 0; i < waypointList.size(); i++) {
             GeoCoordinate coord = waypointList.get(i);
             RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
@@ -739,15 +748,15 @@ class MapFragmentView {
                     if (error != VoiceCatalog.Error.NONE) {
                         Log.d("Test", "Failed to download catalog");
                     } else {
-                        //Log.d("Test", "Catalog downloaded");
+                        Log.d("Test", "Catalog downloaded");
                         List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
-                        //Log.d("Test", "# of available packages: " + packages.size());
-                        //for (VoicePackage lang : packages)
-                        //Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+                        Log.d("Test", "# of available packages: " + packages.size());
+                        for (VoicePackage lang : packages)
+                        Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                         List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-                        //Log.d("Test", "# of local skins: " + localInstalledSkins.size());
+                        Log.d("Test", "# of local skins: " + localInstalledSkins.size());
                         for (VoiceSkin voice : localInstalledSkins) {
-                            //Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+                            Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
                             if (voice.getId() == desiredVoiceId) {
                                 localVoiceSkinExisted[0] = true;
                             }
