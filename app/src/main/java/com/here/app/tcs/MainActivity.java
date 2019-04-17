@@ -63,11 +63,8 @@ public class MainActivity extends AppCompatActivity {
     public void hideJunctionView() {
         View junctionView = findViewById(R.id.junctionImageView);
         junctionView.setVisibility(View.GONE);
-    }
-
-    public void showGuidanceView() {
-        View guidanceView = findViewById(R.id.guidanceManeuverView);
-        guidanceView.setVisibility(View.VISIBLE);
+        View signpostView = findViewById(R.id.signpostImageView);
+        signpostView.setVisibility(View.GONE);
     }
 
     Bundle mViewBundle = new Bundle();
@@ -90,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
         hideGuidanceView();
         hideJunctionView();
         requestPermissions();
-        startLocationUpdates();
+        //startLocationUpdates();
     }
 
     protected void startLocationUpdates() {

@@ -196,7 +196,8 @@ class MapFragmentView {
             shiftMapCenter(m_map);
         }
     };
-    private ImageView imageView;
+    private ImageView junctionViewImageView;
+    private ImageView signpostImageView;
     private OnTouchListener mapOnTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -224,7 +225,7 @@ class MapFragmentView {
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
             Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
-            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+            m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
             resetMapCenter(m_map);
             m_map.removeMapObject(mapLocalModel);
             m_map.setTilt(0);
@@ -370,14 +371,18 @@ class MapFragmentView {
 
         @Override
         public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            imageView.setVisibility(View.VISIBLE);
-            Bitmap bmp = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
-            imageView.setImageBitmap(bmp);
+            junctionViewImageView.setVisibility(View.VISIBLE);
+            signpostImageView.setVisibility(View.VISIBLE);
+            Bitmap junctionBitmap = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
+            Bitmap signpostBitMap = signpost.getBitmap((int) signpost.getWidth(), (int) signpost.getHeight());
+            junctionViewImageView.setImageBitmap(junctionBitmap);
+            signpostImageView.setImageBitmap(signpostBitMap);
         }
 
         @Override
         public void onRealisticViewHide() {
-            imageView.setVisibility(View.GONE);
+            junctionViewImageView.setVisibility(View.GONE);
+            signpostImageView.setVisibility(View.GONE);
         }
     };
 
@@ -478,8 +483,10 @@ class MapFragmentView {
     }
 
     private void initJunctionView() {
-        imageView = m_activity.findViewById(R.id.junctionImageView);
-        imageView.setVisibility(View.GONE);
+        junctionViewImageView = m_activity.findViewById(R.id.junctionImageView);
+        junctionViewImageView.setVisibility(View.GONE);
+        signpostImageView = m_activity.findViewById(R.id.signpostImageView);
+        signpostImageView.setVisibility(View.GONE);
     }
 
     private void initGuidanceManeuverView(Route route) {
@@ -550,7 +557,7 @@ class MapFragmentView {
         m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(View.VISIBLE);
         m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
         isRoadView = true;
-        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
+        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
         EnumSet<NavigationManager.NaturalGuidanceMode> naturalGuidanceModes = EnumSet.of(
                 NavigationManager.NaturalGuidanceMode.JUNCTION,
                 NavigationManager.NaturalGuidanceMode.STOP_SIGN,
@@ -559,7 +566,7 @@ class MapFragmentView {
         m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
         m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
         shiftMapCenter(m_map);
-        //hudMapScheme(m_map);
+        hudMapScheme(m_map);
         m_map.setTilt(60);
         m_navigationManager.startNavigation(m_route);
         m_positioningManager.setMapMatchingEnabled(true);
@@ -700,7 +707,7 @@ class MapFragmentView {
         m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
         m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
         m_navigationManager.addSafetySpotListener(new WeakReference<>(safetySpotListener));
-        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
+        m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
         m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
         m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
         m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
