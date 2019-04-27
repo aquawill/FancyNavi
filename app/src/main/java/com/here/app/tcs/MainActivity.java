@@ -19,9 +19,11 @@ package com.here.app.tcs;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.RequiresApi;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -87,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         hideGuidanceView();
         hideJunctionView();
         requestPermissions();
-        //startLocationUpdates();
+        startLocationUpdates();
     }
 
     protected void startLocationUpdates() {
@@ -186,12 +188,14 @@ public class MainActivity extends AppCompatActivity {
         requiredSDKPermissions.add(Manifest.permission.INTERNET);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_WIFI_STATE);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_NETWORK_STATE);
+        requiredSDKPermissions.add(Manifest.permission.CAMERA);
 
         ActivityCompat.requestPermissions(this,
                 requiredSDKPermissions.toArray(new String[requiredSDKPermissions.size()]),
                 REQUEST_CODE_ASK_PERMISSIONS);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {

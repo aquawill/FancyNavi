@@ -6,11 +6,14 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -21,9 +24,15 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.here.android.mpa.ar.ARController;
+import com.here.android.mpa.ar.ARIconObject;
+import com.here.android.mpa.ar.ARPolylineObject;
+import com.here.android.mpa.ar.CompositeFragment;
+import com.here.android.mpa.ar.LineAttributes;
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
+import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.MapSettings;
@@ -43,8 +52,9 @@ import com.here.android.mpa.mapping.LocalMesh;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
+import com.here.android.mpa.mapping.MapPolyline;
 import com.here.android.mpa.mapping.MapRoute;
-import com.here.android.mpa.mapping.SupportMapFragment;
+import com.here.android.mpa.mapping.MapFragment;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.Route;
@@ -84,8 +94,8 @@ import static java.util.Locale.TRADITIONAL_CHINESE;
  * the usage.
  */
 class MapFragmentView {
-    //private MapFragment supportMapFragment; //Deprecated
-    private SupportMapFragment supportMapFragment;
+    //private MapFragment MapFragment; //Deprecated
+    private MapFragment MapFragment;
     //private Activity m_activity; //Deprecated
     private AppCompatActivity m_activity;
     private Button m_naviControlButton;
@@ -99,6 +109,8 @@ class MapFragmentView {
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
+
+    private ARController arController;
 
     boolean isRoadView = false;
     boolean isRouteOverView = false;
@@ -122,16 +134,42 @@ class MapFragmentView {
         }
     };
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     MapFragmentView(AppCompatActivity activity) {
         m_activity = activity;
-        initSupportMapFragment();
         initNaviControlButton();
+
+        final CompositeFragment compositeFragment;
+        compositeFragment = (CompositeFragment) activity.getFragmentManager().findFragmentById(R.id.compositefragment);
+        // initialize the Composite Fragment and
+        // retrieve the map that is associated to the fragment
+        compositeFragment.init(new OnEngineInitListener() {
+
+            @Override
+            public void onEngineInitializationCompleted(
+                    OnEngineInitListener.Error error) {
+                if (error == OnEngineInitListener.Error.NONE) {
+                    // now the map is ready to be used
+                    m_map = compositeFragment.getMap();
+
+                    // the arController is also ready to be used now
+                    arController = compositeFragment.getARController();
+                    arController.setInfoAnimationInUpViewOnly(false);
+                    System.out.println("CompositeFragment initialized.");
+
+
+                } else {
+                    System.out.println("ERROR: Cannot initialize CompositeFragment");
+                }
+            }
+        });
     }
 
-    private void initSupportMapFragment() {
+
+    private void initMapFragment() {
         /* Locate the mapFragment UI element */
-        supportMapFragment = getMapFragment();
-        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_RIGHT);
+        //MapFragment = getMapFragment();
+        //MapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_RIGHT);
         // Set path of isolated disk cache
         String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
         // Retrieve intent name from manifest
@@ -152,13 +190,13 @@ class MapFragmentView {
             // (getExternalStorageDirectory()/.here-maps).
             // Also, ensure the provided intent name does not match the default intent name.
         } else {
-            if (supportMapFragment != null) {
+            if (MapFragment != null) {
                 /* Initialize the MapFragment, results will be given via the called back. */
-                supportMapFragment.init(new OnEngineInitListener() {
+                MapFragment.init(new OnEngineInitListener() {
                     @Override
                     public void onEngineInitializationCompleted(Error error) {
                         if (error == Error.NONE) {
-                            m_map = supportMapFragment.getMap();
+                            m_map = MapFragment.getMap();
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                             //m_map.setTrafficInfoVisible(true);
                             m_map.setSafetySpotsVisible(true);
@@ -316,13 +354,15 @@ class MapFragmentView {
 
         }
     };
-
+    /*
     // Google has deprecated android.app.Fragment class. It is used in current SDK implementation.
     // Will be fixed in future SDK version.
     @SuppressWarnings("deprecation")
-    private SupportMapFragment getMapFragment() {
-        return (SupportMapFragment) m_activity.getSupportFragmentManager().findFragmentById(R.id.mapFragmentView);
+    private MapFragment getMapFragment() {
+        return (MapFragment) m_activity.getSupportFragmentManager().findFragmentById(R.id.mapFragmentView);
     }
+    */
+
 
     /*
      * Android 8.0 (API level 26) limits how frequently background apps can retrieve the user's
@@ -389,10 +429,14 @@ class MapFragmentView {
 
     private void initNaviControlButton() {
         m_naviControlButton = m_activity.findViewById(R.id.naviCtrlButton);
-        m_naviControlButton.setText("Start Navi");
+        m_naviControlButton.setText("Start AR");
         m_naviControlButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                arController.UpViewParams.setEdgeDetectionEnabled(true);
+                arController.UpViewParams.setShowGridEnabled(true);
+                ARController.Error error = arController.start();
+                Log.e("ERROR", error.toString());
                 if (m_route == null) {
                     m_navigationManager = NavigationManager.getInstance();
                     createRoute();
@@ -569,7 +613,7 @@ class MapFragmentView {
         hudMapScheme(m_map);
         m_map.setTilt(60);
         m_navigationManager.startNavigation(m_route);
-        m_positioningManager.setMapMatchingEnabled(true);
+        //          m_positioningManager.setMapMatchingEnabled(true);
         EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
                 NavigationManager.AudioEvent.MANEUVER,
                 NavigationManager.AudioEvent.ROUTE,
@@ -577,7 +621,7 @@ class MapFragmentView {
                 NavigationManager.AudioEvent.SPEED_LIMIT
         );
         m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
-        supportMapFragment.setOnTouchListener(mapOnTouchListener);
+        MapFragment.setOnTouchListener(mapOnTouchListener);
         mapLocalModel = createPosition3dObj();
     }
 
@@ -634,7 +678,22 @@ class MapFragmentView {
 
         ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
 
-        waypointList.add(m_positioningManager.getPosition().getCoordinate());
+        m_positioningManager = PositioningManager.getInstance();
+        m_positioningManager.addListener(new WeakReference<>(positionListener));
+
+        EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
+                PositioningManager.LogType.RAW,
+                PositioningManager.LogType.DATA_SOURCE
+        );
+
+        m_positioningManager.setLogType(logTypes);
+        m_map.getPositionIndicator().setVisible(true);
+        if (m_positioningManager != null) {
+            m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
+        }
+
+//        waypointList.add(m_positioningManager.getPosition().getCoordinate());
+        waypointList.add(new GeoCoordinate(25.03688293, 121.56821978));
         waypointList.add(new GeoCoordinate(24.16199, 120.64728));
 
         for (int i = 0; i < waypointList.size(); i++) {
@@ -646,9 +705,9 @@ class MapFragmentView {
                 try {
                     Image icon = new Image();
                     if (i == 0) {
-                        icon.setImageResource(R.drawable.red_pin);
-                    } else if (i == waypointList.size() - 1) {
                         icon.setImageResource(R.drawable.blue_pin);
+                    } else if (i == waypointList.size() - 1) {
+                        icon.setImageResource(R.drawable.red_pin);
                     }
                     MapMarker mapMarker = new MapMarker(waypoint.getOriginalPosition(), icon);
                     m_map.addMapObject(mapMarker);
@@ -674,11 +733,12 @@ class MapFragmentView {
                 /* Calculation is done.Let's handle the result */
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
+                        Log.d("Test", "Route calculation completed.");
                         isRouteOverView = true;
                         m_route = routeResults.get(0).getRoute();
                         initGuidanceManeuverView(m_route);
                         initJunctionView();
-                        mapRoute = new MapRoute(routeResults.get(0).getRoute());
+                        mapRoute = new MapRoute(m_route);
                         //mapRoute.setManeuverNumberVisible(true);
                         mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
                         mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
@@ -686,7 +746,16 @@ class MapFragmentView {
                         m_map.addMapObject(mapRoute);
                         mapRouteBBox = routeResults.get(0).getRoute().getBoundingBox();
                         m_map.zoomTo(mapRouteBBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
-                        startNavigation();
+                        Bitmap icon = BitmapFactory.decodeResource(m_activity.getResources(), R.drawable.blue_pin);
+                        arController.addARObject(new ARIconObject(new GeoCoordinate(25.03688293, 121.56821978, 2.0), icon));
+                        arController.addARObject(new ARIconObject(new GeoCoordinate(25.03687, 121.56822, 2.0), icon));
+                        GeoPolyline geoPolyline = new GeoPolyline();
+                        geoPolyline.add(new GeoCoordinate(25.03688293, 121.56821978));
+                        geoPolyline.add(new GeoCoordinate(25.03687, 121.56822));
+                        ARPolylineObject arPolylineObject = new ARPolylineObject(geoPolyline);
+                        arPolylineObject.setLineAttributes(new LineAttributes(10, R.color.colorAccent, MapPolyline.CapStyle.BUTT, true));
+                        arController.addARObject(arPolylineObject);
+                        //startNavigation();
                     } else {
                         Toast.makeText(m_activity, "Error:route results returned is not valid", Toast.LENGTH_LONG).show();
                     }
@@ -702,7 +771,7 @@ class MapFragmentView {
          * Register a NavigationManagerEventListener to monitor the status change on
          * NavigationManager
          */
-        m_activity.findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
+        m_activity.findViewById(R.id.compositefragment).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
         m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
         m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
         m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
