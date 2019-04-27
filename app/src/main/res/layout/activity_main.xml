@@ -29,8 +29,8 @@
         android:scaleType="fitXY" />
 
     <fragment
-        android:id="@+id/compositefragment"
-            class="com.here.android.mpa.ar.CompositeFragment"
+        android:id="@+id/mapFragmentView"
+        class="com.here.android.mpa.mapping.SupportMapFragment"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
