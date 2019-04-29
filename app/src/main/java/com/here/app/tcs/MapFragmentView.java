@@ -168,7 +168,7 @@ class MapFragmentView {
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
             Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
-            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+            m_map.setMapScheme(Map.Scheme.CARNAV_HYBRID_DAY);
             resetMapCenter(m_map);
             m_map.removeMapObject(mapLocalModel);
             m_map.setTilt(0);
@@ -292,13 +292,6 @@ class MapFragmentView {
             signpostImageView.setVisibility(View.GONE);
         }
     };
-
-    MapFragmentView(AppCompatActivity activity) {
-        m_activity = activity;
-        initSupportMapFragment();
-        initNaviControlButton();
-    }
-
     private MapMarker.OnDragListener onDragListener = new MapMarker.OnDragListener() {
         @Override
         public void onMarkerDrag(MapMarker mapMarker) {
@@ -395,6 +388,12 @@ class MapFragmentView {
         }
     };
 
+    MapFragmentView(AppCompatActivity activity) {
+        m_activity = activity;
+        initSupportMapFragment();
+        initNaviControlButton();
+    }
+
     private void touchToAddWaypoint(PointF p) {
         Log.d("Test", "PointF X: " + p.x);
         Log.d("Test", "PointF Y: " + p.y);
@@ -449,6 +448,7 @@ class MapFragmentView {
                         if (error == Error.NONE) {
                             supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
                             m_map = supportMapFragment.getMap();
+                            m_map.setMapScheme(Map.Scheme.CARNAV_HYBRID_DAY);
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                             //m_map.setTrafficInfoVisible(true);
                             m_map.setSafetySpotsVisible(true);
@@ -810,10 +810,16 @@ class MapFragmentView {
                         mapRoute.setTraveledColor(Color.DKGRAY);
                         m_map.addMapObject(mapRoute);
                         mapRouteBBox = routeResults.get(0).getRoute().getBoundingBox();
+                        if (mapRouteBBox.getHeight() > 0.1 || mapRouteBBox.getWidth() > 0.1) {
+                            mapRouteBBox.expand(2000f, 2000f);
+                        } else {
+                            mapRouteBBox.expand(500f, 500f);
+                        }
+
                         m_map.zoomTo(mapRouteBBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
                         startNavigation();
                     } else {
-                        Toast.makeText(m_activity, "Error:route results returned is not valid", Toast.LENGTH_LONG).show();
+                        Toast.makeText(m_activity, "Error: " + RoutingError.NONE, Toast.LENGTH_LONG).show();
                     }
                 } else {
                     Toast.makeText(m_activity, "Error:route calculation returned error code: " + routingError, Toast.LENGTH_LONG).show();
@@ -928,6 +934,7 @@ class MapFragmentView {
             VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
                 String desiredLangCode = "cht"; //Taiwan
                 long desiredVoiceId = 0;
+
                 @Override
                 public void onDownloadDone(VoiceCatalog.Error error) {
 
