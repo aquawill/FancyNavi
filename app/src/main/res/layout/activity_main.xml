@@ -8,7 +8,7 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Start guidance"
+        android:text="@string/start_guidance"
         android:id="@+id/naviCtrlButton" />
 
     <com.here.msdkui.guidance.GuidanceManeuverView
@@ -19,13 +19,13 @@
     <ImageView
         android:id="@+id/signpostImageView"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="250dp"
         android:scaleType="fitXY" />
 
     <ImageView
         android:id="@+id/junctionImageView"
         android:layout_width="match_parent"
-        android:layout_height="150dp"
+        android:layout_height="250dp"
         android:scaleType="fitXY" />
 
     <fragment

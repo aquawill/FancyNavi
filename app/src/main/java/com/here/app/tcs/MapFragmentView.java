@@ -52,7 +52,6 @@ import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapLabeledMarker;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
-import com.here.android.mpa.mapping.MapObject;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.SupportMapFragment;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
@@ -114,21 +113,23 @@ class MapFragmentView {
     private boolean isRouteOverView = false;
     private MapRoute mapRoute;
     private ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-    private ArrayList<MapObject> waypointIconList = new ArrayList<>();
+    private ArrayList<MapMarker> waypointIconList = new ArrayList<>();
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
         public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
             guidanceManeuverView.setManeuverData(guidanceManeuverData);
+            /*
             if (guidanceManeuverData != null) {
                 Log.d("Test", "guidanceManeuverData.getInfo1(): " + guidanceManeuverData.getInfo1());
                 Log.d("Test", "guidanceManeuverData.getInfo2(): " + guidanceManeuverData.getInfo2());
             }
+            */
         }
 
         @Override
         public void onDestinationReached() {
-            guidanceManeuverView.highLightManeuver(Color.BLUE);
+            guidanceManeuverView.highLightManeuver(Color.MAGENTA);
         }
     };
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
@@ -243,8 +244,6 @@ class MapFragmentView {
     private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
-            //Log.d("Test Speed", "" + geoPosition.getSpeed());
-            m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.LINEAR);
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
             mapLocalModel.setYaw((float) geoPosition.getHeading());
             previousKnownPosition = geoPosition;
@@ -300,6 +299,124 @@ class MapFragmentView {
         initNaviControlButton();
     }
 
+    private MapMarker.OnDragListener onDragListener = new MapMarker.OnDragListener() {
+        @Override
+        public void onMarkerDrag(MapMarker mapMarker) {
+            Log.d("Test", "mapMarker Dragging!");
+        }
+
+        @Override
+        public void onMarkerDragEnd(MapMarker mapMarker) {
+            Log.d("Test", "mapMarker Dragging End!");
+        }
+
+        @Override
+        public void onMarkerDragStart(MapMarker mapMarker) {
+            Log.d("Test", "mapMarker Dragging Start!");
+        }
+    };
+    private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
+
+        @Override
+        public void onPanStart() {
+            isDragged = true;
+        }
+
+        @Override
+        public void onPanEnd() {
+
+        }
+
+        @Override
+        public void onMultiFingerManipulationStart() {
+
+        }
+
+        @Override
+        public void onMultiFingerManipulationEnd() {
+
+        }
+
+        @Override
+        public boolean onMapObjectsSelected(List<ViewObject> list) {
+            return false;
+        }
+
+        @Override
+        public boolean onTapEvent(PointF pointF) {
+            return false;
+        }
+
+        @Override
+        public boolean onDoubleTapEvent(PointF pointF) {
+            touchToAddWaypoint(pointF);
+            return true;
+        }
+
+        @Override
+        public void onPinchLocked() {
+
+        }
+
+        @Override
+        public boolean onPinchZoomEvent(float v, PointF pointF) {
+            return false;
+        }
+
+        @Override
+        public void onRotateLocked() {
+
+        }
+
+        @Override
+        public boolean onRotateEvent(float v) {
+            return false;
+        }
+
+        @Override
+        public boolean onTiltEvent(float v) {
+            return false;
+        }
+
+        @Override
+        public boolean onLongPressEvent(PointF pointF) {
+
+            return false;
+        }
+
+        @Override
+        public void onLongPressRelease() {
+
+        }
+
+        @Override
+        public boolean onTwoFingerTapEvent(PointF pointF) {
+            return false;
+        }
+    };
+
+    private void touchToAddWaypoint(PointF p) {
+        Log.d("Test", "PointF X: " + p.x);
+        Log.d("Test", "PointF Y: " + p.y);
+        GeoBoundingBox geoBoundingBox = m_map.getBoundingBox();
+        int supportMapFragmentHeight = supportMapFragment.getClipRect().getHeight();
+        int supportMapFragmentWidth = supportMapFragment.getClipRect().getWidth();
+        double mapTopLeftLat = geoBoundingBox.getTopLeft().getLatitude();
+        double mapTopLeftLng = geoBoundingBox.getTopLeft().getLongitude();
+        double mapBottomRightLat = geoBoundingBox.getBottomRight().getLatitude();
+        double mapBottomRightLng = geoBoundingBox.getBottomRight().getLongitude();
+        double yRatio = Math.abs((mapBottomRightLat - mapTopLeftLat) / supportMapFragmentHeight);
+        double xRatio = Math.abs((mapBottomRightLng - mapTopLeftLng) / supportMapFragmentWidth);
+        double pointLat = mapTopLeftLat - p.y * yRatio;
+        double pointLng = mapTopLeftLng + p.x * xRatio;
+        GeoCoordinate touchPointGeoCoordinate = new GeoCoordinate(pointLat, pointLng);
+        MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
+        mapMarker.setDraggable(true);
+        waypointIconList.add(mapMarker);
+        mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
+        m_map.addMapObject(mapMarker);
+    }
+
     private void initSupportMapFragment() {
         /* Locate the mapFragment UI element */
         supportMapFragment = getMapFragment();
@@ -330,107 +447,7 @@ class MapFragmentView {
                     @Override
                     public void onEngineInitializationCompleted(Error error) {
                         if (error == Error.NONE) {
-                            supportMapFragment.getMapGesture()
-                                    .addOnGestureListener(new MapGesture.OnGestureListener() {
-
-                                        @Override
-                                        public void onPanStart() {
-                                            isDragged = true;
-                                        }
-
-                                        @Override
-                                        public void onPanEnd() {
-
-                                        }
-
-                                        @Override
-                                        public void onMultiFingerManipulationStart() {
-
-                                        }
-
-                                        @Override
-                                        public void onMultiFingerManipulationEnd() {
-
-                                        }
-
-                                        @Override
-                                        public boolean onMapObjectsSelected(List<ViewObject> list) {
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public boolean onTapEvent(PointF pointF) {
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public boolean onDoubleTapEvent(PointF pointF) {
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public void onPinchLocked() {
-
-                                        }
-
-                                        @Override
-                                        public boolean onPinchZoomEvent(float v, PointF pointF) {
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public void onRotateLocked() {
-
-                                        }
-
-                                        @Override
-                                        public boolean onRotateEvent(float v) {
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public boolean onTiltEvent(float v) {
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public boolean onLongPressEvent(PointF pointF) {
-                                            Log.d("Test", "PointF X: " + pointF.x);
-                                            Log.d("Test", "PointF Y: " + pointF.y);
-                                            GeoBoundingBox geoBoundingBox = m_map.getBoundingBox();
-                                            int supportMapFragmentHeight = supportMapFragment.getClipRect().getHeight();
-                                            int supportMapFragmentWidth = supportMapFragment.getClipRect().getWidth();
-                                            double mapTopLeftLat = geoBoundingBox.getTopLeft().getLatitude();
-                                            double mapTopLeftLng = geoBoundingBox.getTopLeft().getLongitude();
-                                            double mapBottomRightLat = geoBoundingBox.getBottomRight().getLatitude();
-                                            double mapBottomRightLng = geoBoundingBox.getBottomRight().getLongitude();
-                                            double yRatio = Math.abs((mapBottomRightLat - mapTopLeftLat) / supportMapFragmentHeight);
-                                            double xRatio = Math.abs((mapBottomRightLng - mapTopLeftLng) / supportMapFragmentWidth);
-                                            double pointLat = mapTopLeftLat - pointF.y * yRatio;
-                                            double pointLng = mapTopLeftLng + pointF.x * xRatio;
-                                            GeoCoordinate touchPointGeoCoordinate = new GeoCoordinate(pointLat, pointLng);
-                                            MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
-                                            waypointIconList.add(mapMarker);
-                                            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
-                                            waypointList.add(new GeoCoordinate(pointLat, pointLng));
-                                            MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(touchPointGeoCoordinate);
-                                            mapLabeledMarker.setLabelText("eng", "Waypoint Index " + (waypointList.size() - 1));
-                                            mapLabeledMarker.setFontScalingFactor(2.0f);
-                                            mapLabeledMarker.setZIndex(10);
-                                            m_map.addMapObject(mapMarker);
-                                            return false;
-                                        }
-
-                                        @Override
-                                        public void onLongPressRelease() {
-
-                                        }
-
-                                        @Override
-                                        public boolean onTwoFingerTapEvent(PointF pointF) {
-                                            return false;
-                                        }
-                                    }, 0, false);
+                            supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
                             m_map = supportMapFragment.getMap();
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                             //m_map.setTrafficInfoVisible(true);
@@ -451,9 +468,7 @@ class MapFragmentView {
                             VoiceActivation voiceActivation = new VoiceActivation();
                             voiceActivation.downloadCatalogAndSkin();
                         } else {
-                            Toast.makeText(m_activity,
-                                    "ERROR: Cannot initialize Map with error " + error,
-                                    Toast.LENGTH_LONG).show();
+                            Toast.makeText(m_activity, "ERROR: Cannot initialize Map with error " + error, Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -501,11 +516,7 @@ class MapFragmentView {
             public void onClick(View v) {
                 if (m_route == null) {
                     m_navigationManager = NavigationManager.getInstance();
-                    try {
-                        createRoute();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+                    createRoute();
                 } else {
                     m_navigationManager.stop();
                     m_map.zoomTo(mapRouteBBox, Map.Animation.NONE, 0f);
@@ -582,12 +593,12 @@ class MapFragmentView {
         Image image = null;
         try {
             image = new Image();
-            image.setImageResource(R.drawable.green);
+            image.setImageResource(R.drawable.grad);
         } catch (IOException e) {
             e.printStackTrace();
         }
         mapLocalModel.setTexture(image); //an Image object
-        mapLocalModel.setScale(5.0f);
+        mapLocalModel.setScale(6.0f);
         mapLocalModel.setDynamicScalingEnabled(true);
 
         m_map.addMapObject(mapLocalModel);
@@ -649,6 +660,7 @@ class MapFragmentView {
         );
         m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
         supportMapFragment.setOnTouchListener(mapOnTouchListener);
+        supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         mapLocalModel = createPosition3dObj();
     }
 
@@ -717,9 +729,15 @@ class MapFragmentView {
         return new PointF((float) (iconWidth / 2), (float) iconHeight);
     }
 
-    private void createRoute() throws IOException {
+    private void createRoute() {
 
-        m_map.removeMapObjects(waypointIconList);
+        for (int i = 0; i < waypointIconList.size(); i++) {
+            MapMarker mapMarker = waypointIconList.get(i);
+            waypointList.add(mapMarker.getCoordinate());
+
+            m_map.removeMapObject(mapMarker);
+        }
+
         CoreRouter coreRouter = new CoreRouter();
 
         RoutePlan routePlan = new RoutePlan();
@@ -745,17 +763,16 @@ class MapFragmentView {
 
         for (int i = 0; i < waypointList.size(); i++) {
             GeoCoordinate coord = waypointList.get(i);
+            MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(coord);
+            mapLabeledMarker.setLabelText("eng", "Waypoint Index " + i);
+            Log.d("Test", "Waypoint Index " + i + " : " + coord);
+            mapLabeledMarker.setFontScalingFactor(2.0f);
+            m_map.addMapObject(mapLabeledMarker);
             RouteWaypoint waypoint = new RouteWaypoint(new GeoCoordinate(coord.getLatitude(), coord.getLongitude()));
             MapMarker mapMarker = new MapMarker();
             Image icon = new Image();
             if (i != 0 && i != waypointList.size() - 1) {
                 waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
-                mapMarker.setCoordinate(waypoint.getOriginalPosition());
-                MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(waypoint.getOriginalPosition());
-                mapLabeledMarker.setLabelText("eng", "Waypoint Index " + i);
-                mapLabeledMarker.setFontScalingFactor(2.0f);
-                mapLabeledMarker.setZIndex(10);
-                m_map.addMapObject(mapLabeledMarker);
             } else {
                 if (i == 0) {
                     icon.setBitmap(getBitmapFromVectorDrawable(m_activity, R.drawable.ic_orig));
@@ -907,9 +924,10 @@ class MapFragmentView {
         }
 
         void downloadCatalogAndSkin() {
-            int desiredVoiceId = 217; //Taiwan
             final Boolean[] localVoiceSkinExisted = {false};
             VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
+                String desiredLangCode = "cht"; //Taiwan
+                long desiredVoiceId = 0;
                 @Override
                 public void onDownloadDone(VoiceCatalog.Error error) {
 
@@ -917,10 +935,17 @@ class MapFragmentView {
                         Log.d("Test", "Failed to download catalog.");
                     } else {
 //                        Log.d("Test", "Catalog downloaded");
-                        List<VoicePackage> packages = VoiceCatalog.getInstance().getCatalogList();
-                        Log.d("Test", "# of available packages: " + packages.size());
-                        for (VoicePackage lang : packages)
+                        List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
+                        Log.d("Test", "# of available voicePackages: " + voicePackages.size());
+                        for (VoicePackage lang : voicePackages) {
+                            if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
+                                if (lang.isTts()) {
+                                    desiredVoiceId = lang.getId();
+                                    break;
+                                }
+                            }
                             Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+                        }
                         List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
                         localInstalledSkins.clear();
 //                        Log.d("Test", "# of local skins: " + localInstalledSkins.size());
