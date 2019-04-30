@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.here.app.tcs;
+package com.fancynavi.app;
 
 import android.Manifest;
 import android.content.pm.PackageManager;

@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.here.app.tcs">
+    package="com.fancynavi.app">
 
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission
+        android:name="android.permission.READ_PHONE_STATE"
+        android:maxSdkVersion="22" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.CAMERA" />
-
-    <!--To allow starting foreground services on Android P+ -->
-    <!--https://developer.android.com/preview/behavior-changes#fg-svc -->
+    <!-- To allow starting foreground services on Android P+ -->
+    <!-- https://developer.android.com/preview/behavior-changes#fg-svc -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
@@ -20,8 +27,15 @@
         android:icon="@mipmap/ic_launcher"
         android:label="HERESdkTest"
         android:supportsRtl="true"
+        android:fullBackupContent="true"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+        <meta-data
+            android:name="com.google.android.actions"
+            android:resource="@xml/network_security_config" />
+
+        <activity
+            android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -34,13 +48,13 @@
          at https://developer.here.com/develop/mobile-sdks-->
         <meta-data
             android:name="com.here.android.maps.appid"
-            android:value="1v4bYi8JuZ1N1XJdGJuR" />
+            android:value="nvAyScuaUcvPRYibjqNe" />
         <meta-data
             android:name="com.here.android.maps.apptoken"
-            android:value="-k4AO57zcSA5Gv8S8122Xg" />
+            android:value="jO-1TVGxGG3X-wZahIVA-g" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="eCOQ+mKrGOW2r4gTMWhc3bydsS/71XSUAGjywXeg9p9XuCEd1b5Gyche/NCqRGyn2UlxlNSs1di0hoAzR8ZqBzqKlgbtUag3fyhBqgmR976RAg8sPTe7wn8dBdPGzkI8X6lgcyl137sOnIqSg4xzvNdErsrQW0lNvA2jUUE/KrxJjgBzSkkel8W/79lmIsT81cHheI5nj61JGNr1qcbfuahu8P8rhimbNS7uo3lIGEwU3dvyzkYldIX9WyE0SPmQgvguXAwK2bs/GR/0eOJ30a2yZAxWhfEWJu2j5RMDvPwwPRt4f91qRA0A9oaltNoDtcUePYDMAxtBwvMMayLqLnm3+cwSwdq2d92TSPKrd6KuEyYc0man/Hb+sWlugQYnAri1ZzP2Kimd8Vbp1/QsvnjNaiY00mtp81RnGChGr4qMJQHkzlNKhsKap0fXzJ9YLOjJP9ICQnOKQ2zMEMq7qAdqtfhEBtjB/1q/pCR4uT2k7D/ihsrrmsd6v5WaB+bwI5koKqZBCavpxAyKBQ8re/KckJC1CvERbLeyYpfrinEAxQE+VlpYi/5P2D5ehV+/rdohBUf31xxs0NoBZ1FzbMw4bbBlfhj9d+JnsAOQFPpu/+akHMVR7HtEXK//+v/bpO8R2LFLbJvhs/gGyp2NE66y8d+8VcMcuGol7Gxtv9I=" />
+            android:value="BO+xsSjLf/ALDGwzPK2FGKFaNhMK23qbopJE84hqs4zDgbpDCaWzsf1MCZpI9ItG+DgPH+m6RXxmKieGe/jn7kuw2zbQw51fuPP4WAGb7UNO9c6dx0dZ9kuOSwYvbBf+R4aBNiJ1DcsFAzuJyHsVOPSJkw6l/oCUJIY8x51NpQSrRnRm8rbySEwQplLmsSBaltBPvLryTtsFhrN8I01BB9T0LnLO0Xj3yuINFOWxxnqiaeINUGH3RNgEUPSTzhCShD3fKFkfnyLA2vM5rXFECrtk8TEY7RcX62p14iq46lqh7ZWkgCX046pHHxcO549cUNx6PCUMuYro2gu9JxQt57qaLDlxVKTJD+MauBx5Lzoq56ZlCFzb45Ftke2kUHqC7ns3XhINtATxlM/b3IR4YW49SwFmHl8ep/o3EjDIGZXZWoOqlMBoPurrNWeloudq10N9B5QwOGeRcbDWhNWI2mmXERru8QHEbFK/DlZgoJrUN3RLUZlpWDjkfTn1nB1qKquPEZZZs5ZvWduE+uUxTfZ2DIKW3XuAwfYcqVA1KlXdENVClBfv2CKP1pi43Zi/b/G9wkDOqDTfuhL0CHWSjp5y/G9xHnHI4g03k0pBG27D841DrHDgG/Ct+c1CkwCMZRRRVkytXBL7crdDY13wiGw+QrQ5al6eDafQaGv17bM=" />
 
         <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
         Do not reuse HERE SDK defaults.-->
@@ -53,10 +67,17 @@
             android:exported="false"
             android:label="AndroidSdkTest">
             <intent-filter>
-                <action android:name="AndroidSdkTest"></action>
+                <action android:name="AndroidSdkTest" />
             </intent-filter>
         </service>
 
+        <!-- HERE Positioning Service definition. -->
+        <service
+            android:name="com.here.services.internal.LocationService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":remote"></service>
         <service android:name=".ForegroundService" />
     </application>
+
 </manifest>

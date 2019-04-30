@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
 
     defaultConfig {
-        applicationId 'com.here.app.tcs'
+        applicationId 'com.fancynavi.app'
         minSdkVersion 19
 
         targetSdkVersion 28

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.here.app.tcs;
+package com.fancynavi.app;
 
 import android.app.Notification;
 import android.app.NotificationChannel;

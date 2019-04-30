@@ -1,37 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
+    android:id="@+id/main_linear_layout"
     android:orientation="vertical">
 
-    <!-- Map Fragment embedded with the map object -->
-    <Button
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/start_guidance"
-        android:id="@+id/naviCtrlButton" />
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/clear"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Reset" />
+
+        <Button
+            android:id="@+id/startGuidance"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/start_guidance" />
+    </LinearLayout>
 
     <com.here.msdkui.guidance.GuidanceManeuverView
         android:id="@+id/guidanceManeuverView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <ImageView
-        android:id="@+id/signpostImageView"
+    <android.support.constraint.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:scaleType="fitXY" />
+        android:layout_height="match_parent">
 
-    <ImageView
-        android:id="@+id/junctionImageView"
-        android:layout_width="match_parent"
-        android:layout_height="250dp"
-        android:scaleType="fitXY" />
+        <ImageView
+            android:id="@+id/signpostImageView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:elevation="2dp"
+            android:scaleType="fitXY"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <fragment
-        android:id="@+id/mapFragmentView"
-        class="com.here.android.mpa.mapping.SupportMapFragment"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        <ImageView
+            android:id="@+id/junctionImageView"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:elevation="2dp"
+            android:scaleType="fitXY"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/signpostImageView" />
+
+        <fragment
+            android:id="@+id/mapFragmentView"
+            class="com.here.android.mpa.mapping.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp" />
+
+        <Button
+            android:id="@+id/north_up"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginBottom="16dp"
+            android:elevation="2dp"
+            android:text="↑"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
+            app:layout_constraintEnd_toEndOf="@id/mapFragmentView"
+            app:layout_constraintTop_toTopOf="@id/mapFragmentView"
+            app:layout_constraintVertical_bias="0.5">
+
+            <Button
+                android:id="@+id/zoom_in"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="+" />
+
+            <Button
+                android:id="@+id/zoom_out"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="-" />
+        </LinearLayout>
+    </android.support.constraint.ConstraintLayout>
+
 
 </LinearLayout>
