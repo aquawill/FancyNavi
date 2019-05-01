@@ -46,8 +46,6 @@ import com.here.android.mpa.guidance.SafetySpotNotificationInfo;
 import com.here.android.mpa.guidance.TrafficNotification;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceGuidanceOptions;
-import com.here.android.mpa.guidance.VoicePackage;
-import com.here.android.mpa.guidance.VoiceSkin;
 import com.here.android.mpa.mapping.LocalMesh;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapGesture;
@@ -98,26 +96,27 @@ import static java.util.Locale.TRADITIONAL_CHINESE;
  * the usage.
  */
 class MapFragmentView {
+    public AppCompatActivity m_activity;
     Map m_map;
     NavigationManager m_navigationManager;
     boolean isRoadView = false;
     boolean isDragged = false;
-    private SupportMapFragment supportMapFragment;
-    private AppCompatActivity m_activity;
-
-    private Button m_naviControlButton;
     PositionIndicator positionIndicator;
-    private Button m_clearButton;
+    private SupportMapFragment supportMapFragment;
+    private Button m_naviControlButton;
+    VoiceActivation voiceActivation;
     private Button northUpButton;
     private Button zoomInButton;
     private Button zoomOutButton;
 
     private PositioningManager m_positioningManager;
+    private Button clearButton;
     private Route m_route;
     private MapRoute mapRoute;
     private GeoBoundingBox mapRouteBBox;
     private MapLocalModel mapLocalModel;
     private boolean m_foregroundServiceStarted;
+    private CoreRouter coreRouter;
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
@@ -208,6 +207,26 @@ class MapFragmentView {
                     Toast.LENGTH_SHORT).show();
         }
     };
+    private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
+        @Override
+        public void onNewInstructionEvent() {
+            Log.d("Test", "getNextManeuver().getRoadName(): " + m_navigationManager.getNextManeuver().getRoadName());
+            Log.d("Test", "getNextManeuver().getNextRoadName(): " + m_navigationManager.getNextManeuver().getNextRoadName());
+        }
+    };
+    private NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
+        @Override
+        public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
+            super.onSafetySpot(safetySpotNotification);
+            List<SafetySpotNotificationInfo> safetySpotInfos = safetySpotNotification.getSafetySpotNotificationInfos();
+            for (int i = 0; i < safetySpotInfos.size(); i++) {
+                SafetySpotNotificationInfo safetySpotInfo = safetySpotInfos.get(i);
+                Log.d("Test", "" + safetySpotInfo.getSafetySpot().getType().toString());
+            }
+
+        }
+    };
+    private GeoPosition previousKnownPosition;
     private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
@@ -229,26 +248,6 @@ class MapFragmentView {
 
         }
     };
-    private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
-        @Override
-        public void onNewInstructionEvent() {
-            Log.d("Test", "getNextManeuver().getRoadName(): " + m_navigationManager.getNextManeuver().getRoadName());
-            Log.d("Test", "getNextManeuver().getNextRoadName(): " + m_navigationManager.getNextManeuver().getNextRoadName());
-        }
-    };
-    private NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
-        @Override
-        public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
-            super.onSafetySpot(safetySpotNotification);
-            List<SafetySpotNotificationInfo> safetySpotInfos = safetySpotNotification.getSafetySpotNotificationInfos();
-            for (int i = 0; i < safetySpotInfos.size(); i++) {
-                SafetySpotNotificationInfo safetySpotInfo = safetySpotInfos.get(i);
-                Log.d("Test", "" + safetySpotInfo.getSafetySpot().getType().toString());
-            }
-
-        }
-    };
-    private GeoPosition previousKnownPosition;
     private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
 
         @Override
@@ -304,21 +303,21 @@ class MapFragmentView {
 
         @Override
         public boolean onRotateEvent(float v) {
-            if (v != 0) {
-                northUpButton.setVisibility(View.VISIBLE);
-            } else {
-                northUpButton.setVisibility(View.GONE);
-            }
+//            if (v != 0) {
+//                northUpButton.setVisibility(View.VISIBLE);
+//            } else {
+//                northUpButton.setVisibility(View.GONE);
+//            }
             return false;
         }
 
         @Override
         public boolean onTiltEvent(float v) {
-            if (v != 0) {
-                northUpButton.setVisibility(View.VISIBLE);
-            } else {
-                northUpButton.setVisibility(View.GONE);
-            }
+//            if (v != 0) {
+//                northUpButton.setVisibility(View.VISIBLE);
+//            } else {
+//                northUpButton.setVisibility(View.GONE);
+//            }
             return false;
         }
 
@@ -382,6 +381,12 @@ class MapFragmentView {
         }
     };
 
+    MapFragmentView(AppCompatActivity activity) {
+        m_activity = activity;
+        initSupportMapFragment();
+        initNaviControlButton();
+    }
+
     private void resetMapRoute(Route route) {
         if (mapRoute != null) {
             m_map.removeMapObject(mapRoute);
@@ -393,13 +398,8 @@ class MapFragmentView {
         m_map.addMapObject(mapRoute);
     }
 
-    MapFragmentView(AppCompatActivity activity) {
-        m_activity = activity;
-        initSupportMapFragment();
-        initNaviControlButton();
-    }
-
     private void touchToAddWaypoint(PointF p) {
+        isDragged = true;
         GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
         mapMarker.setDraggable(true);
@@ -456,11 +456,11 @@ class MapFragmentView {
 
                                 @Override
                                 public void onMapTransformEnd(MapState mapState) {
-                                    if (mapState.getOrientation() != 0 || mapState.getTilt() != 0) {
-                                        northUpButton.setVisibility(View.VISIBLE);
-                                    } else {
-                                        northUpButton.setVisibility(View.GONE);
-                                    }
+//                                    if (mapState.getOrientation() != 0 || mapState.getTilt() != 0) {
+//                                        northUpButton.setVisibility(View.VISIBLE);
+//                                    } else {
+//                                        northUpButton.setVisibility(View.GONE);
+//                                    }
                                 }
                             });
 
@@ -469,6 +469,7 @@ class MapFragmentView {
                             northUpButton.setOnClickListener(v -> {
                                 m_map.setOrientation(0);
                                 m_map.setTilt(0);
+                                m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
                             });
                             zoomInButton = m_activity.findViewById(R.id.zoom_in);
                             zoomInButton.setOnClickListener(v -> {
@@ -485,6 +486,7 @@ class MapFragmentView {
                             m_positioningManager = PositioningManager.getInstance();
 
                             /* Advanced positioning */
+                            /* Disable to run on emulator */
                             LocationDataSourceHERE m_hereDataSource;
                             m_hereDataSource = LocationDataSourceHERE.getInstance();
                             m_positioningManager.setDataSource(m_hereDataSource);
@@ -507,15 +509,17 @@ class MapFragmentView {
                             positionIndicator.setVisible(true);
                             positionIndicator.setAccuracyIndicatorVisible(true);
 
-                            /* Voice Guidance init */
-                            VoiceActivation voiceActivation = new VoiceActivation();
+                            /* Download voice */
+                            voiceActivation = new VoiceActivation();
+                            voiceActivation.setContext(m_activity);
+                            String desiredVoiceLanguageCode = "CHT";
+                            voiceActivation.setDesiredLangCode(desiredVoiceLanguageCode);
                             voiceActivation.downloadCatalogAndSkin();
                         } else {
                             Toast.makeText(m_activity, "ERROR: Cannot initialize Map with error " + error, Toast.LENGTH_LONG).show();
                         }
                     }
                 });
-
             }
         }
     }
@@ -570,8 +574,8 @@ class MapFragmentView {
                 }
             }
         });
-        m_clearButton = m_activity.findViewById(R.id.clear);
-        m_clearButton.setOnClickListener(new View.OnClickListener() {
+        clearButton = m_activity.findViewById(R.id.clear);
+        clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 resetMap();
@@ -661,7 +665,7 @@ class MapFragmentView {
         junctionViewImageView.setVisibility(View.GONE);
         signpostImageView = m_activity.findViewById(R.id.signpostImageView);
         signpostImageView.setVisibility(View.GONE);
-        int jvViewHeight = m_activity.findViewById(R.id.main_linear_layout).getHeight() / 6;
+        int jvViewHeight = m_activity.findViewById(R.id.main_linear_layout).getHeight() / 7;
         int jvViewWidth = (int) (m_activity.findViewById(R.id.main_linear_layout).getWidth() / 2.5);
         junctionViewImageView.requestLayout();
         junctionViewImageView.getLayoutParams().height = jvViewHeight;
@@ -716,6 +720,11 @@ class MapFragmentView {
         m_map.setTilt(60);
         m_navigationManager.startNavigation(m_route);
         m_positioningManager.setMapMatchingEnabled(true);
+
+        /* Voice Guidance init */
+        VoiceCatalog voiceCatalog = voiceActivation.getVoiceCatalog();
+        VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
+        voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(voiceActivation.getDesiredVoiceId()));
         EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
                 NavigationManager.AudioEvent.MANEUVER,
                 NavigationManager.AudioEvent.ROUTE,
@@ -724,6 +733,7 @@ class MapFragmentView {
                 NavigationManager.AudioEvent.GPS
         );
         m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
+
         supportMapFragment.setOnTouchListener(mapOnTouchListener);
         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         mapLocalModel = createPosition3dObj();
@@ -763,6 +773,11 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        if (coreRouter != null) {
+            if (coreRouter.isBusy()) {
+                coreRouter.cancel();
+            }
+        }
         supportMapFragment.setOnTouchListener(null);
         positionIndicator.setVisible(true);
         positionIndicator.setAccuracyIndicatorVisible(true);
@@ -832,12 +847,12 @@ class MapFragmentView {
         }
         waypointIconList.clear();
 
-        CoreRouter coreRouter = new CoreRouter();
+        coreRouter = new CoreRouter();
 
         RoutePlan routePlan = new RoutePlan();
 
         RouteOptions routeOptionCarAllowHighway = new RouteOptions();
-        routeOptionCarAllowHighway.setTransportMode(RouteOptions.TransportMode.SCOOTER);
+        routeOptionCarAllowHighway.setTransportMode(RouteOptions.TransportMode.CAR);
         routeOptionCarAllowHighway.setHighwaysAllowed(true);
         routeOptionCarAllowHighway.setRouteType(RouteOptions.Type.FASTEST);
         routeOptionCarAllowHighway.setRouteCount(1);
@@ -887,16 +902,17 @@ class MapFragmentView {
         DynamicPenalty dynamicPenalty = new DynamicPenalty();
         dynamicPenalty.setTrafficPenaltyMode(Route.TrafficPenaltyMode.OPTIMAL);
         coreRouter.setDynamicPenalty(dynamicPenalty);
+        Log.d("Test", "Start calculating route.");
 
         coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
             public void onProgress(int i) {
-                /* The calculation progress can be retrieved in this callback. */
+                Log.d("Test", "Route calculation progress: " + i);
             }
 
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
-                /* Calculation is done.Let's handle the result */
+                Log.d("Test", "Route calculation finished.");
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
@@ -906,17 +922,19 @@ class MapFragmentView {
                         resetMapRoute(m_route);
 
                         mapRouteBBox = m_route.getBoundingBox();
-                        if (mapRouteBBox.getHeight() > 0.1 || mapRouteBBox.getWidth() > 0.1) {
+
+                        if (mapRouteBBox.getHeight() > 0.01 || mapRouteBBox.getWidth() > 0.01) {
                             mapRouteBBox.expand(2000f, 2000f);
                         } else {
-                            mapRouteBBox.expand(500f, 500f);
+                            mapRouteBBox.expand(2000f, 2000f);
                         }
-                        m_map.zoomTo(mapRouteBBox, Map.Animation.NONE, Map.MOVE_PRESERVE_ORIENTATION);
+                        m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         startNavigation();
                     } else {
                         Toast.makeText(m_activity, "Error: " + RoutingError.NONE, Toast.LENGTH_LONG).show();
                     }
                 } else {
+                    Log.d("Test", "Error:route calculation returned error code: " + routingError);
                     Toast.makeText(m_activity, "Error:route calculation returned error code: " + routingError, Toast.LENGTH_LONG).show();
                 }
             }
@@ -1020,88 +1038,6 @@ class MapFragmentView {
                 vertIndicieBuffer.put(indices.get());
             }
             return vertIndicieBuffer;
-        }
-    }
-
-    class VoiceActivation {
-        VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
-
-        void retryVoiceDownload(final long id) {
-            AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
-            alertDialogBuilder.setTitle("Voice Download Failed");
-            alertDialogBuilder.setNegativeButton("Retry", new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialoginterface, int i) {
-                    downloadVoice(id);
-                }
-            });
-            AlertDialog alertDialog = alertDialogBuilder.create();
-            alertDialog.show();
-        }
-
-        void downloadVoice(final long voiceSkinId) {
-            Log.d("Test", "Downloading voice skin ID: " + voiceSkinId);
-            Toast.makeText(m_activity, "Downloading voice skin ID: " + voiceSkinId, Toast.LENGTH_SHORT).show();
-            voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
-                @Override
-                public void onDownloadDone(VoiceCatalog.Error error) {
-                    if (error != VoiceCatalog.Error.NONE) {
-                        retryVoiceDownload(voiceSkinId);
-                        Toast.makeText(m_activity, "Failed downloading voice skin " + voiceSkinId, Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(m_activity, "Voice skin " + voiceSkinId + " downloaded and activated.", Toast.LENGTH_SHORT).show();
-                        //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
-                        VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
-                        NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
-                        Log.d("Test", "Voice skin " + voiceSkinId + " downloaded and activated.");
-                    }
-                }
-            });
-        }
-
-        void downloadCatalogAndSkin() {
-            final Boolean[] localVoiceSkinExisted = {false};
-            VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
-                String desiredLangCode = "cht"; //Taiwan
-                long desiredVoiceId = 0;
-
-                @Override
-                public void onDownloadDone(VoiceCatalog.Error error) {
-
-                    if (error != VoiceCatalog.Error.NONE) {
-                        Log.d("Test", "Failed to download catalog.");
-                    } else {
-//                        Log.d("Test", "Catalog downloaded");
-                        List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
-                        Log.d("Test", "# of available voicePackages: " + voicePackages.size());
-                        for (VoicePackage lang : voicePackages) {
-                            if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
-                                if (lang.isTts()) {
-                                    desiredVoiceId = lang.getId();
-                                    break;
-                                }
-                            }
-                            Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
-                        }
-                        List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-                        localInstalledSkins.clear();
-//                        Log.d("Test", "# of local skins: " + localInstalledSkins.size());
-                        for (VoiceSkin voice : localInstalledSkins) {
-                            Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
-                            if (voice.getId() == desiredVoiceId) {
-                                localVoiceSkinExisted[0] = true;
-                            }
-                        }
-                        Log.d("Test", "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
-                        if (!localVoiceSkinExisted[0]) {
-                            downloadVoice(desiredVoiceId);
-                        } else {
-                            Toast.makeText(m_activity, "Voice skin " + desiredVoiceId + " downloaded and activated", Toast.LENGTH_SHORT).show();
-                            VoiceGuidanceOptions voiceGuidanceOptions = m_navigationManager.getVoiceGuidanceOptions();
-                            voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
-                        }
-                    }
-                }
-            });
         }
     }
 }

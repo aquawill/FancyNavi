@@ -72,11 +72,13 @@
         </service>
 
         <!-- HERE Positioning Service definition. -->
+        <!-- Disable to run on emulator -->
         <service
             android:name="com.here.services.internal.LocationService"
             android:enabled="true"
             android:exported="false"
             android:process=":remote"></service>
+
         <service android:name=".ForegroundService" />
     </application>
 
