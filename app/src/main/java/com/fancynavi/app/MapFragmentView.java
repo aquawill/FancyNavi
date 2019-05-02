@@ -1,22 +1,16 @@
 package com.fancynavi.app;
 
 import android.app.AlertDialog;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PointF;
-import android.graphics.drawable.Drawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.graphics.drawable.DrawableCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -25,6 +19,8 @@ import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.here.android.mpa.common.CopyrightLogoPosition;
@@ -32,7 +28,6 @@ import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
-import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
@@ -49,7 +44,6 @@ import com.here.android.mpa.guidance.VoiceGuidanceOptions;
 import com.here.android.mpa.mapping.LocalMesh;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapGesture;
-import com.here.android.mpa.mapping.MapLabeledMarker;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
@@ -61,9 +55,7 @@ import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.DynamicPenalty;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
-import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteResult;
-import com.here.android.mpa.routing.RouteWaypoint;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
 import com.here.msdkui.guidance.GuidanceManeuverData;
@@ -87,30 +79,24 @@ import de.javagl.obj.ObjReader;
 
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
-//HERE SDK UI KIT components
-
-/**
- * This class encapsulates the properties and functionality of the Map view.It also triggers a
- * turn-by-turn navigation from HERE Burnaby office to Langley BC.There is a sample voice skin
- * bundled within the SDK package to be used out-of-box, please refer to the Developer's guide for
- * the usage.
- */
 class MapFragmentView {
-    public AppCompatActivity m_activity;
-    Map m_map;
+    static Map m_map;
+    static GeoPosition currentGeoPosition;
     NavigationManager m_navigationManager;
     boolean isRoadView = false;
     boolean isDragged = false;
-    PositionIndicator positionIndicator;
+    private boolean isRouteOverView = false;
+    private PositioningManager m_positioningManager;
+    private AppCompatActivity m_activity;
+    private PositionIndicator positionIndicator;
     private SupportMapFragment supportMapFragment;
     private Button m_naviControlButton;
-    VoiceActivation voiceActivation;
+    private VoiceActivation voiceActivation;
     private Button northUpButton;
     private Button zoomInButton;
     private Button zoomOutButton;
-
-    private PositioningManager m_positioningManager;
-    private Button clearButton;
+    private ProgressBar progressBar;
+    private TextView calculatingTextView;
     private Route m_route;
     private MapRoute mapRoute;
     private GeoBoundingBox mapRouteBBox;
@@ -120,9 +106,9 @@ class MapFragmentView {
     //HERE SDK UI KIT components
     private GuidanceManeuverView guidanceManeuverView;
     private GuidanceManeuverPresenter guidanceManeuverPresenter;
-    private boolean isRouteOverView = false;
     private ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-    private ArrayList<MapMarker> waypointIconList = new ArrayList<>();
+    private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
+    private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
         @Override
@@ -226,18 +212,17 @@ class MapFragmentView {
 
         }
     };
-    private GeoPosition previousKnownPosition;
+
     private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-            Log.d("Test", "geoPosition.getCoordinate(): " + geoPosition.getCoordinate());
-            Log.d("Test", "geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
-            Log.d("Test", "geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology());
+            currentGeoPosition = geoPosition;
+//            Log.d("Test", "geoPosition.getCoordinate(): " + geoPosition.getCoordinate());
+//            Log.d("Test", "geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
+//            Log.d("Test", "geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology());
             if (!isRouteOverView) {
                 if (!isDragged) {
-                    if (!geoPosition.equals(previousKnownPosition)) {
-                        m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
-                    }
+                    m_map.setCenter(currentGeoPosition.getCoordinate(), Map.Animation.NONE);
                 }
             }
         }
@@ -366,12 +351,34 @@ class MapFragmentView {
 
         @Override
         public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            junctionViewImageView.setVisibility(View.VISIBLE);
-            signpostImageView.setVisibility(View.VISIBLE);
+            View mainLinearLayout = m_activity.findViewById(R.id.main_linear_layout);
+            junctionViewImageView.requestLayout();
+            signpostImageView.requestLayout();
+            int jvViewHeight = mainLinearLayout.getHeight() / 5;
+            int jvViewWidth;
+            switch (aspectRatio) {
+                case AR_16x9:
+                    jvViewWidth = jvViewHeight / 9 * 16;
+                    break;
+                case AR_5x3:
+                    jvViewWidth = jvViewHeight / 3 * 5;
+                    break;
+                case AR_4x3:
+                    jvViewWidth = jvViewHeight / 3 * 4;
+                    break;
+                default:
+                    jvViewWidth = jvViewHeight * 2;
+            }
+            junctionViewImageView.getLayoutParams().height = jvViewHeight;
+            junctionViewImageView.getLayoutParams().width = jvViewWidth;
+            signpostImageView.getLayoutParams().height = jvViewHeight;
+            signpostImageView.getLayoutParams().width = jvViewWidth;
             Bitmap junctionBitmap = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
             Bitmap signpostBitMap = signpost.getBitmap((int) signpost.getWidth(), (int) signpost.getHeight());
             junctionViewImageView.setImageBitmap(junctionBitmap);
             signpostImageView.setImageBitmap(signpostBitMap);
+            junctionViewImageView.setVisibility(View.VISIBLE);
+            signpostImageView.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -387,6 +394,12 @@ class MapFragmentView {
         initNaviControlButton();
     }
 
+    static PointF getMapMarkerAnchorPoint(MapMarker mapMarker) {
+        int iconHeight = (int) mapMarker.getIcon().getHeight();
+        int iconWidth = (int) mapMarker.getIcon().getWidth();
+        return new PointF((float) (iconWidth / 2), (float) iconHeight);
+    }
+
     private void resetMapRoute(Route route) {
         if (mapRoute != null) {
             m_map.removeMapObject(mapRoute);
@@ -395,6 +408,8 @@ class MapFragmentView {
         mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
         mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
         mapRoute.setTraveledColor(Color.DKGRAY);
+        mapRoute.setUpcomingColor(Color.LTGRAY);
+        mapRoute.setTrafficEnabled(true);
         m_map.addMapObject(mapRoute);
     }
 
@@ -403,7 +418,7 @@ class MapFragmentView {
         GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
         mapMarker.setDraggable(true);
-        waypointIconList.add(mapMarker);
+        userInputWaypoints.add(mapMarker);
         mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
         m_map.addMapObject(mapMarker);
     }
@@ -487,9 +502,9 @@ class MapFragmentView {
 
                             /* Advanced positioning */
                             /* Disable to run on emulator */
-                            LocationDataSourceHERE m_hereDataSource;
-                            m_hereDataSource = LocationDataSourceHERE.getInstance();
-                            m_positioningManager.setDataSource(m_hereDataSource);
+//                            LocationDataSourceHERE m_hereDataSource;
+//                            m_hereDataSource = LocationDataSourceHERE.getInstance();
+//                            m_positioningManager.setDataSource(m_hereDataSource);
                             m_positioningManager.addListener(new WeakReference<>(positionListener));
 
                             /* GPS logging function */
@@ -557,13 +572,15 @@ class MapFragmentView {
 
     private void initNaviControlButton() {
         m_naviControlButton = m_activity.findViewById(R.id.startGuidance);
-        m_naviControlButton.setText("Start Navi");
+        m_naviControlButton.setText("Create Route");
         m_naviControlButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (m_route == null) {
                     m_navigationManager = NavigationManager.getInstance();
-                    createRoute();
+                    calculateRoute();
+                    m_naviControlButton.setText("Start Navi");
+
                 } else {
                     m_navigationManager.stop();
                     m_map.removeMapObject(mapLocalModel);
@@ -574,12 +591,11 @@ class MapFragmentView {
                 }
             }
         });
-        clearButton = m_activity.findViewById(R.id.clear);
+        Button clearButton = m_activity.findViewById(R.id.clear);
         clearButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 resetMap();
-                m_naviControlButton.setText("Start Navi");
             }
         });
 
@@ -665,14 +681,7 @@ class MapFragmentView {
         junctionViewImageView.setVisibility(View.GONE);
         signpostImageView = m_activity.findViewById(R.id.signpostImageView);
         signpostImageView.setVisibility(View.GONE);
-        int jvViewHeight = m_activity.findViewById(R.id.main_linear_layout).getHeight() / 7;
-        int jvViewWidth = (int) (m_activity.findViewById(R.id.main_linear_layout).getWidth() / 2.5);
-        junctionViewImageView.requestLayout();
-        junctionViewImageView.getLayoutParams().height = jvViewHeight;
-        junctionViewImageView.getLayoutParams().width = jvViewWidth;
-        signpostImageView.requestLayout();
-        signpostImageView.getLayoutParams().height = jvViewHeight;
-        signpostImageView.getLayoutParams().width = jvViewWidth;
+
     }
 
     private void initGuidanceManeuverView(Route route) {
@@ -740,9 +749,20 @@ class MapFragmentView {
     }
 
     private void startNavigation() {
+
+        initGuidanceManeuverView(m_route);
+        resetMapRoute(m_route);
+        mapRouteBBox = m_route.getBoundingBox();
+        if (mapRouteBBox.getHeight() > 0.01 || mapRouteBBox.getWidth() > 0.01) {
+            mapRouteBBox.expand(2000f, 2000f);
+        } else {
+            mapRouteBBox.expand(2000f, 2000f);
+        }
+        m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
+
+
         resetMapCenter(m_map);
         m_map.setTilt(0);
-        m_naviControlButton.setText("Stop Navi");
         m_navigationManager.setMap(m_map);
         m_map.zoomTo(mapRouteBBox, Map.Animation.NONE, 0f);
 
@@ -751,6 +771,7 @@ class MapFragmentView {
         alertDialogBuilder.setMessage("Choose Mode");
         alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
+                m_naviControlButton.setText("Stop Navi");
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.startNavigation(m_route);
@@ -761,6 +782,7 @@ class MapFragmentView {
         });
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
+                m_naviControlButton.setText("Stop Navi");
                 intoNavigationMode();
                 NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
                 Toast.makeText(m_activity, "Error: " + error.toString(), Toast.LENGTH_SHORT).show();
@@ -786,7 +808,7 @@ class MapFragmentView {
                 m_navigationManager.stop();
             }
         }
-        m_naviControlButton.setText("Start Navi");
+        m_naviControlButton.setText("Create Route");
         m_route = null;
         if (guidanceManeuverPresenter != null) {
             guidanceManeuverPresenter.pause();
@@ -799,12 +821,18 @@ class MapFragmentView {
         if (mapRoute != null) {
             m_map.removeMapObject(mapRoute);
         }
-        if (!waypointIconList.isEmpty()) {
-            for (MapMarker mkr : waypointIconList) {
+        if (!userInputWaypoints.isEmpty()) {
+            for (MapMarker mkr : userInputWaypoints) {
                 m_map.removeMapObject(mkr);
             }
         }
-        waypointIconList.clear();
+        if (!wayPointIcons.isEmpty()) {
+            for (MapMarker mkr : wayPointIcons) {
+                m_map.removeMapObject(mkr);
+            }
+        }
+        wayPointIcons.clear();
+        userInputWaypoints.clear();
         waypointList.clear();
         isDragged = false;
         supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
@@ -813,101 +841,45 @@ class MapFragmentView {
         northUpButton.setAlpha(1);
     }
 
-    // https://www.jianshu.com/p/0555b8c1d26a
-    // https://stackoverflow.com/questions/33696488/getting-bitmap-from-vector-drawable
-    private Bitmap getBitmapFromVectorDrawable(Context context, int drawableId) {
-        Drawable drawable = ContextCompat.getDrawable(context, drawableId);
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            assert drawable != null;
-            drawable = (DrawableCompat.wrap(drawable)).mutate();
-        }
-
-        assert drawable != null;
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(),
-                Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-
-        return bitmap;
-    }
-
-    private PointF getMapMarkerAnchorPoint(MapMarker mapMarker) {
-        int iconHeight = (int) mapMarker.getIcon().getHeight();
-        int iconWidth = (int) mapMarker.getIcon().getWidth();
-        return new PointF((float) (iconWidth / 2), (float) iconHeight);
-    }
-
-    private void createRoute() {
-        for (int i = 0; i < waypointIconList.size(); i++) {
-            MapMarker mapMarker = waypointIconList.get(i);
-            Log.d("Test", "i " + mapMarker.getCoordinate());
+    private void calculateRoute() {
+        for (int i = 0; i < userInputWaypoints.size(); i++) {
+            MapMarker mapMarker = userInputWaypoints.get(i);
             waypointList.add(mapMarker.getCoordinate());
             m_map.removeMapObject(mapMarker);
         }
-        waypointIconList.clear();
 
-        coreRouter = new CoreRouter();
-
-        RoutePlan routePlan = new RoutePlan();
-
+        userInputWaypoints.clear();
         RouteOptions routeOptionCarAllowHighway = new RouteOptions();
         routeOptionCarAllowHighway.setTransportMode(RouteOptions.TransportMode.CAR);
         routeOptionCarAllowHighway.setHighwaysAllowed(true);
         routeOptionCarAllowHighway.setRouteType(RouteOptions.Type.FASTEST);
         routeOptionCarAllowHighway.setRouteCount(1);
-        routePlan.setRouteOptions(routeOptionCarAllowHighway);
+        HereRouter hereRouter = new HereRouter(routeOptionCarAllowHighway);
+        hereRouter.setContext(m_activity);
+        hereRouter.setWaypoints(waypointList);
 
-        //waypointList.add(m_positioningManager.getPosition().getCoordinate());
-        //waypointList.add(new GeoCoordinate(-26.1001341, 28.173676100000005));
-        //waypointList.add(new GeoCoordinate(-26.101369899999987, 28.1758224));
-        //waypointList.add(new GeoCoordinate(-26.104472700000002, 28.173528200000003));
-        //waypointList.add(new GeoCoordinate(-26.10483949999999, 28.1724682));
+        hereRouter.createRoute();
 
-        if (waypointList.size() == 1) {
-            waypointList.add(0, m_positioningManager.getPosition().getCoordinate());
-        } else if (waypointList.isEmpty()) {
-            Toast.makeText(m_activity, "wayPointList is empty.", Toast.LENGTH_SHORT).show();
-        }
-
-        for (int i = 0; i < waypointList.size(); i++) {
-            GeoCoordinate coord = waypointList.get(i);
-            MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(coord);
-            mapLabeledMarker.setLabelText("eng", "Waypoint Index " + i);
-            Log.d("Test", "Waypoint Index " + i + " : " + coord);
-            mapLabeledMarker.setFontScalingFactor(2.0f);
-            m_map.addMapObject(mapLabeledMarker);
-            RouteWaypoint waypoint = new RouteWaypoint(coord);
-            MapMarker mapMarker = new MapMarker();
-            Image icon = new Image();
-            if (i != 0 && i != waypointList.size() - 1) {
-                waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
-                mapMarker.setCoordinate(waypoint.getOriginalPosition());
-            } else {
-                if (i == 0) {
-                    icon.setBitmap(getBitmapFromVectorDrawable(m_activity, R.drawable.ic_orig));
-                    mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
-                } else if (i == waypointList.size() - 1) {
-                    icon.setBitmap(getBitmapFromVectorDrawable(m_activity, R.drawable.ic_dest));
-                    mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
-                }
-            }
-            waypointIconList.add(mapMarker);
-            m_map.addMapObject(mapMarker);
-            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
-            routePlan.addWaypoint(waypoint);
-        }
-
-        /*Traffic Enabled Route*/
+        coreRouter = new CoreRouter();
         DynamicPenalty dynamicPenalty = new DynamicPenalty();
         dynamicPenalty.setTrafficPenaltyMode(Route.TrafficPenaltyMode.OPTIMAL);
         coreRouter.setDynamicPenalty(dynamicPenalty);
-        Log.d("Test", "Start calculating route.");
+        userInputWaypoints = hereRouter.getWaypointIcons();
 
-        coreRouter.calculateRoute(routePlan, new Router.Listener<List<RouteResult>, RoutingError>() {
+        progressBar = m_activity.findViewById(R.id.progressBar);
+        calculatingTextView = m_activity.findViewById(R.id.calculatingTextView);
+
+        coreRouter.calculateRoute(hereRouter.getRoutePlan(), new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
             public void onProgress(int i) {
-                Log.d("Test", "Route calculation progress: " + i);
+                if (i < 100) {
+                    progressBar.setVisibility(View.VISIBLE);
+                    calculatingTextView.setVisibility(View.VISIBLE);
+                    progressBar.setProgress(i);
+                } else {
+                    calculatingTextView.setVisibility(View.INVISIBLE);
+                    progressBar.setVisibility(View.INVISIBLE);
+                }
             }
 
             @Override
@@ -918,11 +890,8 @@ class MapFragmentView {
                         isRouteOverView = true;
                         m_route = routeResults.get(0).getRoute();
                         initGuidanceManeuverView(m_route);
-
                         resetMapRoute(m_route);
-
                         mapRouteBBox = m_route.getBoundingBox();
-
                         if (mapRouteBBox.getHeight() > 0.01 || mapRouteBBox.getWidth() > 0.01) {
                             mapRouteBBox.expand(2000f, 2000f);
                         } else {
@@ -942,17 +911,13 @@ class MapFragmentView {
     }
 
     private void addNavigationListeners() {
-        /*
-         * Register a NavigationManagerEventListener to monitor the status change on
-         * NavigationManager
-         */
         m_activity.findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
         m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(m_navigationManagerEventListener));
         m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
         m_navigationManager.addNewInstructionEventListener(new WeakReference<>(m_newInstructionEventListener));
         m_navigationManager.addSafetySpotListener(new WeakReference<>(safetySpotListener));
         m_navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
-        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_4x3);
+        m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_16x9);
         m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
         m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
         m_navigationManager.addRerouteListener(new WeakReference<>(new NavigationManager.RerouteListener() {

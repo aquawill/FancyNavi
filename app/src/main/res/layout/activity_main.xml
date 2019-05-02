@@ -79,9 +79,9 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <LinearLayout
+            android:id="@+id/linearLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="@id/mapFragmentView"
@@ -104,6 +104,37 @@
                 android:background="@color/lui_light"
                 android:text="-" />
         </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="60dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="60dp"
+            android:layout_marginBottom="8dp"
+            android:background="#00C7C7C7"
+            android:max="100"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintEnd_toEndOf="@+id/mapFragmentView"
+            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
+            app:layout_constraintTop_toTopOf="@+id/mapFragmentView" />
+
+        <TextView
+            android:id="@+id/calculatingTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="#00D6D6D6"
+            android:text="Calculating..."
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@+id/progressBar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
     </android.support.constraint.ConstraintLayout>
 
 
