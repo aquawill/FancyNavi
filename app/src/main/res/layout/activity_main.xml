@@ -2,9 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_linear_layout"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:id="@+id/main_linear_layout"
     android:orientation="vertical">
 
     <LinearLayout
@@ -23,8 +23,7 @@
             android:id="@+id/startGuidance"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/start_guidance" />
+            android:layout_weight="1" />
     </LinearLayout>
 
     <com.here.msdkui.guidance.GuidanceManeuverView
@@ -69,19 +68,33 @@
             android:id="@+id/north_up"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginBottom="16dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/lui_light"
             android:elevation="2dp"
             android:text="↑"
-            android:background="@color/lui_light"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/traffic_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/lui_light"
+            android:elevation="2dp"
+            android:text="T"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
             android:id="@+id/linearLayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="@id/mapFragmentView"
@@ -94,7 +107,8 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@color/lui_light"
-                android:text="+" />
+                android:text="+"
+                android:textSize="24sp" />
 
             <Button
                 android:id="@+id/zoom_out"
@@ -102,7 +116,8 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@color/lui_light"
-                android:text="-" />
+                android:text="-"
+                android:textSize="24sp" />
         </LinearLayout>
 
         <ProgressBar
@@ -128,14 +143,79 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
-            android:background="#00D6D6D6"
+            android:background="#00C7C7C7"
             android:text="Calculating..."
             android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/progressBar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
+        <TableLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="160dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="160dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/mapFragmentView">
+
+            <TableRow
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/car_route"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="4dp"
+                    android:background="@android:color/holo_red_dark"
+                    android:foreground="@drawable/ic_drive"
+                    android:padding="4dp"
+                    android:visibility="invisible" />
+
+                <Button
+                    android:id="@+id/truck_route"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="4dp"
+                    android:background="@android:color/holo_orange_dark"
+                    android:foreground="@drawable/ic_truck_24"
+                    android:padding="4dp"
+                    android:visibility="invisible" />
+
+                <Button
+                    android:id="@+id/scooter_route"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="4dp"
+                    android:background="@android:color/holo_green_dark"
+                    android:foreground="@drawable/ic_scooter"
+                    android:padding="4dp"
+                    android:visibility="invisible" />
+
+                <Button
+                    android:id="@+id/bike_route"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="4dp"
+                    android:background="@android:color/holo_blue_dark"
+                    android:foreground="@drawable/ic_bike_24"
+                    android:padding="4dp"
+                    android:visibility="invisible" />
+
+                <Button
+                    android:id="@+id/peds_route"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_margin="4dp"
+                    android:background="@android:color/holo_purple"
+                    android:foreground="@drawable/ic_walk_24"
+                    android:padding="4dp"
+                    android:visibility="invisible" />
+
+            </TableRow>
+        </TableLayout>
+
     </android.support.constraint.ConstraintLayout>
-
-
 </LinearLayout>

@@ -6,7 +6,6 @@ import android.widget.Toast;
 
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.Image;
-import com.here.android.mpa.mapping.MapLabeledMarker;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
@@ -15,7 +14,6 @@ import com.here.android.mpa.routing.RouteWaypoint;
 import java.util.ArrayList;
 
 import static com.fancynavi.app.MapFragmentView.currentGeoPosition;
-import static com.fancynavi.app.MapFragmentView.getMapMarkerAnchorPoint;
 import static com.fancynavi.app.MapFragmentView.m_map;
 
 class HereRouter {
@@ -23,7 +21,8 @@ class HereRouter {
     private RoutePlan routePlan;
     private RouteOptions routeOptions;
     private ArrayList<GeoCoordinate> waypoints = new ArrayList<>();
-    private ArrayList<MapMarker> waypointIcons = new ArrayList<>();
+    private ArrayList<MapMarker> inputWaypointIcons = new ArrayList<>();
+    private ArrayList<MapMarker> outputWaypointIcons = new ArrayList<>();
 
     public HereRouter(RouteOptions routeOptions) {
         this.routeOptions = routeOptions;
@@ -45,19 +44,19 @@ class HereRouter {
         this.routeOptions = routeOptions;
     }
 
-    ArrayList<MapMarker> getWaypointIcons() {
-        return waypointIcons;
+    ArrayList<MapMarker> getOutputWaypointIcons() {
+        return outputWaypointIcons;
     }
 
     void createRoute() {
-        for (int i = 0; i < waypointIcons.size(); i++) {
-            MapMarker mapMarker = waypointIcons.get(i);
+        for (int i = 0; i < inputWaypointIcons.size(); i++) {
+            MapMarker mapMarker = inputWaypointIcons.get(i);
             Log.d("Test", "i " + mapMarker.getCoordinate());
             waypoints.add(mapMarker.getCoordinate());
             m_map.removeMapObject(mapMarker);
         }
 
-        waypointIcons.clear();
+        inputWaypointIcons.clear();
         routePlan = new RoutePlan();
 
         if (waypoints.size() == 1) {
@@ -65,17 +64,13 @@ class HereRouter {
         } else if (waypoints.isEmpty()) {
             Toast.makeText(context, "waypoints is empty.", Toast.LENGTH_SHORT).show();
         }
-
         VectorDrawableConverter vectorDrawableConverter = new VectorDrawableConverter();
-        Log.d("Test", "waypoints.size(): " + waypoints.size());
 
         for (int i = 0; i < waypoints.size(); i++) {
             GeoCoordinate coord = waypoints.get(i);
-            MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(coord);
-            mapLabeledMarker.setLabelText("eng", "Waypoint Index " + i);
-            Log.d("Test", "Waypoint Index " + i + " : " + coord);
-            mapLabeledMarker.setFontScalingFactor(2.0f);
-            m_map.addMapObject(mapLabeledMarker);
+//            MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(coord);
+//            mapLabeledMarker.setLabelText("eng", "Waypoint Index " + i);
+//            m_map.addMapObject(mapLabeledMarker);
             RouteWaypoint waypoint = new RouteWaypoint(coord);
             MapMarker mapMarker = new MapMarker();
             Image icon = new Image();
@@ -91,9 +86,7 @@ class HereRouter {
                     mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
                 }
             }
-            waypointIcons.add(mapMarker);
-            m_map.addMapObject(mapMarker);
-            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
+            outputWaypointIcons.add(mapMarker);
             routePlan.addWaypoint(waypoint);
             routePlan.setRouteOptions(routeOptions);
         }
