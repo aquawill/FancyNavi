@@ -29,6 +29,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -53,9 +54,14 @@ import static com.google.android.gms.location.LocationServices.getFusedLocationP
  */
 
 public class MainActivity extends AppCompatActivity {
-
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
+    static GeoCoordinate updatedLatLng;
+    Bundle mViewBundle = new Bundle();
+    private Button offlineMapButton;
     private MapFragmentView m_mapFragmentView;
+    private LocationRequest mLocationRequest;
+    private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
+    private long FASTEST_INTERVAL = 2000; /* 2 sec */
 
     public void hideGuidanceView() {
         View guidanceView = findViewById(R.id.guidanceManeuverView);
@@ -69,17 +75,10 @@ public class MainActivity extends AppCompatActivity {
         signpostView.setVisibility(View.GONE);
     }
 
-    Bundle mViewBundle = new Bundle();
-
     public void setData(Bundle data) {
         mViewBundle = data;
 
     }
-
-    static GeoCoordinate updatedLatLng;
-    private LocationRequest mLocationRequest;
-    private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
-    private long FASTEST_INTERVAL = 2000; /* 2 sec */
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         hideJunctionView();
         requestPermissions();
         startLocationUpdates();
+
     }
 
     protected void startLocationUpdates() {
@@ -169,8 +169,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (!m_mapFragmentView.isRoadView) {
-            m_mapFragmentView.shiftMapCenter(m_mapFragmentView.m_map);
-            m_mapFragmentView.m_map.setTilt(60);
+            m_mapFragmentView.shiftMapCenter(MapFragmentView.m_map);
+            MapFragmentView.m_map.setTilt(60);
             m_mapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
         } else {
             m_mapFragmentView.isDragged = false;

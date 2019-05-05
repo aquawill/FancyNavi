@@ -84,8 +84,9 @@ class MapFragmentView {
     private AppCompatActivity m_activity;
     private PositionIndicator positionIndicator;
     private SupportMapFragment supportMapFragment;
-    private Button m_naviControlButton;
     private VoiceActivation voiceActivation;
+    private Button m_naviControlButton;
+    private Button clearButton;
     private Button northUpButton;
     private Button zoomInButton;
     private Button zoomOutButton;
@@ -270,6 +271,7 @@ class MapFragmentView {
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
             touchToAddWaypoint(pointF);
+//            pointReverseGeocode(pointF);
             return true;
         }
 
@@ -373,7 +375,7 @@ class MapFragmentView {
             }
             junctionViewImageView.getLayoutParams().height = jvViewHeight;
             junctionViewImageView.getLayoutParams().width = jvViewWidth;
-            signpostImageView.getLayoutParams().height = jvViewHeight;
+            signpostImageView.getLayoutParams().height = (int) (jvViewHeight * 0.75);
             signpostImageView.getLayoutParams().width = jvViewWidth;
             Bitmap junctionBitmap = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
             Bitmap signpostBitMap = signpost.getBitmap((int) signpost.getWidth(), (int) signpost.getHeight());
@@ -428,6 +430,8 @@ class MapFragmentView {
         scooterRouteButton.setVisibility(View.VISIBLE);
         bikeRouteButton.setVisibility(View.VISIBLE);
         pedsRouteButton.setVisibility(View.VISIBLE);
+        m_naviControlButton.setVisibility(View.VISIBLE);
+        clearButton.setVisibility(View.VISIBLE);
     }
 
     private void initSupportMapFragment() {
@@ -540,6 +544,22 @@ class MapFragmentView {
                                     trafficButton.setTextColor(Color.parseColor("#FF000000"));
                                 }
                             });
+                            m_naviControlButton = m_activity.findViewById(R.id.startGuidance);
+                            m_naviControlButton.setText("Create Route");
+                            m_naviControlButton.setOnClickListener(v -> {
+                                if (m_route != null) {
+                                    m_navigationManager.stop();
+                                    m_map.removeMapObject(mapLocalModel);
+                                    resetMapCenter(m_map);
+                                    m_map.setTilt(0);
+                                    guidanceManeuverPresenter.pause();
+                                    startNavigation();
+                                }
+                            });
+                            clearButton = m_activity.findViewById(R.id.clear);
+                            clearButton.setOnClickListener(v -> resetMap());
+
+
 
                             /* PositioningManager init */
                             m_positioningManager = PositioningManager.getInstance();
@@ -615,20 +635,7 @@ class MapFragmentView {
     }
 
     private void initNaviControlButton() {
-        m_naviControlButton = m_activity.findViewById(R.id.startGuidance);
-        m_naviControlButton.setText("Create Route");
-        m_naviControlButton.setOnClickListener(v -> {
-            if (m_route != null) {
-                m_navigationManager.stop();
-                m_map.removeMapObject(mapLocalModel);
-                resetMapCenter(m_map);
-                m_map.setTilt(0);
-                guidanceManeuverPresenter.pause();
-                startNavigation();
-            }
-        });
-        Button clearButton = m_activity.findViewById(R.id.clear);
-        clearButton.setOnClickListener(v -> resetMap());
+
 
     }
 
@@ -743,6 +750,7 @@ class MapFragmentView {
         scooterRouteButton.setVisibility(View.INVISIBLE);
         bikeRouteButton.setVisibility(View.INVISIBLE);
         pedsRouteButton.setVisibility(View.INVISIBLE);
+
 
         positionIndicator.setVisible(false);
         positionIndicator.setAccuracyIndicatorVisible(false);
@@ -882,6 +890,8 @@ class MapFragmentView {
         scooterRouteButton.setVisibility(View.INVISIBLE);
         bikeRouteButton.setVisibility(View.INVISIBLE);
         pedsRouteButton.setVisibility(View.INVISIBLE);
+        m_naviControlButton.setVisibility(View.INVISIBLE);
+        clearButton.setVisibility(View.INVISIBLE);
     }
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {

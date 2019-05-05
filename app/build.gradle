@@ -42,4 +42,3 @@ dependencies {
     //implementation(name: 'obj-0.3.0', ext: 'jar')
     implementation 'com.google.android.gms:play-services-location:11.8.0'
 }
-

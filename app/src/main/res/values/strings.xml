@@ -3,4 +3,5 @@
     <string name="start_navi">Start Navigation</string>
     <string name="stop_navi">Stop Navigation</string>
     <string name="start_guidance">Start guidance</string>
+    <string name="available_maps">Available Maps</string>
 </resources>

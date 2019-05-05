@@ -17,19 +17,19 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permisssion.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <!-- To allow starting foreground services on Android P+ -->
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- To allow starting foreground services on Android P+ -->
     <!-- https://developer.android.com/preview/behavior-changes#fg-svc -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
     <application
         android:allowBackup="true"
+        android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="HERESdkTest"
-        android:supportsRtl="true"
-        android:fullBackupContent="true"
         android:networkSecurityConfig="@xml/network_security_config"
+        android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
         <meta-data
             android:name="com.google.android.actions"
             android:resource="@xml/network_security_config" />
@@ -43,9 +43,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <!--Developers should put application credentials here.To obtain them, please register the application
-         at https://developer.here.com/develop/mobile-sdks-->
+        <!--
+Developers should put application credentials here.To obtain them, please register the application
+         at https://developer.here.com/develop/mobile-sdks
+        -->
         <meta-data
             android:name="com.here.android.maps.appid"
             android:value="nvAyScuaUcvPRYibjqNe" />
@@ -55,9 +56,10 @@
         <meta-data
             android:name="com.here.android.maps.license.key"
             android:value="BO+xsSjLf/ALDGwzPK2FGKFaNhMK23qbopJE84hqs4zDgbpDCaWzsf1MCZpI9ItG+DgPH+m6RXxmKieGe/jn7kuw2zbQw51fuPP4WAGb7UNO9c6dx0dZ9kuOSwYvbBf+R4aBNiJ1DcsFAzuJyHsVOPSJkw6l/oCUJIY8x51NpQSrRnRm8rbySEwQplLmsSBaltBPvLryTtsFhrN8I01BB9T0LnLO0Xj3yuINFOWxxnqiaeINUGH3RNgEUPSTzhCShD3fKFkfnyLA2vM5rXFECrtk8TEY7RcX62p14iq46lqh7ZWkgCX046pHHxcO549cUNx6PCUMuYro2gu9JxQt57qaLDlxVKTJD+MauBx5Lzoq56ZlCFzb45Ftke2kUHqC7ns3XhINtATxlM/b3IR4YW49SwFmHl8ep/o3EjDIGZXZWoOqlMBoPurrNWeloudq10N9B5QwOGeRcbDWhNWI2mmXERru8QHEbFK/DlZgoJrUN3RLUZlpWDjkfTn1nB1qKquPEZZZs5ZvWduE+uUxTfZ2DIKW3XuAwfYcqVA1KlXdENVClBfv2CKP1pi43Zi/b/G9wkDOqDTfuhL0CHWSjp5y/G9xHnHI4g03k0pBG27D841DrHDgG/Ct+c1CkwCMZRRRVkytXBL7crdDY13wiGw+QrQ5al6eDafQaGv17bM=" />
-
-        <!--Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
-        Do not reuse HERE SDK defaults.-->
+        <!--
+Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
+        Do not reuse HERE SDK defaults.
+        -->
         <meta-data
             android:name="INTENT_NAME"
             android:value="AndroidSdkTest" />
@@ -69,16 +71,13 @@
             <intent-filter>
                 <action android:name="AndroidSdkTest" />
             </intent-filter>
-        </service>
-
-        <!-- HERE advanced positioning. -->
+        </service> <!-- HERE advanced positioning. -->
         <!-- Disable to run on emulator -->
-        <!--<service-->
-        <!--android:name="com.here.services.internal.LocationService"-->
-        <!--android:enabled="true"-->
-        <!--android:exported="false"-->
-        <!--android:process=":remote"></service>-->
-
+        <!-- <service -->
+        <!-- android:name="com.here.services.internal.LocationService" -->
+        <!-- android:enabled="true" -->
+        <!-- android:exported="false" -->
+        <!-- android:process=":remote"></service> -->
         <service android:name=".ForegroundService" />
     </application>
 
