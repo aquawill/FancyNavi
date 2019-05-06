@@ -79,6 +79,13 @@ class MapFragmentView {
     NavigationManager m_navigationManager;
     boolean isRoadView = false;
     boolean isDragged = false;
+    private boolean safetyCameraAhead = false;
+    private GeoCoordinate safetyCameraLocation;
+    private double distanceToSafetyCamera;
+    private double safetyCameraSpeedLimit;
+    private ImageView safetyCamImageView;
+    private TextView safetyCamTextView;
+    private TextView safetyCamSpeedTextView;
     private boolean isRouteOverView;
     private PositioningManager m_positioningManager;
     private AppCompatActivity m_activity;
@@ -210,11 +217,15 @@ class MapFragmentView {
             List<SafetySpotNotificationInfo> safetySpotInfos = safetySpotNotification.getSafetySpotNotificationInfos();
             for (int i = 0; i < safetySpotInfos.size(); i++) {
                 SafetySpotNotificationInfo safetySpotInfo = safetySpotInfos.get(i);
-                Log.d("Test", "" + safetySpotInfo.getSafetySpot().getType().toString());
+                safetyCameraLocation = safetySpotInfo.getSafetySpot().getCoordinate();
+                distanceToSafetyCamera = safetySpotInfo.getDistance();
+                safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
+                safetyCameraAhead = true;
             }
-
         }
     };
+
+    private GeoCoordinate lastKnownLocation;
 
     private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
         @Override
@@ -228,6 +239,29 @@ class MapFragmentView {
                     m_map.setCenter(currentGeoPosition.getCoordinate(), Map.Animation.NONE);
                 }
             }
+            if (safetyCameraAhead) {
+                if (lastKnownLocation.distanceTo(safetyCameraLocation) < geoPosition.getCoordinate().distanceTo(safetyCameraLocation)) {
+                    safetyCameraAhead = false;
+                    safetyCamImageView.setVisibility(View.INVISIBLE);
+                    safetyCamTextView.setVisibility(View.INVISIBLE);
+                    safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
+                } else {
+                    safetyCamImageView.setVisibility(View.VISIBLE);
+                    safetyCamTextView.setVisibility(View.VISIBLE);
+                    safetyCamSpeedTextView.setVisibility(View.VISIBLE);
+                    safetyCamTextView.setText((int) geoPosition.getCoordinate().distanceTo(safetyCameraLocation) + "m");
+                    safetyCamSpeedTextView.setText((int) (safetyCameraSpeedLimit * 3.6) + "km/h");
+
+                }
+            }
+            if (lastKnownLocation != null) {
+                if (lastKnownLocation.distanceTo(geoPosition.getCoordinate()) > 0) {
+                    lastKnownLocation = geoPosition.getCoordinate();
+                }
+            } else {
+                lastKnownLocation = geoPosition.getCoordinate();
+            }
+
         }
 
         @Override
@@ -395,7 +429,6 @@ class MapFragmentView {
     MapFragmentView(AppCompatActivity activity) {
         m_activity = activity;
         initSupportMapFragment();
-        initNaviControlButton();
     }
 
     private static PointF getMapMarkerAnchorPoint(MapMarker mapMarker) {
@@ -490,6 +523,7 @@ class MapFragmentView {
                             northUpButton.setOnClickListener(v -> {
                                 m_map.setOrientation(0);
                                 m_map.setTilt(0);
+                                resetMapCenter(m_map);
                                 if (!isRouteOverView) {
                                     m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
                                 } else {
@@ -559,7 +593,9 @@ class MapFragmentView {
                             clearButton = m_activity.findViewById(R.id.clear);
                             clearButton.setOnClickListener(v -> resetMap());
 
-
+                            safetyCamImageView = m_activity.findViewById(R.id.safety_cam_image_view);
+                            safetyCamTextView = m_activity.findViewById(R.id.safety_cam_text_view);
+                            safetyCamSpeedTextView = m_activity.findViewById(R.id.safety_cam_speed_text_view);
 
                             /* PositioningManager init */
                             m_positioningManager = PositioningManager.getInstance();
@@ -634,10 +670,6 @@ class MapFragmentView {
         }
     }
 
-    private void initNaviControlButton() {
-
-
-    }
 
     private void hudMapScheme(Map map) {
         /*Map Customization - Start*/
