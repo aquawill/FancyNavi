@@ -26,7 +26,7 @@
             android:elevation="2dp"
             android:scaleType="fitXY"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout2" />
+            app:layout_constraintTop_toBottomOf="@+id/top_button_linear_layout" />
 
         <ImageView
             android:id="@+id/junctionImageView"
@@ -43,7 +43,7 @@
             class="com.here.android.mpa.mapping.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_constraintTop_toTopOf="@+id/linearLayout2"
+            app:layout_constraintTop_toTopOf="@+id/top_button_linear_layout"
             tools:layout_editor_absoluteX="0dp" />
 
         <Button
@@ -72,12 +72,16 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
-            android:id="@+id/linearLayout2"
+            android:id="@+id/top_button_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="133dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:orientation="horizontal"
-            app:layout_constraintTop_toTopOf="@+id/main_linear_layout">
+            app:layout_constraintEnd_toEndOf="@+id/linearLayout"
+            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
+            app:layout_constraintTop_toTopOf="@+id/mapFragmentView">
 
             <Button
                 android:id="@+id/clear"
@@ -166,7 +170,7 @@
             android:layout_marginEnd="160dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/linearLayout2">
+            app:layout_constraintTop_toBottomOf="@+id/top_button_linear_layout">
 
             <TableRow
                 android:layout_width="wrap_content"
@@ -238,6 +242,7 @@
                 android:id="@+id/safety_cam_image_view"
                 android:layout_width="match_parent"
                 android:layout_height="80dp"
+                android:alpha="0.8"
                 android:foreground="@android:drawable/ic_menu_camera"
                 android:visibility="invisible"
                 app:srcCompat="@android:color/holo_red_light" />
@@ -246,6 +251,7 @@
                 android:id="@+id/safety_cam_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:alpha="0.8"
                 android:background="@android:color/holo_red_light"
                 android:textAlignment="center"
                 android:textColor="@color/lui_white"
@@ -256,6 +262,7 @@
                 android:id="@+id/safety_cam_speed_text_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:alpha="0.8"
                 android:background="@android:color/holo_red_light"
                 android:textAlignment="center"
                 android:textColor="@color/lui_white"

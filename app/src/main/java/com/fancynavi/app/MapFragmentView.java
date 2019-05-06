@@ -103,6 +103,7 @@ class MapFragmentView {
     private Button bikeRouteButton;
     private Button pedsRouteButton;
     private Button trafficButton;
+    private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView calculatingTextView;
     private Route m_route;
@@ -231,9 +232,6 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
-//            Log.d("Test", "geoPosition.getCoordinate(): " + geoPosition.getCoordinate());
-//            Log.d("Test", "geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
-//            Log.d("Test", "geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology());
             if (!isRouteOverView) {
                 if (!isDragged) {
                     m_map.setCenter(currentGeoPosition.getCoordinate(), Map.Animation.NONE);
@@ -250,8 +248,7 @@ class MapFragmentView {
                     safetyCamTextView.setVisibility(View.VISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setText((int) geoPosition.getCoordinate().distanceTo(safetyCameraLocation) + "m");
-                    safetyCamSpeedTextView.setText((int) (safetyCameraSpeedLimit * 3.6) + "km/h");
-
+                    safetyCamSpeedTextView.setText(Math.round(safetyCameraSpeedLimit * 3.6) + "km/h");
                 }
             }
             if (lastKnownLocation != null) {
@@ -261,15 +258,14 @@ class MapFragmentView {
             } else {
                 lastKnownLocation = geoPosition.getCoordinate();
             }
-
         }
 
         @Override
         public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
             Log.d("Test", "locationMethod: " + locationMethod + " locationStatus: " + locationStatus);
-
         }
     };
+
     private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
 
         @Override
@@ -305,7 +301,6 @@ class MapFragmentView {
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
             touchToAddWaypoint(pointF);
-//            pointReverseGeocode(pointF);
             return true;
         }
 
@@ -326,27 +321,16 @@ class MapFragmentView {
 
         @Override
         public boolean onRotateEvent(float v) {
-//            if (v != 0) {
-//                northUpButton.setVisibility(View.VISIBLE);
-//            } else {
-//                northUpButton.setVisibility(View.GONE);
-//            }
             return false;
         }
 
         @Override
         public boolean onTiltEvent(float v) {
-//            if (v != 0) {
-//                northUpButton.setVisibility(View.VISIBLE);
-//            } else {
-//                northUpButton.setVisibility(View.GONE);
-//            }
             return false;
         }
 
         @Override
         public boolean onLongPressEvent(PointF pointF) {
-
             return false;
         }
 
@@ -470,7 +454,7 @@ class MapFragmentView {
     private void initSupportMapFragment() {
         /* Locate the mapFragment UI element */
         supportMapFragment = getMapFragment();
-        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_RIGHT);
+        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_CENTER);
         // Set path of isolated disk cache
         String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
         // Retrieve intent name from manifest
@@ -565,12 +549,14 @@ class MapFragmentView {
                             trafficButton.setTextColor(Color.parseColor("#FF000000"));
                             trafficButton.setOnClickListener(v -> {
                                 if (!m_map.isTrafficInfoVisible()) {
+                                    trafficEnabled = true;
                                     m_map.setTrafficInfoVisible(true);
                                     if (m_map.getMapScheme().equals(Map.Scheme.CARNAV_DAY)) {
                                         m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
                                     }
                                     trafficButton.setTextColor(Color.parseColor("#FFFF0000"));
                                 } else {
+                                    trafficEnabled = false;
                                     m_map.setTrafficInfoVisible(false);
                                     if (m_map.getMapScheme().equals(Map.Scheme.CARNAV_TRAFFIC_DAY)) {
                                         m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
@@ -932,7 +918,11 @@ class MapFragmentView {
             case CAR:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
                 routeOptions.setHighwaysAllowed(true);
-                m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+                if (!trafficEnabled) {
+                    m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+                } else {
+                    m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
+                }
                 break;
             case TRUCK:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.TRUCK);
@@ -941,7 +931,11 @@ class MapFragmentView {
                 break;
             case SCOOTER:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.SCOOTER);
-                m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+                if (!trafficEnabled) {
+                    m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+                } else {
+                    m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
+                }
                 routeOptions.setHighwaysAllowed(false);
                 break;
             case BICYCLE:
