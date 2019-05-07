@@ -59,6 +59,10 @@ import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
+import com.here.android.mpa.search.ErrorCode;
+import com.here.android.mpa.search.Location;
+import com.here.android.mpa.search.ResultListener;
+import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.msdkui.guidance.GuidanceManeuverData;
 import com.here.msdkui.guidance.GuidanceManeuverListener;
 import com.here.msdkui.guidance.GuidanceManeuverPresenter;
@@ -78,9 +82,9 @@ class MapFragmentView {
     static Map m_map;
     static GeoPosition currentGeoPosition;
     NavigationManager m_navigationManager;
-    private MapSchemeChanger mapSchemeChanger;
     boolean isRoadView = false;
     boolean isDragged = false;
+    private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
     private double distanceToSafetyCamera;
@@ -218,7 +222,7 @@ class MapFragmentView {
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
             EnumSet roadElementAttributes = m_positioningManager.getRoadElement().getAttributes();
-            Log.d("Test", "LightSensorReader.getLightSensorValue() " + lightSensorValue);
+//            Log.d("Test", "LightSensorReader.getLightSensorValue() " + lightSensorValue);
             if (lightSensorValue < 50 || roadElementAttributes.contains(RoadElement.Attribute.TUNNEL)) {
                 mapSchemeChanger.darkenMap();
             } else {
@@ -294,6 +298,7 @@ class MapFragmentView {
         public boolean onDoubleTapEvent(PointF pointF) {
             touchToAddWaypoint(pointF);
             m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
+
             return true;
         }
 
@@ -429,7 +434,21 @@ class MapFragmentView {
         m_map.addMapObject(mapRoute);
     }
 
+
     private void touchToAddWaypoint(PointF p) {
+        GeoCoordinate coordinate = new GeoCoordinate(49.25914, -123.00777);
+        ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(coordinate);
+        reverseGeocodeRequest.execute(new ResultListener<Location>() {
+            @Override
+            public void onCompleted(Location location, ErrorCode errorCode) {
+                if (errorCode == ErrorCode.NONE) {
+                    Log.d("Test", "NONE");
+                } else {
+                    Log.d("Test", errorCode.name());
+
+                }
+            }
+        });
         isDragged = true;
         GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
@@ -447,7 +466,6 @@ class MapFragmentView {
     }
 
     private void initSupportMapFragment() {
-        /* Locate the mapFragment UI element */
         supportMapFragment = getMapFragment();
         supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_CENTER);
         // Set path of isolated disk cache
@@ -471,7 +489,6 @@ class MapFragmentView {
             // Also, ensure the provided intent name does not match the default intent name.
         } else {
             if (supportMapFragment != null) {
-                /* Initialize the MapFragment, results will be given via the called back. */
                 supportMapFragment.init(new OnEngineInitListener() {
                     @Override
                     public void onEngineInitializationCompleted(Error error) {
