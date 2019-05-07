@@ -79,7 +79,7 @@ class MapFragmentView {
     NavigationManager m_navigationManager;
     boolean isRoadView = false;
     boolean isDragged = false;
-    private boolean safetyCameraAhead = false;
+    private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
     private double distanceToSafetyCamera;
     private double safetyCameraSpeedLimit;
@@ -173,18 +173,7 @@ class MapFragmentView {
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
             Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
-//            m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
-//            resetMapCenter(m_map);
-//            m_map.removeMapObject(mapLocalModel);
-//            m_map.setTilt(0);
-//            m_map.zoomTo(mapRouteBBox, Map.Animation.NONE, 0f);
-//            View guidanceView = m_activity.findViewById(R.id.guidanceManeuverView);
-//            guidanceView.setVisibility(View.GONE);
-////            if (mapRoute != null) {
-////                m_map.removeMapObject(mapRoute);
-////            }
             stopForegroundService();
-//            startNavigation();
         }
 
         @Override
@@ -301,6 +290,7 @@ class MapFragmentView {
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
             touchToAddWaypoint(pointF);
+            m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
             return true;
         }
 
@@ -422,6 +412,7 @@ class MapFragmentView {
     }
 
     private void resetMapRoute(Route route) {
+        safetyCameraAhead = false;
         if (mapRoute != null) {
             m_map.removeMapObject(mapRoute);
         }
@@ -507,6 +498,7 @@ class MapFragmentView {
                             northUpButton.setOnClickListener(v -> {
                                 m_map.setOrientation(0);
                                 m_map.setTilt(0);
+                                m_map.setZoomLevel(16);
                                 resetMapCenter(m_map);
                                 if (!isRouteOverView) {
                                     m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
@@ -1022,14 +1014,17 @@ class MapFragmentView {
                         initGuidanceManeuverView(m_route);
                         resetMapRoute(m_route);
                         mapRouteBBox = m_route.getBoundingBox();
-                        if (mapRouteBBox.getHeight() > 0.01 || mapRouteBBox.getWidth() > 0.01) {
-                            mapRouteBBox.expand(3000f, 1500f);
-                        } else {
-                            mapRouteBBox.expand(1500f, 750f);
-                        }
+                        GeoCoordinate mapRouteBBoxTopLeft = mapRouteBBox.getTopLeft();
+                        GeoCoordinate mapRouteBBoxBottomRight = mapRouteBBox.getBottomRight();
+                        GeoCoordinate mapRouteBBoxTopRight = new GeoCoordinate(mapRouteBBoxTopLeft.getLatitude(), mapRouteBBoxBottomRight.getLongitude());
+                        GeoCoordinate mapRouteBBoxBottomLeft = new GeoCoordinate(mapRouteBBoxBottomRight.getLatitude(), mapRouteBBoxTopLeft.getLongitude());
+                        double mapRouteBBoxHeightMeters = mapRouteBBoxTopLeft.distanceTo(mapRouteBBoxBottomLeft);
+                        double mapRouteBBoxWidthMeters = mapRouteBBoxBottomLeft.distanceTo(mapRouteBBoxBottomRight);
+                        mapRouteBBox.expand((float) (mapRouteBBoxHeightMeters * 0.6), (float) (mapRouteBBoxWidthMeters * 0.3));
                         m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         m_naviControlButton.setText("Start Navi");
                         Toast.makeText(m_activity, "Length: " + m_route.getLength() + "m", Toast.LENGTH_LONG).show();
+                        supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
                     } else {
                         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
                         alertDialogBuilder.setTitle("Can't find a route.");
@@ -1039,6 +1034,9 @@ class MapFragmentView {
                 } else {
                     calculatingTextView.setVisibility(View.INVISIBLE);
                     progressBar.setVisibility(View.INVISIBLE);
+                    if (mapRoute != null) {
+                        m_map.removeMapObject(mapRoute);
+                    }
                     retryRouting(m_activity, routingError, routeOptions);
                 }
             }
