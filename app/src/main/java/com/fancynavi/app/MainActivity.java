@@ -18,6 +18,10 @@ package com.fancynavi.app;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
@@ -47,6 +51,7 @@ import com.here.android.mpa.guidance.NavigationManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fancynavi.app.MapFragmentView.m_map;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
@@ -56,6 +61,20 @@ import static com.google.android.gms.location.LocationServices.getFusedLocationP
 public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
     static GeoCoordinate updatedLatLng;
+    static float lightSensorValue;
+    private final SensorEventListener lightSensorListener = new SensorEventListener() {
+
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        }
+
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
+                lightSensorValue = event.values[0];
+            }
+        }
+    };
     Bundle mViewBundle = new Bundle();
     private Button offlineMapButton;
     private MapFragmentView m_mapFragmentView;
@@ -77,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
 
     public void setData(Bundle data) {
         mViewBundle = data;
-
     }
 
     @Override
@@ -89,7 +107,11 @@ public class MainActivity extends AppCompatActivity {
         hideJunctionView();
         requestPermissions();
         startLocationUpdates();
-
+        SensorManager mySensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        Sensor lightSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        if (lightSensor != null) {
+            mySensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
     }
 
     protected void startLocationUpdates() {
@@ -169,8 +191,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (!m_mapFragmentView.isRoadView) {
-            m_mapFragmentView.shiftMapCenter(MapFragmentView.m_map);
-            MapFragmentView.m_map.setTilt(60);
+            m_mapFragmentView.shiftMapCenter(m_map);
+            m_map.setTilt(60);
             m_mapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
         } else {
             m_mapFragmentView.isDragged = false;

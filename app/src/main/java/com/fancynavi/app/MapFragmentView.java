@@ -71,12 +71,14 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
+import static com.fancynavi.app.MainActivity.lightSensorValue;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
 class MapFragmentView {
     static Map m_map;
     static GeoPosition currentGeoPosition;
     NavigationManager m_navigationManager;
+    private MapSchemeChanger mapSchemeChanger;
     boolean isRoadView = false;
     boolean isDragged = false;
     private boolean safetyCameraAhead;
@@ -118,7 +120,6 @@ class MapFragmentView {
     private ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
     private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
-
 
     //HERE UI Kit, Guidance Maneuver View
     private GuidanceManeuverListener guidanceManeuverListener = new GuidanceManeuverListener() {
@@ -162,12 +163,10 @@ class MapFragmentView {
     private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
         public void onRunningStateChanged() {
-            Toast.makeText(m_activity, "Running state changed", Toast.LENGTH_SHORT).show();
         }
 
         @Override
         public void onNavigationModeChanged() {
-            Toast.makeText(m_activity, "Navigation mode changed", Toast.LENGTH_SHORT).show();
         }
 
         @Override
@@ -178,7 +177,6 @@ class MapFragmentView {
 
         @Override
         public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            //Toast.makeText(m_activity, "Map update mode is changed to " + mapUpdateMode, Toast.LENGTH_SHORT).show();
             Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
         }
 
@@ -189,8 +187,6 @@ class MapFragmentView {
 
         @Override
         public void onCountryInfo(String s, String s1) {
-            Toast.makeText(m_activity, "Country info updated from " + s + " to " + s1,
-                    Toast.LENGTH_SHORT).show();
         }
     };
     private NavigationManager.NewInstructionEventListener m_newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
@@ -221,9 +217,16 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
+            EnumSet roadElementAttributes = m_positioningManager.getRoadElement().getAttributes();
+            Log.d("Test", "LightSensorReader.getLightSensorValue() " + lightSensorValue);
+            if (lightSensorValue < 50 || roadElementAttributes.contains(RoadElement.Attribute.TUNNEL)) {
+                mapSchemeChanger.darkenMap();
+            } else {
+                mapSchemeChanger.lightenMap();
+            }
             if (!isRouteOverView) {
                 if (!isDragged) {
-                    m_map.setCenter(currentGeoPosition.getCoordinate(), Map.Animation.NONE);
+                    m_map.setCenter(currentGeoPosition.getCoordinate(), Map.Animation.LINEAR);
                 }
             }
             if (safetyCameraAhead) {
@@ -237,7 +240,7 @@ class MapFragmentView {
                     safetyCamTextView.setVisibility(View.VISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setText((int) geoPosition.getCoordinate().distanceTo(safetyCameraLocation) + "m");
-                    safetyCamSpeedTextView.setText(Math.round(safetyCameraSpeedLimit * 3.6) + "km/h");
+                    safetyCamSpeedTextView.setText((Math.round(safetyCameraSpeedLimit * 3.6) / 5) * 5 + "km/h");
                 }
             }
             if (lastKnownLocation != null) {
@@ -340,6 +343,7 @@ class MapFragmentView {
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
             mapLocalModel.setYaw((float) geoPosition.getHeading());
         }
+
     };
     private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
         @Override
@@ -474,6 +478,8 @@ class MapFragmentView {
                         if (error == Error.NONE) {
                             supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
                             m_map = supportMapFragment.getMap();
+                            mapSchemeChanger = new MapSchemeChanger(m_map);
+
                             initJunctionView();
                             m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
@@ -744,6 +750,7 @@ class MapFragmentView {
         ));
     }
 
+
     private void resetMapCenter(Map map) {
         map.setTransformCenter(new PointF(
                 (float) (map.getWidth() * 0.5),
@@ -822,7 +829,6 @@ class MapFragmentView {
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.startNavigation(m_route);
                 Log.e("Error: ", error.toString());
-                Toast.makeText(m_activity, "Error: " + error.toString(), Toast.LENGTH_SHORT).show();
                 startForegroundService();
             }
         });
@@ -832,7 +838,6 @@ class MapFragmentView {
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
-                Toast.makeText(m_activity, "Error: " + error.toString(), Toast.LENGTH_SHORT).show();
                 startForegroundService();
             }
         });
