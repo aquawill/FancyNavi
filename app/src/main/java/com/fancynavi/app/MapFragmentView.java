@@ -478,6 +478,7 @@ class MapFragmentView {
                         if (error == Error.NONE) {
                             supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
                             m_map = supportMapFragment.getMap();
+                            m_map.setCenter(new GeoCoordinate(25.040014, 121.511984), Map.Animation.NONE);
                             mapSchemeChanger = new MapSchemeChanger(m_map);
 
                             initJunctionView();
@@ -847,6 +848,8 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        junctionViewImageView.setVisibility(View.INVISIBLE);
+        signpostImageView.setVisibility(View.INVISIBLE);
         isRouteOverView = false;
         if (coreRouter != null) {
             if (coreRouter.isBusy()) {
