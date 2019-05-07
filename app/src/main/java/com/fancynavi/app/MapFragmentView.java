@@ -59,10 +59,6 @@ import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
-import com.here.android.mpa.search.ErrorCode;
-import com.here.android.mpa.search.Location;
-import com.here.android.mpa.search.ResultListener;
-import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.msdkui.guidance.GuidanceManeuverData;
 import com.here.msdkui.guidance.GuidanceManeuverListener;
 import com.here.msdkui.guidance.GuidanceManeuverPresenter;
@@ -222,7 +218,7 @@ class MapFragmentView {
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
             EnumSet roadElementAttributes = m_positioningManager.getRoadElement().getAttributes();
-//            Log.d("Test", "LightSensorReader.getLightSensorValue() " + lightSensorValue);
+            Log.d("Test", "LightSensorReader.getLightSensorValue() " + lightSensorValue);
             if (lightSensorValue < 50 || roadElementAttributes.contains(RoadElement.Attribute.TUNNEL)) {
                 mapSchemeChanger.darkenMap();
             } else {
@@ -298,7 +294,6 @@ class MapFragmentView {
         public boolean onDoubleTapEvent(PointF pointF) {
             touchToAddWaypoint(pointF);
             m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
-
             return true;
         }
 
@@ -435,21 +430,8 @@ class MapFragmentView {
     }
 
     private void touchToAddWaypoint(PointF p) {
-        GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
-        Log.d("test", m_map.pixelToGeo(p).toString());
-        ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(touchPointGeoCoordinate);
-        reverseGeocodeRequest.execute(new ResultListener<Location>() {
-            @Override
-            public void onCompleted(Location location, ErrorCode errorCode) {
-                if (errorCode == ErrorCode.NONE) {
-                    Log.d("test", location.getAddress().getText());
-                } else {
-                    Log.d("test", errorCode.toString());
-                }
-
-            }
-        });
         isDragged = true;
+        GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
         mapMarker.setDraggable(true);
         userInputWaypoints.add(mapMarker);
