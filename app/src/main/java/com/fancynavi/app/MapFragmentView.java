@@ -12,6 +12,7 @@ import android.graphics.PointF;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MotionEvent;
@@ -22,7 +23,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -62,6 +62,7 @@ import com.here.android.mpa.routing.RoutingError;
 import com.here.android.mpa.search.ErrorCode;
 import com.here.android.mpa.search.Location;
 import com.here.android.mpa.search.ResultListener;
+import com.here.android.mpa.search.ReverseGeocodeMode;
 import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.msdkui.guidance.GuidanceManeuverData;
 import com.here.msdkui.guidance.GuidanceManeuverListener;
@@ -84,6 +85,8 @@ class MapFragmentView {
     NavigationManager m_navigationManager;
     boolean isRoadView = false;
     boolean isDragged = false;
+    boolean isMapShiftedForWaypoints = false;
+    private View mapFragmentView;
     private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
@@ -175,7 +178,7 @@ class MapFragmentView {
 
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
-            Toast.makeText(m_activity, navigationMode + " was ended", Toast.LENGTH_SHORT).show();
+            Snackbar.make(mapFragmentView, navigationMode + " was ended", Snackbar.LENGTH_LONG).show();
             stopForegroundService();
         }
 
@@ -297,8 +300,6 @@ class MapFragmentView {
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
             touchToAddWaypoint(pointF);
-            m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
-
             return true;
         }
 
@@ -434,23 +435,25 @@ class MapFragmentView {
         m_map.addMapObject(mapRoute);
     }
 
-
     private void touchToAddWaypoint(PointF p) {
-        GeoCoordinate coordinate = new GeoCoordinate(49.25914, -123.00777);
-        ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(coordinate);
+        isDragged = true;
+        GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
+        GeoCoordinate coordinate = new GeoCoordinate(touchPointGeoCoordinate);
+        ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(coordinate, ReverseGeocodeMode.RETRIEVE_ADDRESSES, 0);
         reverseGeocodeRequest.execute(new ResultListener<Location>() {
             @Override
             public void onCompleted(Location location, ErrorCode errorCode) {
                 if (errorCode == ErrorCode.NONE) {
-                    Log.d("Test", "NONE");
+                    if (location != null) {
+                        Snackbar.make(mapFragmentView, "Waypoint: " + location.getAddress().getText(), Snackbar.LENGTH_LONG).show();
+                    } else {
+                        Snackbar.make(mapFragmentView, "Waypoint added without address.", Snackbar.LENGTH_LONG).show();
+                    }
                 } else {
-                    Log.d("Test", errorCode.name());
-
+                    Snackbar.make(mapFragmentView, errorCode.name(), Snackbar.LENGTH_LONG).show();
                 }
             }
         });
-        isDragged = true;
-        GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
         mapMarker.setDraggable(true);
         userInputWaypoints.add(mapMarker);
@@ -463,9 +466,11 @@ class MapFragmentView {
         pedsRouteButton.setVisibility(View.VISIBLE);
         m_naviControlButton.setVisibility(View.VISIBLE);
         clearButton.setVisibility(View.VISIBLE);
+        m_map.setCenter(touchPointGeoCoordinate, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
     }
 
     private void initSupportMapFragment() {
+        mapFragmentView = m_activity.findViewById(R.id.mapFragmentView);
         supportMapFragment = getMapFragment();
         supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_CENTER);
         // Set path of isolated disk cache
@@ -627,13 +632,13 @@ class MapFragmentView {
                             positionIndicator.setAccuracyIndicatorVisible(true);
 
                             /* Download voice */
-                            voiceActivation = new VoiceActivation();
+                            voiceActivation = new VoiceActivation(m_activity);
                             voiceActivation.setContext(m_activity);
                             String desiredVoiceLanguageCode = "CHT";
                             voiceActivation.setDesiredLangCode(desiredVoiceLanguageCode);
                             voiceActivation.downloadCatalogAndSkin();
                         } else {
-                            Toast.makeText(m_activity, "ERROR: Cannot initialize Map with error " + error, Toast.LENGTH_LONG).show();
+                            Snackbar.make(mapFragmentView, "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -984,7 +989,7 @@ class MapFragmentView {
     }
 
     private void calculateRoute(RouteOptions routeOptions) {
-        HereRouter hereRouter = new HereRouter(routeOptions);
+        HereRouter hereRouter = new HereRouter(m_activity, routeOptions);
         hereRouter.setContext(m_activity);
         if (wayPointIcons.size() == 0) {
             for (int i = 0; i < userInputWaypoints.size(); i++) {
@@ -1045,10 +1050,10 @@ class MapFragmentView {
                         GeoCoordinate mapRouteBBoxBottomLeft = new GeoCoordinate(mapRouteBBoxBottomRight.getLatitude(), mapRouteBBoxTopLeft.getLongitude());
                         double mapRouteBBoxHeightMeters = mapRouteBBoxTopLeft.distanceTo(mapRouteBBoxBottomLeft);
                         double mapRouteBBoxWidthMeters = mapRouteBBoxBottomLeft.distanceTo(mapRouteBBoxBottomRight);
-                        mapRouteBBox.expand((float) (mapRouteBBoxHeightMeters * 0.6), (float) (mapRouteBBoxWidthMeters * 0.3));
+                        mapRouteBBox.expand((float) (mapRouteBBoxHeightMeters), (float) (mapRouteBBoxWidthMeters * 0.5));
                         m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         m_naviControlButton.setText("Start Navi");
-                        Toast.makeText(m_activity, "Length: " + m_route.getLength() + "m", Toast.LENGTH_LONG).show();
+                        Snackbar.make(mapFragmentView, "Length: " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
                         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
                     } else {
                         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);

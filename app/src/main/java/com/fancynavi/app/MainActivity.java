@@ -28,13 +28,13 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    View mapFragmentView;
     Bundle mViewBundle = new Bundle();
     private Button offlineMapButton;
     private MapFragmentView m_mapFragmentView;
@@ -100,6 +101,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        mapFragmentView = findViewById(R.id.mapFragmentView);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
@@ -234,14 +236,10 @@ public class MainActivity extends AppCompatActivity {
                          */
                         if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
                                 permissions[index])) {
-                            Toast.makeText(this,
-                                    "Required permission " + permissions[index] + " not granted. "
-                                            + "Please go to settings and turn on for sample app",
-                                    Toast.LENGTH_LONG).show();
+                            Snackbar.make(mapFragmentView, "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
                         } else {
-                            Toast.makeText(this,
-                                    "Required permission " + permissions[index] + " not granted",
-                                    Toast.LENGTH_LONG).show();
+                            Snackbar.make(mapFragmentView, "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
+
                         }
                     }
                 }

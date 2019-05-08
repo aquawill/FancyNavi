@@ -3,8 +3,9 @@ package com.fancynavi.app;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
@@ -19,12 +20,15 @@ import java.util.List;
 
 
 class VoiceActivation {
+    private AppCompatActivity m_activity;
     private Context context;
-
     private VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
     private String desiredLangCode;
     private long desiredVoiceId;
 
+    public VoiceActivation(AppCompatActivity m_activity) {
+        this.m_activity = m_activity;
+    }
 
     void setContext(Context context) {
         this.context = context;
@@ -56,15 +60,16 @@ class VoiceActivation {
 
     private void downloadVoice(Context context, final long voiceSkinId) {
         Log.d("Test", "Downloading voice skin ID: " + voiceSkinId);
-        Toast.makeText(context, "Downloading voice skin ID: " + voiceSkinId, Toast.LENGTH_SHORT).show();
+        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Downloading voice skin ID: " + voiceSkinId, Snackbar.LENGTH_LONG).show();
+
         voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
                 if (error != VoiceCatalog.Error.NONE) {
                     retryVoiceDownload(context, voiceSkinId);
-                    Toast.makeText(context, "Failed downloading voice skin " + voiceSkinId, Toast.LENGTH_SHORT).show();
+                    Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Failed downloading voice skin " + voiceSkinId, Snackbar.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(context, "Voice skin " + voiceSkinId + " downloaded and activated.", Toast.LENGTH_SHORT).show();
+                    Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Voice skin " + voiceSkinId + " downloaded and activated.", Snackbar.LENGTH_LONG).show();
                     //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
@@ -108,7 +113,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-                        Toast.makeText(context, "Voice skin " + desiredVoiceId + " downloaded and activated", Toast.LENGTH_SHORT).show();
+                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Voice skin " + desiredVoiceId + " downloaded and activated", Snackbar.LENGTH_LONG).show();
                     }
                 }
             }

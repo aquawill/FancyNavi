@@ -1,8 +1,9 @@
 package com.fancynavi.app;
 
 import android.content.Context;
+import android.support.design.widget.Snackbar;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.Image;
@@ -17,6 +18,7 @@ import static com.fancynavi.app.MapFragmentView.currentGeoPosition;
 import static com.fancynavi.app.MapFragmentView.m_map;
 
 class HereRouter {
+    private AppCompatActivity m_activity;
     private Context context;
     private RoutePlan routePlan;
     private RouteOptions routeOptions;
@@ -24,7 +26,8 @@ class HereRouter {
     private ArrayList<MapMarker> inputWaypointIcons = new ArrayList<>();
     private ArrayList<MapMarker> outputWaypointIcons = new ArrayList<>();
 
-    public HereRouter(RouteOptions routeOptions) {
+    public HereRouter(AppCompatActivity m_activity, RouteOptions routeOptions) {
+        this.m_activity = m_activity;
         this.routeOptions = routeOptions;
     }
 
@@ -62,7 +65,7 @@ class HereRouter {
         if (waypoints.size() == 1) {
             waypoints.add(0, currentGeoPosition.getCoordinate());
         } else if (waypoints.isEmpty()) {
-            Toast.makeText(context, "waypoints is empty.", Toast.LENGTH_SHORT).show();
+            Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "waypoints is empty.", Snackbar.LENGTH_LONG).show();
         }
         VectorDrawableConverter vectorDrawableConverter = new VectorDrawableConverter();
 
