@@ -7,15 +7,42 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
-
-    <com.here.msdkui.guidance.GuidanceManeuverView
-        android:id="@+id/guidanceManeuverView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
     <android.support.constraint.ConstraintLayout
+        android:id="@+id/map_constraint_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <com.here.msdkui.guidance.GuidanceNextManeuverView
+            android:id="@+id/guidance_next_maneuver_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="2dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
+            app:layout_constraintTop_toBottomOf="@+id/guidanceManeuverView" />
+
+        <com.here.msdkui.guidance.GuidanceManeuverView
+            android:id="@+id/guidanceManeuverView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:elevation="2dp"
+            android:visibility="invisible"
+            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
+            app:layout_constraintTop_toTopOf="@+id/mapFragmentView">
+
+        </com.here.msdkui.guidance.GuidanceManeuverView>
+
+        <com.here.msdkui.guidance.GuidanceStreetLabelView
+            android:id="@+id/guidance_street_label_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:elevation="2dp"
+            android:textAlignment="center"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <ImageView
             android:id="@+id/signpostImageView"
@@ -55,7 +82,7 @@
             android:elevation="2dp"
             android:text="↑"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
@@ -68,7 +95,7 @@
             android:elevation="2dp"
             android:text="TRF"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
@@ -81,12 +108,13 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="@+id/linearLayout"
             app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
-            app:layout_constraintTop_toTopOf="@+id/mapFragmentView">
+            app:layout_constraintTop_toBottomOf="@id/guidance_next_maneuver_view">
 
             <Button
                 android:id="@+id/clear"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_margin="8dp"
                 android:layout_weight="1"
                 android:elevation="2dp"
                 android:text="Reset"
@@ -96,6 +124,7 @@
                 android:id="@+id/startGuidance"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_margin="8dp"
                 android:layout_weight="1"
                 android:elevation="2dp"
                 android:visibility="invisible" />
@@ -233,9 +262,8 @@
             android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginBottom="8dp"
             android:orientation="vertical"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
             app:layout_constraintStart_toStartOf="parent">
 
             <ImageView
@@ -268,7 +296,9 @@
                 android:textColor="@color/lui_white"
                 android:textSize="16sp"
                 android:visibility="invisible" />
-        </LinearLayout>
 
+        </LinearLayout>
     </android.support.constraint.ConstraintLayout>
+
+
 </LinearLayout>

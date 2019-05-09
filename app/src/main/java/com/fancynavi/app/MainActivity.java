@@ -193,7 +193,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (!m_mapFragmentView.isRoadView) {
-            m_mapFragmentView.shiftMapCenter(m_map);
+            m_mapFragmentView.shiftMapCenter(m_map, 0.5f, 0.8f);
             m_map.setTilt(60);
             m_mapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
         } else {

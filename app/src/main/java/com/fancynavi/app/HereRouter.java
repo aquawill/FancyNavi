@@ -67,7 +67,7 @@ class HereRouter {
         } else if (waypoints.isEmpty()) {
             Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "waypoints is empty.", Snackbar.LENGTH_LONG).show();
         }
-        VectorDrawableConverter vectorDrawableConverter = new VectorDrawableConverter();
+        //VectorDrawableConverter vectorDrawableConverter = new VectorDrawableConverter();
 
         for (int i = 0; i < waypoints.size(); i++) {
             GeoCoordinate coord = waypoints.get(i);
@@ -82,10 +82,10 @@ class HereRouter {
                 mapMarker.setCoordinate(waypoint.getOriginalPosition());
             } else {
                 if (i == 0) {
-                    icon.setBitmap(vectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_orig));
+                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_orig));
                     mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
                 } else if (i == waypoints.size() - 1) {
-                    icon.setBitmap(vectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_dest));
+                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_dest));
                     mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
                 }
             }

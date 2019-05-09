@@ -28,7 +28,7 @@
         android:label="HERESdkTest"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/MSDKUIDarkTheme">
 
         <meta-data
             android:name="com.google.android.actions"
