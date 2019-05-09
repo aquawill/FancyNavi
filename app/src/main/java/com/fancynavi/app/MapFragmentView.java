@@ -777,7 +777,7 @@ class MapFragmentView {
                             positionIndicator.setAccuracyIndicatorVisible(true);
 
                             /* Download voice */
-                            voiceActivation = new VoiceActivation();
+                            voiceActivation = new VoiceActivation(m_activity);
                             voiceActivation.setContext(m_activity);
                             String desiredVoiceLanguageCode = "CHT";
                             voiceActivation.setDesiredLangCode(desiredVoiceLanguageCode);
@@ -1115,7 +1115,7 @@ class MapFragmentView {
     }
 
     private void calculateRoute(RouteOptions routeOptions) {
-        HereRouter hereRouter = new HereRouter(routeOptions);
+        HereRouter hereRouter = new HereRouter(m_activity, routeOptions);
         hereRouter.setContext(m_activity);
         if (wayPointIcons.size() == 0) {
             for (int i = 0; i < userInputWaypoints.size(); i++) {
