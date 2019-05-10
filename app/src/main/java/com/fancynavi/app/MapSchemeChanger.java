@@ -1,20 +1,20 @@
 package com.fancynavi.app;
 
+import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 
 public class MapSchemeChanger {
 
     private Map map;
+    private NavigationManager navigationManager;
 
-    MapSchemeChanger(Map map) {
+    MapSchemeChanger(Map map, NavigationManager navigationManager) {
         this.map = map;
-    }
-
-    public void setMap(Map map) {
-        this.map = map;
+        this.navigationManager = navigationManager;
     }
 
     void darkenMap() {
+        navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
         switch (map.getMapScheme()) {
             case Map.Scheme.CARNAV_DAY:
                 map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
@@ -32,6 +32,7 @@ public class MapSchemeChanger {
     }
 
     void lightenMap() {
+        navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
         switch (map.getMapScheme()) {
             case Map.Scheme.CARNAV_NIGHT:
                 map.setMapScheme(Map.Scheme.CARNAV_DAY);

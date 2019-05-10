@@ -51,7 +51,9 @@ import com.here.android.mpa.guidance.NavigationManager;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.fancynavi.app.MapFragmentView.clearButton;
 import static com.fancynavi.app.MapFragmentView.m_map;
+import static com.fancynavi.app.MapFragmentView.m_naviControlButton;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
@@ -195,7 +197,9 @@ public class MainActivity extends AppCompatActivity {
         if (!m_mapFragmentView.isRoadView) {
             m_mapFragmentView.shiftMapCenter(m_map, 0.5f, 0.8f);
             m_map.setTilt(60);
-            m_mapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            MapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            m_naviControlButton.setVisibility(View.GONE);
+            clearButton.setVisibility(View.GONE);
         } else {
             m_mapFragmentView.isDragged = false;
         }

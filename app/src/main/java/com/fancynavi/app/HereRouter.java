@@ -51,7 +51,7 @@ class HereRouter {
         return outputWaypointIcons;
     }
 
-    void createRoute() {
+    void createRouteForNavi() {
         for (int i = 0; i < inputWaypointIcons.size(); i++) {
             MapMarker mapMarker = inputWaypointIcons.get(i);
             Log.d("Test", "i " + mapMarker.getCoordinate());
