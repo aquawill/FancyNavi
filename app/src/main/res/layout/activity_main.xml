@@ -86,6 +86,19 @@
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
+            android:id="@+id/capture_button"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/lui_light"
+            android:elevation="2dp"
+            android:text="CAP"
+            android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@+id/traffic_button"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
             android:id="@+id/traffic_button"
             android:layout_width="40dp"
             android:layout_height="40dp"

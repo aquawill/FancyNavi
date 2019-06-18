@@ -83,7 +83,6 @@ import com.here.msdkui.guidance.GuidanceStreetLabelPresenter;
 import com.here.msdkui.guidance.GuidanceStreetLabelView;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -358,25 +357,6 @@ class MapFragmentView {
 
         @Override
         public boolean onLongPressEvent(PointF pointF) {
-            supportMapFragment.getScreenCapture(new OnScreenCaptureListener() {
-                @Override
-                public void onScreenCaptured(Bitmap bitmap) {
-                    File outputPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                    File file = new File(outputPath + File.separator + "SCREENSHOT_" + System.currentTimeMillis() + ".PNG");
-                    Log.d("test", file.getPath());
-                    FileOutputStream fileOutputStream;
-                    try {
-                        fileOutputStream = new FileOutputStream(file);
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
-                        fileOutputStream.flush();
-                        fileOutputStream.close();
-                        Log.d("test", "image saved.");
-                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), file.getAbsolutePath(), Snackbar.LENGTH_LONG).show();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
             return false;
         }
 
@@ -814,6 +794,19 @@ class MapFragmentView {
                                     trafficButton.setTextColor(Color.parseColor("#FF000000"));
                                 }
                             });
+
+                            m_activity.findViewById(R.id.capture_button).setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    supportMapFragment.getScreenCapture(new OnScreenCaptureListener() {
+                                        @Override
+                                        public void onScreenCaptured(Bitmap bitmap) {
+                                            new ScreenCapturer(bitmap, m_activity);
+                                        }
+                                    });
+                                }
+                            });
+
                             m_naviControlButton = m_activity.findViewById(R.id.startGuidance);
                             m_naviControlButton.setText("Create Route");
                             m_naviControlButton.setOnClickListener(v -> {
@@ -836,11 +829,12 @@ class MapFragmentView {
                             safetyCamSpeedTextView = m_activity.findViewById(R.id.safety_cam_speed_text_view);
 
 
-
                             /* Show position indicator */
                             positionIndicator = m_map.getPositionIndicator();
                             positionIndicator.setVisible(true);
                             positionIndicator.setAccuracyIndicatorVisible(true);
+
+                            resetMap();
 
                             /* Download voice */
                             voiceActivation = new VoiceActivation(m_activity);
@@ -1267,6 +1261,7 @@ class MapFragmentView {
 
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
+                Log.d("Test", routingError.toString());
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
@@ -1283,19 +1278,17 @@ class MapFragmentView {
                         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
                     } else {
-                        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
-                        alertDialogBuilder.setTitle("Can't find a route.");
-                        AlertDialog alertDialog = alertDialogBuilder.create();
-                        alertDialog.show();
+                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Can't find a route.", Snackbar.LENGTH_LONG).show();
                     }
                 } else {
+                    Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Error: " + routingError.name(), Snackbar.LENGTH_LONG).show();
                     calculatingTextView.setVisibility(View.INVISIBLE);
                     progressBar.setVisibility(View.INVISIBLE);
                     if (mapRoute != null) {
                         m_map.removeMapObject(mapRoute);
                     }
-                    retryRouting(m_activity, routingError, routeOptions);
                 }
+//                retryRouting(m_activity, routingError, routeOptions);
             }
         });
     }
