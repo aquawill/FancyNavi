@@ -31,6 +31,7 @@ import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
+import com.here.android.mpa.common.OnScreenCaptureListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
@@ -82,6 +83,7 @@ import com.here.msdkui.guidance.GuidanceStreetLabelPresenter;
 import com.here.msdkui.guidance.GuidanceStreetLabelView;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -107,7 +109,6 @@ class MapFragmentView {
     private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
-    private double distanceToSafetyCamera;
     private double safetyCameraSpeedLimit;
     private int safetyCameraSpeedLimitKM;
     private ImageView safetyCamImageView;
@@ -131,7 +132,6 @@ class MapFragmentView {
     private Button bikeRouteButton;
     private Button pedsRouteButton;
     private Button trafficButton;
-
     private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView calculatingTextView;
@@ -157,6 +157,9 @@ class MapFragmentView {
     private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
+
+    private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
+
 
     //HERE UI Kit
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
@@ -206,7 +209,7 @@ class MapFragmentView {
                 safetyCameraMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(safetyCameraMapMarker));
                 m_map.addMapObject(safetyCameraMapMarker);
 
-                distanceToSafetyCamera = safetySpotInfo.getDistance();
+                double distanceToSafetyCamera = safetySpotInfo.getDistance();
                 safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
                 Log.d("Test", "safetyCameraSpeedLimit = " + safetyCameraSpeedLimit);
                 Log.d("Test", "safetyCameraSpeedLimit * 3.6) % 5 = " + (safetyCameraSpeedLimit * 3.6) % 5);
@@ -292,6 +295,7 @@ class MapFragmentView {
 
         @Override
         public boolean onMapObjectsSelected(List<ViewObject> list) {
+            Log.d("Test", "onMapObjectsSelected: " + list.size());
             for (ViewObject viewObject : list) {
                 if (viewObject.getBaseType() == ViewObject.Type.USER_OBJECT) {
                     MapMarker mapMarkerOnMap = (MapMarker) viewObject;
@@ -354,6 +358,25 @@ class MapFragmentView {
 
         @Override
         public boolean onLongPressEvent(PointF pointF) {
+            supportMapFragment.getScreenCapture(new OnScreenCaptureListener() {
+                @Override
+                public void onScreenCaptured(Bitmap bitmap) {
+                    File outputPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                    File file = new File(outputPath + File.separator + "SCREENSHOT_" + System.currentTimeMillis() + ".PNG");
+                    Log.d("test", file.getPath());
+                    FileOutputStream fileOutputStream;
+                    try {
+                        fileOutputStream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 90, fileOutputStream);
+                        fileOutputStream.flush();
+                        fileOutputStream.close();
+                        Log.d("test", "image saved.");
+                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), file.getAbsolutePath(), Snackbar.LENGTH_LONG).show();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
             return false;
         }
 
@@ -666,11 +689,9 @@ class MapFragmentView {
     }
 
     private void initSupportMapFragment() {
-        /* Locate the mapFragment UI element */
         supportMapFragment = getMapFragment();
         supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_CENTER);
         // Set path of isolated disk cache
-        String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
         // Retrieve intent name from manifest
         String intentName = "";
         try {
@@ -1250,7 +1271,6 @@ class MapFragmentView {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
                         m_route = routeResults.get(0).getRoute();
-
                         resetMapRoute(m_route);
                         mapRouteBBox = m_route.getBoundingBox();
                         GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(mapRouteBBox);
@@ -1259,7 +1279,9 @@ class MapFragmentView {
                         m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         m_naviControlButton.setText("Start Navi");
                         Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Length: " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
+
                         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
+
                     } else {
                         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(m_activity);
                         alertDialogBuilder.setTitle("Can't find a route.");
