@@ -104,9 +104,8 @@
             android:layout_height="40dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
-            android:background="@color/lui_light"
             android:elevation="2dp"
-            android:text="TRF"
+            android:foreground="@drawable/ic_congestion"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -197,6 +196,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:background="#00C7C7C7"
+            android:textColor="#FFFFFFFF"
             android:text="Calculating..."
             android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/progressBar"
@@ -311,6 +311,19 @@
                 android:visibility="invisible" />
 
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/lane_linear_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#00000000"
+            android:elevation="2dp"
+            android:orientation="horizontal"
+            android:padding="8dp"
+            android:visibility="invisible"
+            app:layout_constraintBottom_toTopOf="@id/guidance_street_label_view"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
     </android.support.constraint.ConstraintLayout>
 
 
