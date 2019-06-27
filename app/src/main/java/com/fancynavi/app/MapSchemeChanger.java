@@ -16,6 +16,9 @@ public class MapSchemeChanger {
     void darkenMap() {
         navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
         switch (map.getMapScheme()) {
+            case Map.Scheme.NORMAL_DAY:
+                map.setMapScheme(Map.Scheme.NORMAL_NIGHT);
+                break;
             case Map.Scheme.CARNAV_DAY:
                 map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
                 break;
@@ -34,6 +37,9 @@ public class MapSchemeChanger {
     void lightenMap() {
         navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
         switch (map.getMapScheme()) {
+            case Map.Scheme.NORMAL_NIGHT:
+                map.setMapScheme(Map.Scheme.NORMAL_DAY);
+                break;
             case Map.Scheme.CARNAV_NIGHT:
                 map.setMapScheme(Map.Scheme.CARNAV_DAY);
                 break;

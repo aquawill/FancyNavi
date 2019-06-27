@@ -46,7 +46,10 @@ import com.here.android.mpa.guidance.TrafficNotification;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceGuidanceOptions;
 import com.here.android.mpa.mapping.LocalMesh;
+import com.here.android.mpa.mapping.Location;
+import com.here.android.mpa.mapping.LocationInfo;
 import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapCartoMarker;
 import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
@@ -174,6 +177,7 @@ class MapFragmentView {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
             isRoadView = false;
+            isRouteOverView = true;
             m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
             shiftMapCenter(m_map, 0.5f, 0.6f);
             m_map.setTilt(0);
@@ -311,6 +315,35 @@ class MapFragmentView {
 
         @Override
         public boolean onTapEvent(PointF pointF) {
+            List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
+            if (selectedMapObjects.size() > 0) {
+                Log.d("Test", selectedMapObjects.get(0).getClass().getName());
+                if (selectedMapObjects.get(0).getClass().getName().equals("com.here.android.mpa.mapping.MapCartoMarker")) {
+                    MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
+                    Location location = selectedMapCartoMarker.getLocation();
+                    String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
+                    String placeCategory = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
+                    Snackbar snackbarForPlaceResult = Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), placeName + " / " + placeCategory, Snackbar.LENGTH_LONG);
+                    snackbarForPlaceResult.setAction("Add Waypoint", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            MapMarker mapMarker = new MapMarker(selectedMapCartoMarker.getLocation().getCoordinate());
+                            mapMarker.setDraggable(true);
+                            userInputWaypoints.add(mapMarker);
+                            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
+                            m_map.addMapObject(mapMarker);
+                            carRouteButton.setVisibility(View.VISIBLE);
+                            truckRouteButton.setVisibility(View.VISIBLE);
+                            scooterRouteButton.setVisibility(View.VISIBLE);
+                            bikeRouteButton.setVisibility(View.VISIBLE);
+                            pedsRouteButton.setVisibility(View.VISIBLE);
+                            m_naviControlButton.setVisibility(View.VISIBLE);
+                            clearButton.setVisibility(View.VISIBLE);
+                        }
+                    });
+                    snackbarForPlaceResult.show();
+                }
+            }
             return false;
         }
 
@@ -775,7 +808,7 @@ class MapFragmentView {
                             shiftMapCenter(m_map, 0.5f, 0.6f);
                             mapSchemeChanger = new MapSchemeChanger(m_map, m_navigationManager);
 
-                            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+                            m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
                             m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                             m_map.setSafetySpotsVisible(true);
                             m_map.setExtrudedBuildingsVisible(false);
@@ -1000,10 +1033,7 @@ class MapFragmentView {
             map.setExtrudedBuildingsVisible(false);
             map.setCartoMarkersVisible(false);
             */
-            EnumSet<Map.LayerCategory> invisibleLayerCategory = EnumSet.of(
-                    Map.LayerCategory.ABSTRACT_CITY_MODEL
-            );
-            map.setVisibleLayers(invisibleLayerCategory, false);
+
 
         } else {
             if (map != null) {
@@ -1180,9 +1210,9 @@ class MapFragmentView {
         m_route = null;
         switchGuidanceUiPresenters(false);
         if (m_map.isTrafficInfoVisible()) {
-            m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
+            m_map.setMapScheme(Map.Scheme.NORMAL_TRAFFIC_DAY);
         } else {
-            m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+            m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
         }
 
         shiftMapCenter(m_map, 0.5f, 0.6f);
@@ -1214,6 +1244,13 @@ class MapFragmentView {
         zoomInButton.setVisibility(View.VISIBLE);
         zoomOutButton.setVisibility(View.VISIBLE);
         northUpButton.setVisibility(View.VISIBLE);
+
+        EnumSet<Map.LayerCategory> poiLayers = EnumSet.of(
+                Map.LayerCategory.POI_ICON,
+                Map.LayerCategory.POI_LABEL,
+                Map.LayerCategory.POINT_ADDRESS
+        );
+        m_map.setVisibleLayers(poiLayers, true);
     }
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {
@@ -1222,44 +1259,44 @@ class MapFragmentView {
             case CAR:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
                 routeOptions.setHighwaysAllowed(true);
-                if (lightSensorValue < 50) {
-                    if (!trafficEnabled) {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
-                    } else {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_NIGHT);
-                    }
-                } else {
-                    if (!trafficEnabled) {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
-                    } else {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
-                    }
-                }
+//                if (lightSensorValue < 50) {
+//                    if (!trafficEnabled) {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
+//                    } else {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_NIGHT);
+//                    }
+//                } else {
+//                    if (!trafficEnabled) {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+//                    } else {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
+//                    }
+//                }
                 break;
             case TRUCK:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.TRUCK);
                 routeOptions.setHighwaysAllowed(true);
-                if (lightSensorValue < 50) {
-                    m_map.setMapScheme(Map.Scheme.TRUCK_NIGHT);
-                } else {
-                    m_map.setMapScheme(Map.Scheme.TRUCK_DAY);
-                }
+//                if (lightSensorValue < 50) {
+//                    m_map.setMapScheme(Map.Scheme.TRUCK_NIGHT);
+//                } else {
+//                    m_map.setMapScheme(Map.Scheme.TRUCK_DAY);
+//                }
                 break;
             case SCOOTER:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.SCOOTER);
-                if (lightSensorValue < 50) {
-                    if (!trafficEnabled) {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
-                    } else {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_NIGHT);
-                    }
-                } else {
-                    if (!trafficEnabled) {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
-                    } else {
-                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
-                    }
-                }
+//                if (lightSensorValue < 50) {
+//                    if (!trafficEnabled) {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
+//                    } else {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_NIGHT);
+//                    }
+//                } else {
+//                    if (!trafficEnabled) {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
+//                    } else {
+//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
+//                    }
+//                }
                 routeOptions.setHighwaysAllowed(false);
                 break;
             case BICYCLE:
@@ -1269,11 +1306,11 @@ class MapFragmentView {
                 break;
             case PEDESTRIAN:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.PEDESTRIAN);
-                if (lightSensorValue < 50) {
-                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_NIGHT);
-                } else {
-                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
-                }
+//                if (lightSensorValue < 50) {
+//                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_NIGHT);
+//                } else {
+//                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
+//                }
                 routeOptions.setHighwaysAllowed(false);
                 break;
         }
