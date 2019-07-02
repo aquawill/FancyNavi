@@ -198,13 +198,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (!m_mapFragmentView.isRoadView) {
-            m_mapFragmentView.shiftMapCenter(m_map, 0.5f, 0.8f);
+            new ShiftMapCenter(m_map, 0.5f, 0.8f);
             m_map.setTilt(60);
             MapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             m_naviControlButton.setVisibility(View.GONE);
             clearButton.setVisibility(View.GONE);
         } else {
-            m_mapFragmentView.isDragged = false;
+            MapFragmentView.isDragged = false;
         }
         //super.onBackPressed();
     }
@@ -221,7 +221,7 @@ public class MainActivity extends AppCompatActivity {
         requiredSDKPermissions.add(Manifest.permission.INTERNET);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_WIFI_STATE);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_NETWORK_STATE);
-        requiredSDKPermissions.add(Manifest.permission.CAMERA);
+//        requiredSDKPermissions.add(Manifest.permission.CAMERA);
 
         ActivityCompat.requestPermissions(this,
                 requiredSDKPermissions.toArray(new String[requiredSDKPermissions.size()]),

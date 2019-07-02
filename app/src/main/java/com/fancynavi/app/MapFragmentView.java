@@ -56,6 +56,7 @@ import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapState;
+import com.here.android.mpa.mapping.OnMapRenderListener;
 import com.here.android.mpa.mapping.PositionIndicator;
 import com.here.android.mpa.mapping.SupportMapFragment;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
@@ -109,8 +110,11 @@ class MapFragmentView {
     static NavigationManager m_navigationManager;
     static Button m_naviControlButton;
     static Button clearButton;
+    static boolean isDragged;
+    static PositioningManager m_positioningManager;
+    static GeoBoundingBox mapRouteBBox;
     boolean isRoadView = false;
-    boolean isDragged;
+    private boolean isRouteOverView;
     private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
@@ -122,12 +126,8 @@ class MapFragmentView {
     private MapMarker safetyCameraMapMarker;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
-
     private LinearLayout laneLinearLayout;
     private GeoPolyline laneInformationOnRoad;
-
-    private boolean isRouteOverView;
-    private PositioningManager m_positioningManager;
     private AppCompatActivity m_activity;
     private PositionIndicator positionIndicator;
     private SupportMapFragment supportMapFragment;
@@ -146,7 +146,6 @@ class MapFragmentView {
     private TextView calculatingTextView;
     private Route m_route;
     private MapRoute mapRoute;
-    private GeoBoundingBox mapRouteBBox;
     private MapLocalModel mapLocalModel;
     private boolean m_foregroundServiceStarted;
     private CoreRouter coreRouter;
@@ -184,7 +183,7 @@ class MapFragmentView {
             isRoadView = false;
             isRouteOverView = true;
             m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
-            shiftMapCenter(m_map, 0.5f, 0.6f);
+            new ShiftMapCenter(m_map, 0.5f, 0.6f);
             m_map.setTilt(0);
             m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
             m_naviControlButton.setVisibility(View.VISIBLE);
@@ -269,8 +268,7 @@ class MapFragmentView {
 
         @Override
         public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
-            Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "locationMethod: " + locationMethod, Snackbar.LENGTH_SHORT);
-            Log.d("Test", "locationMethod: " + locationMethod + " locationStatus: " + locationStatus);
+//            Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "locationMethod: " + locationMethod, Snackbar.LENGTH_SHORT).show();
         }
     };
     private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
@@ -789,6 +787,7 @@ class MapFragmentView {
                             m_map.setCenter(new GeoCoordinate(25.038137, 121.513936), Map.Animation.NONE);
                             isDragged = false;
 
+                            /* Rotate compass icon*/
                             m_map.addTransformListener(new Map.OnTransformListener() {
                                 @Override
                                 public void onMapTransformStart() {
@@ -798,6 +797,36 @@ class MapFragmentView {
                                 @Override
                                 public void onMapTransformEnd(MapState mapState) {
                                     northUpButton.setRotation(mapState.getOrientation() * -1);
+                                }
+                            });
+
+                            supportMapFragment.addOnMapRenderListener(new OnMapRenderListener() {
+                                @Override
+                                public void onPreDraw() {
+                                }
+
+                                @Override
+                                public void onPostDraw(boolean b, long l) {
+                                }
+
+                                @Override
+                                public void onSizeChanged(int i, int i1) {
+                                    new ShiftMapCenter(m_map, 0.5f, 0.6f);
+                                    Log.d("test", "isRouteOverView " + isRouteOverView);
+
+                                    if (isRouteOverView) {
+                                        m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
+                                    }
+                                }
+
+                                @Override
+                                public void onGraphicsDetached() {
+
+                                }
+
+                                @Override
+                                public void onRenderBufferCreated() {
+
                                 }
                             });
 
@@ -822,7 +851,7 @@ class MapFragmentView {
                                 m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
                             }
 
-                            shiftMapCenter(m_map, 0.5f, 0.6f);
+                            new ShiftMapCenter(m_map, 0.5f, 0.6f);
                             mapSchemeChanger = new MapSchemeChanger(m_map, m_navigationManager);
 
                             m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
@@ -842,7 +871,7 @@ class MapFragmentView {
                                 northUpButton.setRotation(0);
                                 m_map.setTilt(0);
                                 m_map.setZoomLevel(16);
-                                shiftMapCenter(m_map, 0.5f, 0.6f);
+                                new ShiftMapCenter(m_map, 0.5f, 0.6f);
                                 if (!isRouteOverView) {
                                     m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
                                 } else {
@@ -939,7 +968,7 @@ class MapFragmentView {
                                 if (m_route != null) {
                                     m_navigationManager.stop();
                                     m_map.removeMapObject(mapLocalModel);
-                                    shiftMapCenter(m_map, 0.5f, 0.6f);
+                                    new ShiftMapCenter(m_map, 0.5f, 0.6f);
                                     m_map.setTilt(0);
                                     switchGuidanceUiPresenters(false);
                                     startNavigation(m_route, true);
@@ -1094,13 +1123,6 @@ class MapFragmentView {
 
     }
 
-    void shiftMapCenter(Map map, float widthOffset, float heightOffset) {
-        map.setTransformCenter(new PointF(
-                (map.getWidth() * widthOffset),
-                (map.getHeight() * heightOffset)
-        ));
-    }
-
     private void intoNavigationMode() {
         initJunctionView();
 
@@ -1128,7 +1150,7 @@ class MapFragmentView {
         );
         m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
         m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
-        shiftMapCenter(m_map, 0.5f, 0.8f);
+        new ShiftMapCenter(m_map, 0.5f, 0.8f);
         //hudMapScheme(m_map);
         m_map.setTilt(60);
         m_navigationManager.startNavigation(m_route);
@@ -1159,7 +1181,7 @@ class MapFragmentView {
             m_map.removeMapObject(m);
         }
 
-        shiftMapCenter(m_map, 0.5f, 0.6f);
+        new ShiftMapCenter(m_map, 0.5f, 0.6f);
         m_map.setTilt(0);
         m_navigationManager.setMap(m_map);
         if (zoomToRoute) {
@@ -1235,7 +1257,7 @@ class MapFragmentView {
             m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
         }
 
-        shiftMapCenter(m_map, 0.5f, 0.6f);
+        new ShiftMapCenter(m_map, 0.5f, 0.6f);
 
         m_map.removeMapObject(mapLocalModel);
         m_map.setTilt(0);
@@ -1274,6 +1296,14 @@ class MapFragmentView {
     }
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {
+        EnumSet<Map.PedestrianFeature> pedestrianFeatureEnumSet = EnumSet.of(
+                Map.PedestrianFeature.BRIDGE,
+                Map.PedestrianFeature.CROSSWALK,
+                Map.PedestrianFeature.ELEVATOR,
+                Map.PedestrianFeature.ESCALATOR,
+                Map.PedestrianFeature.STAIRS,
+                Map.PedestrianFeature.TUNNEL
+        );
         RouteOptions routeOptions = new RouteOptions();
         switch (transportMode) {
             case CAR:
@@ -1326,6 +1356,8 @@ class MapFragmentView {
                 break;
             case PEDESTRIAN:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.PEDESTRIAN);
+                m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
+                m_map.setPedestrianFeaturesVisible(pedestrianFeatureEnumSet);
 //                if (lightSensorValue < 50) {
 //                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_NIGHT);
 //                } else {
@@ -1407,6 +1439,7 @@ class MapFragmentView {
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
+                        Log.d("Test", "isRouteOverView " + isRouteOverView);
                         m_route = routeResults.get(0).getRoute();
                         resetMapRoute(m_route);
                         mapRouteBBox = m_route.getBoundingBox();
