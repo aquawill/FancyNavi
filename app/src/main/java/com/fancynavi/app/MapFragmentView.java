@@ -31,6 +31,7 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
+import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.OnScreenCaptureListener;
@@ -54,6 +55,7 @@ import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.MapRoute;
+import com.here.android.mpa.mapping.MapState;
 import com.here.android.mpa.mapping.PositionIndicator;
 import com.here.android.mpa.mapping.SupportMapFragment;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
@@ -64,6 +66,10 @@ import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
+import com.here.android.mpa.search.ErrorCode;
+import com.here.android.mpa.search.ResultListener;
+import com.here.android.mpa.search.ReverseGeocodeMode;
+import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalView;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewPresenter;
 import com.here.msdkui.guidance.GuidanceManeuverData;
@@ -162,7 +168,6 @@ class MapFragmentView {
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
 
     private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
-
 
     //HERE UI Kit
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
@@ -315,35 +320,7 @@ class MapFragmentView {
 
         @Override
         public boolean onTapEvent(PointF pointF) {
-            List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
-            if (selectedMapObjects.size() > 0) {
-                Log.d("Test", selectedMapObjects.get(0).getClass().getName());
-                if (selectedMapObjects.get(0).getClass().getName().equals("com.here.android.mpa.mapping.MapCartoMarker")) {
-                    MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
-                    Location location = selectedMapCartoMarker.getLocation();
-                    String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
-                    String placeCategory = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
-                    Snackbar snackbarForPlaceResult = Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), placeName + " / " + placeCategory, Snackbar.LENGTH_LONG);
-                    snackbarForPlaceResult.setAction("Add Waypoint", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            MapMarker mapMarker = new MapMarker(selectedMapCartoMarker.getLocation().getCoordinate());
-                            mapMarker.setDraggable(true);
-                            userInputWaypoints.add(mapMarker);
-                            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
-                            m_map.addMapObject(mapMarker);
-                            carRouteButton.setVisibility(View.VISIBLE);
-                            truckRouteButton.setVisibility(View.VISIBLE);
-                            scooterRouteButton.setVisibility(View.VISIBLE);
-                            bikeRouteButton.setVisibility(View.VISIBLE);
-                            pedsRouteButton.setVisibility(View.VISIBLE);
-                            m_naviControlButton.setVisibility(View.VISIBLE);
-                            clearButton.setVisibility(View.VISIBLE);
-                        }
-                    });
-                    snackbarForPlaceResult.show();
-                }
-            }
+            new SearchResultHandler(m_activity.findViewById(R.id.mapFragmentView), pointF, m_map);
             return false;
         }
 
@@ -384,12 +361,28 @@ class MapFragmentView {
 
         @Override
         public boolean onLongPressEvent(PointF pointF) {
+            GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(pointF);
+            GeoCoordinate coordinate = new GeoCoordinate(touchPointGeoCoordinate);
+            ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(coordinate, ReverseGeocodeMode.RETRIEVE_ADDRESSES, 0);
+            reverseGeocodeRequest.execute(new ResultListener<com.here.android.mpa.search.Location>() {
+                @Override
+                public void onCompleted(com.here.android.mpa.search.Location location, ErrorCode errorCode) {
+                    if (errorCode == ErrorCode.NONE) {
+                        if (location != null) {
+                            new SearchResultHandler(m_activity.findViewById(R.id.mapFragmentView), location, m_map);
+                        } else {
+                            Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Unable to find an address at " + touchPointGeoCoordinate.toString(), Snackbar.LENGTH_LONG).show();
+                        }
+                    } else {
+                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), errorCode.name(), Snackbar.LENGTH_LONG).show();
+                    }
+                }
+            });
             return false;
         }
 
         @Override
         public void onLongPressRelease() {
-
         }
 
         @Override
@@ -764,6 +757,20 @@ class MapFragmentView {
 
 
         boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
+        Log.d("Test", "Clear " + diskCacheRoot);
+
+        /* Purge cache before start */
+        new File(diskCacheRoot).delete();
+//        File dir = new File(diskCacheRoot);
+//        if (dir.isDirectory()) {
+//            String[] children = dir.list();
+//            for (String child : children) {
+//                Log.d("Test", "Delete: " + dir + "/" + child);
+//                new File(dir, child).delete();
+//            }
+//        }
+        /* Purge cache before start */
+
         if (!success) {
             // Setting the isolated disk cache was not successful, please check if the path is valid and
             // ensure that it does not match the default location
@@ -776,23 +783,33 @@ class MapFragmentView {
                     @Override
                     public void onEngineInitializationCompleted(Error error) {
                         if (error == Error.NONE) {
-                            supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
-
                             m_navigationManager = NavigationManager.getInstance();
                             coreRouter = new CoreRouter();
                             m_map = supportMapFragment.getMap();
                             m_map.setCenter(new GeoCoordinate(25.038137, 121.513936), Map.Animation.NONE);
                             isDragged = false;
 
+                            m_map.addTransformListener(new Map.OnTransformListener() {
+                                @Override
+                                public void onMapTransformStart() {
+
+                                }
+
+                                @Override
+                                public void onMapTransformEnd(MapState mapState) {
+                                    northUpButton.setRotation(mapState.getOrientation() * -1);
+                                }
+                            });
+
                             /* PositioningManager init */
                             m_positioningManager = PositioningManager.getInstance();
                             /* Advanced positioning */
                             /* Disable to run on emulator */
-//                            LocationDataSourceHERE m_hereDataSource;
-//                            m_hereDataSource = LocationDataSourceHERE.getInstance();
-//                            m_positioningManager.setDataSource(m_hereDataSource);
+                            LocationDataSourceHERE m_hereDataSource;
+                            m_hereDataSource = LocationDataSourceHERE.getInstance();
+                            m_positioningManager.setDataSource(m_hereDataSource);
                             m_positioningManager.addListener(new WeakReference<>(positionListener));
-
+                            m_positioningManager.enableProbeDataCollection(true);
                             /* GPS logging function */
 //                            EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
 //                                    PositioningManager.LogType.RAW,
@@ -802,7 +819,7 @@ class MapFragmentView {
 
                             /* Start tracking position */
                             if (m_positioningManager != null) {
-                                m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK_INDOOR);
+                                m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
                             }
 
                             shiftMapCenter(m_map, 0.5f, 0.6f);
@@ -822,11 +839,12 @@ class MapFragmentView {
                             northUpButton = m_activity.findViewById(R.id.north_up);
                             northUpButton.setOnClickListener(v -> {
                                 m_map.setOrientation(0);
+                                northUpButton.setRotation(0);
                                 m_map.setTilt(0);
                                 m_map.setZoomLevel(16);
                                 shiftMapCenter(m_map, 0.5f, 0.6f);
                                 if (!isRouteOverView) {
-                                    m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.NONE);
+                                    m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.LINEAR);
                                 } else {
                                     m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                                 }
@@ -941,6 +959,7 @@ class MapFragmentView {
                             safetyCamTextView = m_activity.findViewById(R.id.safety_cam_text_view);
                             safetyCamSpeedTextView = m_activity.findViewById(R.id.safety_cam_speed_text_view);
 
+                            supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
 
                             /* Show position indicator */
                             positionIndicator = m_map.getPositionIndicator();
@@ -1182,6 +1201,7 @@ class MapFragmentView {
 
     private void resetMap() {
         switchGuidanceUiViews(View.GONE);
+        laneLinearLayout.setVisibility(View.GONE);
         m_activity.findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);
         m_activity.findViewById(R.id.signpostImageView).setVisibility(View.INVISIBLE);
         m_naviControlButton.setVisibility(View.GONE);
@@ -1366,7 +1386,7 @@ class MapFragmentView {
 
         progressBar = m_activity.findViewById(R.id.progressBar);
         calculatingTextView = m_activity.findViewById(R.id.calculatingTextView);
-
+        Log.d("Test", "Route Calculation Started.");
         coreRouter.calculateRoute(hereRouter.getRoutePlan(), new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
             public void onProgress(int i) {
@@ -1382,6 +1402,7 @@ class MapFragmentView {
 
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
+                Log.d("Test", "Route Calculation Ended.");
                 Log.d("Test", routingError.toString());
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
@@ -1468,5 +1489,56 @@ class MapFragmentView {
         }
     }
 
+    class SearchResultHandler {
 
+        SearchResultHandler(View view, com.here.android.mpa.search.Location location, Map map) {
+            Snackbar snackbar = Snackbar.make(view, location.getAddress().getText(), Snackbar.LENGTH_LONG);
+            snackbar.setAction("Add Waypoint", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    addingWaypointMapMarker(location.getCoordinate());
+                    map.setCenter(location.getCoordinate(), Map.Animation.LINEAR);
+                }
+            });
+            snackbar.show();
+        }
+
+        SearchResultHandler(View view, PointF pointF, Map map) {
+            List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
+            if (selectedMapObjects.size() > 0) {
+                Log.d("Test", selectedMapObjects.get(0).getClass().getName());
+                if (selectedMapObjects.get(0).getClass().getName().equals("com.here.android.mpa.mapping.MapCartoMarker")) {
+                    MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
+                    Location location = selectedMapCartoMarker.getLocation();
+                    String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
+                    String cityName = location.getInfo().getField(LocationInfo.Field.ADDR_CITY_NAME);
+                    String districtName = location.getInfo().getField(LocationInfo.Field.ADDR_DISTRICT_NAME);
+                    Snackbar snackbarForPlaceResult = Snackbar.make(view, placeName + " / " + cityName + " / " + districtName, Snackbar.LENGTH_LONG);
+                    snackbarForPlaceResult.setAction("Add Waypoint", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            addingWaypointMapMarker(location.getCoordinate());
+                            map.setCenter(selectedMapCartoMarker.getLocation().getCoordinate(), Map.Animation.LINEAR);
+                        }
+                    });
+                    snackbarForPlaceResult.show();
+                }
+            }
+        }
+
+        private void addingWaypointMapMarker(GeoCoordinate geoCoordinate) {
+            MapMarker mapMarker = new MapMarker(geoCoordinate);
+            mapMarker.setDraggable(true);
+            userInputWaypoints.add(mapMarker);
+            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
+            m_map.addMapObject(mapMarker);
+            carRouteButton.setVisibility(View.VISIBLE);
+            truckRouteButton.setVisibility(View.VISIBLE);
+            scooterRouteButton.setVisibility(View.VISIBLE);
+            bikeRouteButton.setVisibility(View.VISIBLE);
+            pedsRouteButton.setVisibility(View.VISIBLE);
+            m_naviControlButton.setVisibility(View.VISIBLE);
+            clearButton.setVisibility(View.VISIBLE);
+        }
+    }
 }

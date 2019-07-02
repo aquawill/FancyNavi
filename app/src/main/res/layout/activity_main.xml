@@ -75,15 +75,18 @@
 
         <Button
             android:id="@+id/north_up"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginStart="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="8dp"
+            android:background="@null"
             android:elevation="2dp"
-            android:text="↑"
+            android:foreground="@drawable/compass"
+            android:shadowColor="#00FFFFFF"
+            android:stateListAnimator="@null"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/top_button_linear_layout" />
 
         <Button
             android:id="@+id/capture_button"
@@ -130,7 +133,7 @@
                 android:layout_weight="1"
                 android:elevation="2dp"
                 android:text="Reset"
-                android:visibility="invisible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/startGuidance"
@@ -139,7 +142,7 @@
                 android:layout_margin="8dp"
                 android:layout_weight="1"
                 android:elevation="2dp"
-                android:visibility="invisible" />
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout

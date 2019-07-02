@@ -103,10 +103,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        mapFragmentView = findViewById(R.id.mapFragmentView);
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getSupportActionBar().hide();
+
+        mapFragmentView = findViewById(R.id.mapFragmentView);
+        setContentView(R.layout.activity_main);
         hideGuidanceView();
         hideJunctionView();
         requestPermissions();

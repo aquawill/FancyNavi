@@ -26,7 +26,7 @@
     <application
         android:allowBackup="true"
         android:fullBackupContent="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@mipmap/ic_navigator"
         android:label="HERESdkTest"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
@@ -36,9 +36,8 @@
             android:name="com.google.android.actions"
             android:resource="@xml/network_security_config" />
 
-        <activity
-            android:name=".MainActivity"
-            android:screenOrientation="portrait">
+        <activity android:name=".MainActivity">
+            <!--android:screenOrientation="portrait">-->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -75,11 +74,11 @@ Developers should always provide custom values for each of {YOUR_LABEL_NAME} and
             </intent-filter>
         </service> <!-- HERE advanced positioning. -->
         <!-- Disable to run on emulator -->
-        <!-- <service -->
-        <!-- android:name="com.here.services.internal.LocationService" -->
-        <!-- android:enabled="true" -->
-        <!-- android:exported="false" -->
-        <!-- android:process=":remote"></service> -->
+        <service
+            android:name="com.here.services.internal.LocationService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":remote"></service>
         <service android:name=".ForegroundService" />
     </application>
 
