@@ -1544,9 +1544,8 @@ class MapFragmentView {
                     MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
                     Location location = selectedMapCartoMarker.getLocation();
                     String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
-                    String cityName = location.getInfo().getField(LocationInfo.Field.ADDR_CITY_NAME);
-                    String districtName = location.getInfo().getField(LocationInfo.Field.ADDR_DISTRICT_NAME);
-                    Snackbar snackbarForPlaceResult = Snackbar.make(view, placeName + " / " + cityName + " / " + districtName, Snackbar.LENGTH_LONG);
+                    String category = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
+                    Snackbar snackbarForPlaceResult = Snackbar.make(view, placeName + " / " + category, Snackbar.LENGTH_LONG);
                     snackbarForPlaceResult.setAction("Add Waypoint", new View.OnClickListener() {
                         @Override
                         public void onClick(View view) {
