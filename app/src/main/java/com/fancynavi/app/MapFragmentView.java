@@ -31,7 +31,6 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
-import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.OnScreenCaptureListener;
@@ -105,16 +104,17 @@ import static java.util.Locale.TRADITIONAL_CHINESE;
 //import com.here.msdkui.guidance.GuidanceSpeedListener;
 
 class MapFragmentView {
+    static boolean isDragged;
     static Map m_map;
     static GeoPosition currentGeoPosition;
     static NavigationManager m_navigationManager;
     static Button m_naviControlButton;
     static Button clearButton;
-    static boolean isDragged;
     static PositioningManager m_positioningManager;
     static GeoBoundingBox mapRouteBBox;
     boolean isRoadView = false;
     private boolean isRouteOverView;
+    private boolean isNavigating;
     private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
@@ -437,6 +437,7 @@ class MapFragmentView {
 //            });
 //            snackbarForSearchParking.setDuration(30000);
 //            snackbarForSearchParking.show();
+            isNavigating = false;
             stopForegroundService();
         }
 
@@ -533,7 +534,7 @@ class MapFragmentView {
             View mainLinearLayout = m_activity.findViewById(R.id.main_linear_layout);
             junctionViewImageView.requestLayout();
             signpostImageView.requestLayout();
-            int jvViewWidth = (int) (mainLinearLayout.getWidth() / 2.5);
+            int jvViewWidth = (mainLinearLayout.getWidth() / 3);
             int jvViewHeight;
             switch (aspectRatio) {
                 case AR_16x9:
@@ -784,6 +785,7 @@ class MapFragmentView {
                             m_navigationManager = NavigationManager.getInstance();
                             coreRouter = new CoreRouter();
                             m_map = supportMapFragment.getMap();
+                            isNavigating = false;
                             m_map.setCenter(new GeoCoordinate(25.038137, 121.513936), Map.Animation.NONE);
                             isDragged = false;
 
@@ -811,7 +813,11 @@ class MapFragmentView {
 
                                 @Override
                                 public void onSizeChanged(int i, int i1) {
-                                    new ShiftMapCenter(m_map, 0.5f, 0.6f);
+                                    if (!isNavigating) {
+                                        new ShiftMapCenter(m_map, 0.5f, 0.6f);
+                                    } else {
+                                        new ShiftMapCenter(m_map, 0.5f, 0.8f);
+                                    }
                                     Log.d("test", "isRouteOverView " + isRouteOverView);
 
                                     if (isRouteOverView) {
@@ -834,11 +840,11 @@ class MapFragmentView {
                             m_positioningManager = PositioningManager.getInstance();
                             /* Advanced positioning */
                             /* Disable to run on emulator */
-                            LocationDataSourceHERE m_hereDataSource;
-                            m_hereDataSource = LocationDataSourceHERE.getInstance();
-                            m_positioningManager.setDataSource(m_hereDataSource);
-                            m_positioningManager.addListener(new WeakReference<>(positionListener));
-                            m_positioningManager.enableProbeDataCollection(true);
+//                            LocationDataSourceHERE m_hereDataSource;
+//                            m_hereDataSource = LocationDataSourceHERE.getInstance();
+//                            m_positioningManager.setDataSource(m_hereDataSource);
+//                            m_positioningManager.addListener(new WeakReference<>(positionListener));
+//                            m_positioningManager.enableProbeDataCollection(true);
                             /* GPS logging function */
 //                            EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
 //                                    PositioningManager.LogType.RAW,
@@ -1193,6 +1199,7 @@ class MapFragmentView {
         alertDialogBuilder.setMessage("Choose Mode");
         alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
+                isNavigating = true;
                 m_naviControlButton.setText("Stop Navi");
                 intoNavigationMode();
                 isRouteOverView = false;
@@ -1205,6 +1212,7 @@ class MapFragmentView {
         });
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
+                isNavigating = true;
                 m_naviControlButton.setText("Stop Navi");
                 intoNavigationMode();
                 isRouteOverView = false;
@@ -1222,6 +1230,7 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        isNavigating = false;
         switchGuidanceUiViews(View.GONE);
         laneLinearLayout.setVisibility(View.GONE);
         m_activity.findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);
