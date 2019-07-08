@@ -38,8 +38,8 @@
 
         <activity
             android:name=".MainActivity"
-            android:configChanges="orientation|screenSize">
-            <!--android:screenOrientation="portrait">-->
+            android:configChanges="orientation|screenSize"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -74,13 +74,13 @@ Developers should always provide custom values for each of {YOUR_LABEL_NAME} and
             <intent-filter>
                 <action android:name="AndroidSdkTest" />
             </intent-filter>
-        </service> <!-- HERE advanced positioning. -->
-        <!-- Disable to run on emulator -->
-        <!--<service-->
-        <!--android:name="com.here.services.internal.LocationService"-->
-        <!--android:enabled="true"-->
-        <!--android:exported="false"-->
-        <!--android:process=":remote"></service>-->
+        </service>
+        <!-- HERE advanced positioning. -->
+        <service
+            android:name="com.here.services.internal.LocationService"
+            android:enabled="true"
+            android:exported="false"
+            android:process=":remote"></service>
         <service android:name=".ForegroundService" />
     </application>
 

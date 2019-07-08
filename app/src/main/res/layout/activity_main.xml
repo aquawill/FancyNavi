@@ -53,7 +53,7 @@
             android:elevation="2dp"
             android:scaleType="fitXY"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/top_button_linear_layout" />
+            app:layout_constraintTop_toBottomOf="@+id/guidance_next_maneuver_view" />
 
         <ImageView
             android:id="@+id/junctionImageView"
@@ -110,7 +110,7 @@
             android:elevation="2dp"
             android:foreground="@drawable/ic_congestion"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
@@ -275,12 +275,14 @@
         </TableLayout>
 
         <LinearLayout
+            android:id="@+id/safety_cam_linear_layout"
             android:layout_width="80dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:orientation="vertical"
-            app:layout_constraintBottom_toTopOf="@+id/guidance_street_label_view"
-            app:layout_constraintStart_toStartOf="parent">
+            app:layout_constraintEnd_toEndOf="@+id/mapFragmentView"
+            app:layout_constraintTop_toBottomOf="@+id/guidance_next_maneuver_view">
 
             <ImageView
                 android:id="@+id/safety_cam_image_view"
@@ -319,14 +321,17 @@
             android:id="@+id/lane_linear_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
             android:background="#00000000"
             android:elevation="2dp"
             android:orientation="horizontal"
             android:padding="8dp"
             android:visibility="invisible"
-            app:layout_constraintBottom_toTopOf="@id/guidance_street_label_view"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
     </android.support.constraint.ConstraintLayout>
 
 
