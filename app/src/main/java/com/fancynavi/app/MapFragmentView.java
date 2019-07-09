@@ -404,6 +404,7 @@ class MapFragmentView {
 
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
+            m_navigationManager.removeLaneInformationListener(m_LaneInformationListener);
 //            Snackbar snackbarForSearchParking = Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), navigationMode + " was ended", Snackbar.LENGTH_LONG);
 //            snackbarForSearchParking.setAction("Find Parking!", new View.OnClickListener() {
 //                @Override
@@ -1326,44 +1327,13 @@ class MapFragmentView {
             case CAR:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
                 routeOptions.setHighwaysAllowed(true);
-//                if (lightSensorValue < 50) {
-//                    if (!trafficEnabled) {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
-//                    } else {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_NIGHT);
-//                    }
-//                } else {
-//                    if (!trafficEnabled) {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
-//                    } else {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
-//                    }
-//                }
                 break;
             case TRUCK:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.TRUCK);
                 routeOptions.setHighwaysAllowed(true);
-//                if (lightSensorValue < 50) {
-//                    m_map.setMapScheme(Map.Scheme.TRUCK_NIGHT);
-//                } else {
-//                    m_map.setMapScheme(Map.Scheme.TRUCK_DAY);
-//                }
                 break;
             case SCOOTER:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.SCOOTER);
-//                if (lightSensorValue < 50) {
-//                    if (!trafficEnabled) {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_NIGHT);
-//                    } else {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_NIGHT);
-//                    }
-//                } else {
-//                    if (!trafficEnabled) {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_DAY);
-//                    } else {
-//                        m_map.setMapScheme(Map.Scheme.CARNAV_TRAFFIC_DAY);
-//                    }
-//                }
                 routeOptions.setHighwaysAllowed(false);
                 break;
             case BICYCLE:
@@ -1375,11 +1345,6 @@ class MapFragmentView {
                 routeOptions.setTransportMode(RouteOptions.TransportMode.PEDESTRIAN);
                 m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
                 m_map.setPedestrianFeaturesVisible(pedestrianFeatureEnumSet);
-//                if (lightSensorValue < 50) {
-//                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_NIGHT);
-//                } else {
-//                    m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
-//                }
                 routeOptions.setHighwaysAllowed(false);
                 break;
         }
@@ -1493,7 +1458,9 @@ class MapFragmentView {
         m_navigationManager.addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_16x9);
         m_navigationManager.addRealisticViewListener(new WeakReference<>(m_realisticViewListener));
         m_navigationManager.addPositionListener(new WeakReference<>(m_positionListener));
-        m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
+        if (m_route.getFirstManeuver().getTransportMode() == RouteOptions.TransportMode.CAR || m_route.getFirstManeuver().getTransportMode() == RouteOptions.TransportMode.TRUCK) {
+            m_navigationManager.addLaneInformationListener(new WeakReference<>(m_LaneInformationListener));
+        }
         m_navigationManager.addRerouteListener(new WeakReference<>(new NavigationManager.RerouteListener() {
             @Override
             public void onRerouteBegin() {
