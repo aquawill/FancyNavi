@@ -399,6 +399,8 @@ class MapFragmentView {
         public void onPositionUpdated(GeoPosition geoPosition) {
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
             mapLocalModel.setYaw((float) geoPosition.getHeading());
+            Log.d("test", "geoPosition.getPositionSource() " + geoPosition.getPositionSource());
+            Log.d("test", "geoPosition.getPositionTechnology() " + geoPosition.getPositionTechnology());
         }
 
     };
@@ -481,7 +483,6 @@ class MapFragmentView {
                 laneLinearLayoutOverlay.setElevation((int) DpConverter.convertDpToPixel(4, m_activity));
                 laneMapOverlay = new MapOverlay(laneLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
                 m_map.addMapOverlay(laneMapOverlay);
-                Log.d("Test", "new laneMapOverlay: " + laneMapOverlay);
             }
         }
     };
@@ -536,6 +537,14 @@ class MapFragmentView {
 //            snackbarForSearchParking.setDuration(30000);
 //            snackbarForSearchParking.show();
             isNavigating = false;
+            isRoadView = false;
+            isRouteOverView = true;
+            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+            new ShiftMapCenter(m_map, 0.5f, 0.6f);
+            m_map.setTilt(0);
+            m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
+            m_naviControlButton.setVisibility(View.VISIBLE);
+            clearButton.setVisibility(View.VISIBLE);
             stopForegroundService();
         }
 
@@ -866,6 +875,7 @@ class MapFragmentView {
 
                         /* PositioningManager init */
                         m_positioningManager = PositioningManager.getInstance();
+
                         /* Advanced positioning */
                         if (!Build.FINGERPRINT.contains("generic")) {
                             LocationDataSourceHERE m_hereDataSource;
@@ -1027,6 +1037,7 @@ class MapFragmentView {
 
                         /* Show position indicator */
                         positionIndicator = m_map.getPositionIndicator();
+                        positionIndicator.setSmoothPositionChange(true);
                         positionIndicator.setVisible(true);
                         positionIndicator.setAccuracyIndicatorVisible(true);
 

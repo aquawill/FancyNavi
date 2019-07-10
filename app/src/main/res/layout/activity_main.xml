@@ -90,7 +90,7 @@
             android:layout_height="40dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
-            android:background="@color/lui_light"
+            android:background="#FFFFFFFF"
             android:elevation="2dp"
             android:text="CAP"
             android:visibility="visible"
@@ -104,6 +104,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:elevation="2dp"
+            android:background="#FFFFFFFF"
             android:foreground="@drawable/ic_congestion"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -158,6 +159,7 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@color/lui_light"
+                android:padding="2dp"
                 android:text="+"
                 android:textSize="24sp" />
 
@@ -167,6 +169,7 @@
                 android:layout_height="40dp"
                 android:layout_weight="1"
                 android:background="@color/lui_light"
+                android:padding="2dp"
                 android:text="-"
                 android:textSize="24sp" />
         </LinearLayout>
@@ -276,9 +279,10 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
+            android:elevation="2dp"
             android:orientation="vertical"
             app:layout_constraintEnd_toEndOf="@+id/mapFragmentView"
-            app:layout_constraintTop_toBottomOf="@+id/guidance_next_maneuver_view">
+            app:layout_constraintTop_toTopOf="@+id/mapFragmentView">
 
             <ImageView
                 android:id="@+id/safety_cam_image_view"
