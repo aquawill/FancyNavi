@@ -55,6 +55,7 @@ import com.here.android.mpa.mapping.MapCartoMarker;
 import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
+import com.here.android.mpa.mapping.MapOverlay;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapState;
 import com.here.android.mpa.mapping.OnMapRenderListener;
@@ -115,6 +116,8 @@ class MapFragmentView {
     static PositioningManager m_positioningManager;
     static GeoBoundingBox mapRouteBBox;
     boolean isRoadView = false;
+    MapOverlay laneMapOverlay;
+    LinearLayout laneLinearLayoutOverlay;
     private boolean isRouteOverView;
     private boolean isNavigating;
     private MapSchemeChanger mapSchemeChanger;
@@ -128,7 +131,6 @@ class MapFragmentView {
     private MapMarker safetyCameraMapMarker;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
-    private LinearLayout laneLinearLayout;
     private GeoPolyline laneInformationOnRoad;
     private AppCompatActivity m_activity;
     private PositionIndicator positionIndicator;
@@ -167,7 +169,6 @@ class MapFragmentView {
     private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
-
     private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
 
     //HERE UI Kit
@@ -393,6 +394,97 @@ class MapFragmentView {
             return false;
         }
     };
+    private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
+        @Override
+        public void onPositionUpdated(GeoPosition geoPosition) {
+            mapLocalModel.setAnchor(geoPosition.getCoordinate());
+            mapLocalModel.setYaw((float) geoPosition.getHeading());
+        }
+
+    };
+    private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
+
+        @Override
+        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
+            /*
+            Log.d("Test", "=======================================================================================");
+            Log.d("Test", "Lane information");
+            Log.d("Test", "---------------------------------------------------------------------------------------");
+            for (LaneInformation laneInformation : list) {
+                Log.d("Test", "Lane Directions " + laneInformation.getDirections());
+                Log.d("Test", "Recommended " + laneInformation.getRecommendationState());
+            }
+            */
+            super.onLaneInformation(list, roadElement);
+            if (laneMapOverlay != null) {
+                m_map.removeMapOverlay(laneMapOverlay);
+            }
+            laneLinearLayoutOverlay = new LinearLayout(m_activity);
+            laneLinearLayoutOverlay.setVisibility(View.VISIBLE);
+            if (list.size() > 0) {
+                for (LaneInformation laneInformation : list) {
+                    LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
+                    EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
+                    for (LaneInformation.Direction direction : directions) {
+                        ImageView laneDcmImageView = new ImageView(m_activity);
+                        switch (direction) {
+                            case STRAIGHT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_s);
+                                break;
+                            case SLIGHTLY_RIGHT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_rs);
+                                break;
+                            case SLIGHTLY_LEFT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_ls);
+                                break;
+                            case RIGHT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_r);
+                                break;
+                            case LEFT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_l);
+                                break;
+                            case SHARP_LEFT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_lh);
+                                break;
+                            case SHARP_RIGHT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_rh);
+                                break;
+                            case U_TURN_LEFT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_lu);
+                                break;
+                            case U_TURN_RIGHT:
+                                laneDcmImageView.setImageResource(R.drawable.ic_lane_ru);
+                                break;
+                            case UNDEFINED:
+                                laneDcmImageView.setVisibility(View.INVISIBLE);
+                                break;
+                        }
+                        if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
+                            laneDcmImageView.setBackgroundColor(Color.argb(255, 153, 255, 51));
+                        } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
+                            laneDcmImageView.setBackgroundColor(Color.argb(255, 255, 255, 153));
+                        } else if (recommendationState == LaneInformation.RecommendationState.NOT_RECOMMENDED) {
+                            laneDcmImageView.setBackgroundColor(Color.argb(255, 100, 100, 100));
+                        } else {
+                            laneDcmImageView.setBackgroundColor(Color.argb(255, 100, 100, 100));
+                        }
+                        int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(2, m_activity);
+                        laneLinearLayoutOverlay.addView(laneDcmImageView);
+                        laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
+//                        laneDcmImageView.requestLayout();
+//                        laneDcmImageView.getLayoutParams().width = (int) DpConverter.convertDpToPixel(24, m_activity);
+//                        laneDcmImageView.getLayoutParams().height = (int) DpConverter.convertDpToPixel(24, m_activity);
+                    }
+                    laneLinearLayoutOverlay.addView(new ImageView(m_activity), 8, 8);
+
+                }
+                laneLinearLayoutOverlay.setElevation((int) DpConverter.convertDpToPixel(4, m_activity));
+                laneMapOverlay = new MapOverlay(laneLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+                m_map.addMapOverlay(laneMapOverlay);
+                Log.d("Test", "new laneMapOverlay: " + laneMapOverlay);
+            }
+        }
+    };
     private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
         public void onRunningStateChanged() {
@@ -461,75 +553,6 @@ class MapFragmentView {
         public void onCountryInfo(String s, String s1) {
         }
     };
-    private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
-        @Override
-        public void onPositionUpdated(GeoPosition geoPosition) {
-            mapLocalModel.setAnchor(geoPosition.getCoordinate());
-            mapLocalModel.setYaw((float) geoPosition.getHeading());
-        }
-
-    };
-    private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
-
-        @Override
-        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
-            super.onLaneInformation(list, roadElement);
-            laneLinearLayout.removeAllViews();
-            laneLinearLayout.setVisibility(View.VISIBLE);
-            if (list.size() > 0) {
-                for (LaneInformation laneInformation : list) {
-                    LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
-                    EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
-                    for (LaneInformation.Direction direction : directions) {
-                        ImageView laneDcmImageView = new ImageView(m_activity);
-                        switch (direction) {
-                            case STRAIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_s);
-                                break;
-                            case SLIGHTLY_RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_rs);
-                                break;
-                            case SLIGHTLY_LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_ls);
-                                break;
-                            case RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_r);
-                                break;
-                            case LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_l);
-                                break;
-                            case SHARP_LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_lh);
-                                break;
-                            case SHARP_RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_rh);
-                                break;
-                            case U_TURN_LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_lu);
-                                break;
-                            case U_TURN_RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_ru);
-                                break;
-                        }
-                        if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 153, 255, 51));
-                        } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 255, 255, 153));
-                        } else if (recommendationState == LaneInformation.RecommendationState.NOT_RECOMMENDED) {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 50, 50, 50));
-                        } else {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 100, 100, 100));
-                        }
-                        laneLinearLayout.addView(laneDcmImageView);
-                    }
-                    laneLinearLayout.addView(new ImageView(m_activity), 8, 32);
-                }
-            } else {
-                laneLinearLayout.removeAllViews();
-            }
-        }
-    };
-
     private NavigationManager.RealisticViewListener m_realisticViewListener = new NavigationManager.RealisticViewListener() {
         @Override
         public void onRealisticViewNextManeuver(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
@@ -537,7 +560,6 @@ class MapFragmentView {
 
         @Override
         public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            laneLinearLayout.setVisibility(View.INVISIBLE);
             View mainLinearLayout = m_activity.findViewById(R.id.main_linear_layout);
             junctionViewImageView.requestLayout();
             signpostImageView.requestLayout();
@@ -570,7 +592,6 @@ class MapFragmentView {
 
         @Override
         public void onRealisticViewHide() {
-            laneLinearLayout.setVisibility(View.VISIBLE);
             junctionViewImageView.setVisibility(View.GONE);
             signpostImageView.setVisibility(View.GONE);
         }
@@ -964,8 +985,6 @@ class MapFragmentView {
                             }
                         });
 
-                        laneLinearLayout = m_activity.findViewById(R.id.lane_linear_layout);
-
                         m_activity.findViewById(R.id.capture_button).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -1241,7 +1260,6 @@ class MapFragmentView {
     private void resetMap() {
         isNavigating = false;
         switchGuidanceUiViews(View.GONE);
-        laneLinearLayout.setVisibility(View.GONE);
         m_activity.findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);
         m_activity.findViewById(R.id.signpostImageView).setVisibility(View.INVISIBLE);
         m_naviControlButton.setVisibility(View.GONE);
@@ -1311,6 +1329,9 @@ class MapFragmentView {
                 Map.LayerCategory.POINT_ADDRESS
         );
         m_map.setVisibleLayers(poiLayers, true);
+        if (laneMapOverlay != null) {
+            m_map.removeMapOverlay(laneMapOverlay);
+        }
     }
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {

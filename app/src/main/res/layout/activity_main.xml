@@ -7,30 +7,26 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
+    <com.here.msdkui.guidance.GuidanceManeuverView
+        android:id="@+id/guidanceManeuverView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="2dp"
+        android:visibility="gone">
+
+    </com.here.msdkui.guidance.GuidanceManeuverView>
+
+    <com.here.msdkui.guidance.GuidanceNextManeuverView
+        android:id="@+id/guidance_next_maneuver_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="2dp"
+        android:visibility="gone" />
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/map_constraint_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
-
-        <com.here.msdkui.guidance.GuidanceNextManeuverView
-            android:id="@+id/guidance_next_maneuver_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:elevation="2dp"
-            android:visibility="invisible"
-            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
-            app:layout_constraintTop_toBottomOf="@+id/guidanceManeuverView" />
-
-        <com.here.msdkui.guidance.GuidanceManeuverView
-            android:id="@+id/guidanceManeuverView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:elevation="2dp"
-            android:visibility="invisible"
-            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
-            app:layout_constraintTop_toTopOf="@+id/mapFragmentView">
-
-        </com.here.msdkui.guidance.GuidanceManeuverView>
 
         <com.here.msdkui.guidance.GuidanceStreetLabelView
             android:id="@+id/guidance_street_label_view"
@@ -53,7 +49,7 @@
             android:elevation="2dp"
             android:scaleType="fitXY"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/guidance_next_maneuver_view" />
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
             android:id="@+id/junctionImageView"
@@ -123,7 +119,7 @@
             android:orientation="horizontal"
             app:layout_constraintEnd_toEndOf="@+id/linearLayout"
             app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
-            app:layout_constraintTop_toBottomOf="@id/guidance_next_maneuver_view">
+            app:layout_constraintTop_toTopOf="parent">
 
             <Button
                 android:id="@+id/clear"
@@ -199,8 +195,8 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:background="#00C7C7C7"
-            android:textColor="#FFFFFFFF"
             android:text="Calculating..."
+            android:textColor="#FFFFFFFF"
             android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@+id/progressBar"
             app:layout_constraintEnd_toEndOf="parent"
@@ -316,22 +312,6 @@
                 android:visibility="invisible" />
 
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/lane_linear_layout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:background="#00000000"
-            android:elevation="2dp"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:visibility="invisible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tableLayout" />
     </android.support.constraint.ConstraintLayout>
 
 
