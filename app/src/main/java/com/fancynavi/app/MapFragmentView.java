@@ -116,7 +116,7 @@ class MapFragmentView {
     static PositioningManager m_positioningManager;
     static GeoBoundingBox mapRouteBBox;
     boolean isRoadView = false;
-    MapOverlay laneMapOverlay;
+    static MapOverlay laneMapOverlay;
     LinearLayout laneLinearLayoutOverlay;
     private boolean isRouteOverView;
     private boolean isNavigating;
@@ -178,19 +178,22 @@ class MapFragmentView {
         public void onGlobalLayout() {
         }
     };
-    private ImageView junctionViewImageView;
-    private ImageView signpostImageView;
+    static ImageView junctionViewImageView;
+    static ImageView signpostImageView;
     private OnTouchListener mapOnTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
             isRoadView = false;
             isRouteOverView = true;
+            m_map.removeMapOverlay(laneMapOverlay);
             m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
             new ShiftMapCenter(m_map, 0.5f, 0.6f);
             m_map.setTilt(0);
             m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
             m_naviControlButton.setVisibility(View.VISIBLE);
             clearButton.setVisibility(View.VISIBLE);
+            junctionViewImageView.setAlpha(0f);
+            signpostImageView.setAlpha(0f);
             return false;
         }
     };
@@ -229,7 +232,7 @@ class MapFragmentView {
         }
     };
     private GeoCoordinate lastKnownLocation;
-    private OnPositionChangedListener positionListener = new OnPositionChangedListener() {
+    private OnPositionChangedListener p_PositionListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
@@ -274,7 +277,6 @@ class MapFragmentView {
 
         @Override
         public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
-//            Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "locationMethod: " + locationMethod, Snackbar.LENGTH_SHORT).show();
         }
     };
     private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
@@ -399,8 +401,6 @@ class MapFragmentView {
         public void onPositionUpdated(GeoPosition geoPosition) {
             mapLocalModel.setAnchor(geoPosition.getCoordinate());
             mapLocalModel.setYaw((float) geoPosition.getHeading());
-            Log.d("test", "geoPosition.getPositionSource() " + geoPosition.getPositionSource());
-            Log.d("test", "geoPosition.getPositionTechnology() " + geoPosition.getPositionTechnology());
         }
 
     };
@@ -427,62 +427,131 @@ class MapFragmentView {
                 for (LaneInformation laneInformation : list) {
                     LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
                     EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
+                    int laneDirectionCategory = 0;
+                    ImageView laneDcmImageView = new ImageView(m_activity);
                     for (LaneInformation.Direction direction : directions) {
-                        ImageView laneDcmImageView = new ImageView(m_activity);
-                        switch (direction) {
-                            case STRAIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_s);
-                                break;
-                            case SLIGHTLY_RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_rs);
-                                break;
-                            case SLIGHTLY_LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_ls);
-                                break;
-                            case RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_r);
-                                break;
-                            case LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_l);
-                                break;
-                            case SHARP_LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_lh);
-                                break;
-                            case SHARP_RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_rh);
-                                break;
-                            case U_TURN_LEFT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_lu);
-                                break;
-                            case U_TURN_RIGHT:
-                                laneDcmImageView.setImageResource(R.drawable.ic_lane_ru);
-                                break;
-                            case UNDEFINED:
-                                laneDcmImageView.setVisibility(View.INVISIBLE);
-                                break;
-                        }
-                        if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 153, 255, 51));
-                        } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 255, 255, 153));
-                        } else if (recommendationState == LaneInformation.RecommendationState.NOT_RECOMMENDED) {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 100, 100, 100));
-                        } else {
-                            laneDcmImageView.setBackgroundColor(Color.argb(255, 100, 100, 100));
-                        }
-                        int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(2, m_activity);
-                        laneLinearLayoutOverlay.addView(laneDcmImageView);
-                        laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
-//                        laneDcmImageView.requestLayout();
-//                        laneDcmImageView.getLayoutParams().width = (int) DpConverter.convertDpToPixel(24, m_activity);
-//                        laneDcmImageView.getLayoutParams().height = (int) DpConverter.convertDpToPixel(24, m_activity);
+                        laneDirectionCategory += direction.value();
                     }
-                    laneLinearLayoutOverlay.addView(new ImageView(m_activity), 8, 8);
-
+                    switch (laneDirectionCategory) {
+                        case 1:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_1);
+                            break;
+                        case 2:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2);
+                            break;
+                        case 3:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_3);
+                            break;
+                        case 4:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_4);
+                            break;
+                        case 5:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_5);
+                            break;
+                        case 6:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_6);
+                            break;
+                        case 9:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_9);
+                            break;
+                        case 16:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_16);
+                            break;
+                        case 17:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_17);
+                            break;
+                        case 64:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_64);
+                            break;
+                        case 65:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_65);
+                            break;
+                        case 67:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_67);
+                            break;
+                        case 68:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_68);
+                            break;
+                        case 69:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_69);
+                            break;
+                        case 80:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_80);
+                            break;
+                        case 128:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_128);
+                            break;
+                        case 129:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_129);
+                            break;
+                        case 130:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_130);
+                            break;
+                        case 131:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_131);
+                            break;
+                        case 192:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_192);
+                            break;
+                        case 256:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_256);
+                            break;
+                        case 257:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_257);
+                            break;
+                        case 512:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_512);
+                            break;
+                        case 513:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_513);
+                            break;
+                        case 2048:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2048);
+                            break;
+                        case 2049:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2049);
+                            break;
+                        case 2052:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2052);
+                            break;
+                        case 2053:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2053);
+                            break;
+                        case 2056:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2056);
+                            break;
+                        case 2112:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2112);
+                            break;
+                        case 2113:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2113);
+                            break;
+                        case 4096:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_4096);
+                            break;
+                        case 8192:
+                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_8192);
+                            break;
+                    }
+                    laneDcmImageView.setCropToPadding(false);
+                    if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
+                        laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
+                    } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
+                        laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 128, 0));
+                    } else if (recommendationState == LaneInformation.RecommendationState.NOT_RECOMMENDED) {
+                        laneDcmImageView.setBackgroundColor(Color.argb(255, 64, 64, 64));
+                    } else {
+                        laneDcmImageView.setBackgroundColor(Color.argb(255, 64, 64, 64));
+                        laneDcmImageView.setAlpha(0f);
+                    }
+                    int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, m_activity);
+                    laneLinearLayoutOverlay.addView(laneDcmImageView);
+                    laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
                 }
-                laneLinearLayoutOverlay.setElevation((int) DpConverter.convertDpToPixel(4, m_activity));
                 laneMapOverlay = new MapOverlay(laneLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
-                m_map.addMapOverlay(laneMapOverlay);
+                if (!isRouteOverView) {
+                    m_map.addMapOverlay(laneMapOverlay);
+                }
             }
         }
     };
@@ -884,7 +953,7 @@ class MapFragmentView {
                             m_positioningManager.enableProbeDataCollection(true);
                         }
 
-                        m_positioningManager.addListener(new WeakReference<>(positionListener));
+                        m_positioningManager.addListener(new WeakReference<>(p_PositionListener));
 
                         /* GPS logging function */
 //                            EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
@@ -1037,7 +1106,6 @@ class MapFragmentView {
 
                         /* Show position indicator */
                         positionIndicator = m_map.getPositionIndicator();
-                        positionIndicator.setSmoothPositionChange(true);
                         positionIndicator.setVisible(true);
                         positionIndicator.setAccuracyIndicatorVisible(true);
 
