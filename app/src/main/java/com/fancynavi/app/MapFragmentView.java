@@ -21,9 +21,11 @@ import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Switch;
 import android.widget.TextView;
 
 import com.here.android.mpa.common.CopyrightLogoPosition;
@@ -32,10 +34,8 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
-import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
-import com.here.android.mpa.common.OnScreenCaptureListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
@@ -115,9 +115,18 @@ class MapFragmentView {
     static Button clearButton;
     static PositioningManager m_positioningManager;
     static GeoBoundingBox mapRouteBBox;
-    boolean isRoadView = false;
     static MapOverlay laneMapOverlay;
-    LinearLayout laneLinearLayoutOverlay;
+    static ImageView junctionViewImageView;
+    static ImageView signpostImageView;
+    boolean isRoadView = false;
+    boolean isPositionLogging = false;
+    EnumSet<PositioningManager.LocationMethod> locationMethodEnum;
+    LinearLayout laneDcmLinearLayout;
+    LinearLayout laneInfoLinearLayoutOverlay;
+    int laneInfoLinearLayoutOverlayHeight;
+    int laneInfoLinearLayoutOverlayWidth;
+    private ImageView gpsStatusImageView;
+    private Switch gpsSwitch;
     private boolean isRouteOverView;
     private boolean isNavigating;
     private MapSchemeChanger mapSchemeChanger;
@@ -170,7 +179,6 @@ class MapFragmentView {
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
     private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
-
     //HERE UI Kit
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
     private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -178,8 +186,6 @@ class MapFragmentView {
         public void onGlobalLayout() {
         }
     };
-    static ImageView junctionViewImageView;
-    static ImageView signpostImageView;
     private OnTouchListener mapOnTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -235,6 +241,13 @@ class MapFragmentView {
     private OnPositionChangedListener p_PositionListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
+            if (locationMethod.equals(PositioningManager.LocationMethod.GPS)) {
+                gpsStatusImageView.setImageResource(R.drawable.ic_gps_fixed_white_24dp);
+                gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.green));
+            } else if (locationMethod.equals(PositioningManager.LocationMethod.NETWORK)) {
+                gpsStatusImageView.setImageResource(R.drawable.ic_gps_not_fixed_white_24dp);
+                gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.yellow));
+            }
             currentGeoPosition = geoPosition;
             if (!Build.FINGERPRINT.contains("generic")) {
                 if (lightSensorValue < 50) {
@@ -258,12 +271,14 @@ class MapFragmentView {
                     safetyCamImageView.setVisibility(View.INVISIBLE);
                     safetyCamTextView.setVisibility(View.INVISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
+                    gpsStatusImageView.setVisibility(View.VISIBLE);
                 } else {
                     safetyCamImageView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setVisibility(View.VISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setText((int) geoPosition.getCoordinate().distanceTo(safetyCameraLocation) + "m");
                     safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
+                    gpsStatusImageView.setVisibility(View.INVISIBLE);
                 }
             }
             if (lastKnownLocation != null) {
@@ -277,6 +292,15 @@ class MapFragmentView {
 
         @Override
         public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
+            Log.d("test", "locationMethod: " + locationMethod.toString());
+            Log.d("test", "locationStatus: " + locationStatus.toString());
+            if (locationStatus.equals(PositioningManager.LocationStatus.OUT_OF_SERVICE) || locationStatus.equals(PositioningManager.LocationStatus.TEMPORARILY_UNAVAILABLE)) {
+                gpsStatusImageView.setImageResource(R.drawable.ic_gps_off_white_24dp);
+                gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.red));
+                gpsSwitch.setEnabled(false);
+            } else {
+                gpsSwitch.setEnabled(true);
+            }
         }
     };
     private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
@@ -408,21 +432,16 @@ class MapFragmentView {
 
         @Override
         public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
-            /*
-            Log.d("Test", "=======================================================================================");
-            Log.d("Test", "Lane information");
-            Log.d("Test", "---------------------------------------------------------------------------------------");
-            for (LaneInformation laneInformation : list) {
-                Log.d("Test", "Lane Directions " + laneInformation.getDirections());
-                Log.d("Test", "Recommended " + laneInformation.getRecommendationState());
-            }
-            */
             super.onLaneInformation(list, roadElement);
             if (laneMapOverlay != null) {
                 m_map.removeMapOverlay(laneMapOverlay);
             }
-            laneLinearLayoutOverlay = new LinearLayout(m_activity);
-            laneLinearLayoutOverlay.setVisibility(View.VISIBLE);
+            laneDcmLinearLayout = new LinearLayout(m_activity);
+            laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+            laneDcmLinearLayout.setVisibility(View.VISIBLE);
+            laneInfoLinearLayoutOverlay = new LinearLayout(m_activity);
+            laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
+            laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
             if (list.size() > 0) {
                 for (LaneInformation laneInformation : list) {
                     LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
@@ -532,23 +551,36 @@ class MapFragmentView {
                         case 8192:
                             laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_8192);
                             break;
+                        default:
+                            laneDcmImageView.setImageResource(R.drawable.transparent_24px);
+                            laneDcmImageView.setAlpha(0.3f);
                     }
                     laneDcmImageView.setCropToPadding(false);
                     if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
                         laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
                     } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
                         laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 128, 0));
-                    } else if (recommendationState == LaneInformation.RecommendationState.NOT_RECOMMENDED) {
-                        laneDcmImageView.setBackgroundColor(Color.argb(255, 64, 64, 64));
                     } else {
                         laneDcmImageView.setBackgroundColor(Color.argb(255, 64, 64, 64));
-                        laneDcmImageView.setAlpha(0f);
+                        laneDcmImageView.setAlpha(0.3f);
                     }
                     int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, m_activity);
-                    laneLinearLayoutOverlay.addView(laneDcmImageView);
+                    laneDcmLinearLayout.addView(laneDcmImageView);
                     laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
                 }
-                laneMapOverlay = new MapOverlay(laneLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+                laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
+                ImageView downArrowImageView = new ImageView(m_activity);
+                downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
+                laneInfoLinearLayoutOverlay.addView(downArrowImageView);
+                laneInfoLinearLayoutOverlay.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        laneInfoLinearLayoutOverlayWidth = laneInfoLinearLayoutOverlay.getWidth();
+                        laneInfoLinearLayoutOverlayHeight = laneInfoLinearLayoutOverlay.getHeight();
+                    }
+                });
+                laneMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+                laneMapOverlay.setAnchorPoint(getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlayWidth, laneInfoLinearLayoutOverlayHeight));
                 if (!isRouteOverView) {
                     m_map.addMapOverlay(laneMapOverlay);
                 }
@@ -684,6 +716,10 @@ class MapFragmentView {
         int iconHeight = (int) mapMarker.getIcon().getHeight();
         int iconWidth = (int) mapMarker.getIcon().getWidth();
         return new PointF((float) (iconWidth / 2), (float) iconHeight);
+    }
+
+    private static PointF getMapOverlayAnchorPoint(int width, int height) {
+        return new PointF((float) (width / 2), (float) height);
     }
 
 //    private void initGuidanceEstimatedArrivalView(NavigationManager navigationManager) {
@@ -942,30 +978,26 @@ class MapFragmentView {
                             }
                         });
 
-                        /* PositioningManager init */
-                        m_positioningManager = PositioningManager.getInstance();
-
-                        /* Advanced positioning */
-                        if (!Build.FINGERPRINT.contains("generic")) {
-                            LocationDataSourceHERE m_hereDataSource;
-                            m_hereDataSource = LocationDataSourceHERE.getInstance();
-                            m_positioningManager.setDataSource(m_hereDataSource);
-                            m_positioningManager.enableProbeDataCollection(true);
-                        }
-
+                        m_positioningManager = new PositionActivation(PositioningManager.LocationMethod.GPS_NETWORK).getPositioningManager();
                         m_positioningManager.addListener(new WeakReference<>(p_PositionListener));
 
-                        /* GPS logging function */
-//                            EnumSet<PositioningManager.LogType> logTypes = EnumSet.of(
-//                                    PositioningManager.LogType.RAW,
-//                                    PositioningManager.LogType.DATA_SOURCE
-//                            );
-//                            m_positioningManager.setLogType(logTypes);
-
-                        /* Start tracking position */
-                        if (m_positioningManager != null) {
-                            m_positioningManager.start(PositioningManager.LocationMethod.GPS_NETWORK);
-                        }
+                        gpsSwitch = m_activity.findViewById(R.id.gps_switch);
+                        gpsSwitch.setChecked(true);
+                        gpsSwitch.setEnabled(false);
+                        gpsSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                            @Override
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                if (isChecked) {
+                                    m_positioningManager.stop();
+                                    m_positioningManager = null;
+                                    m_positioningManager = new PositionActivation(PositioningManager.LocationMethod.GPS_NETWORK).getPositioningManager();
+                                } else {
+                                    m_positioningManager.stop();
+                                    m_positioningManager = null;
+                                    m_positioningManager = new PositionActivation(PositioningManager.LocationMethod.NETWORK).getPositioningManager();
+                                }
+                            }
+                        });
 
                         new ShiftMapCenter(m_map, 0.5f, 0.6f);
                         mapSchemeChanger = new MapSchemeChanger(m_map, m_navigationManager);
@@ -980,6 +1012,7 @@ class MapFragmentView {
 //                            speedLimitLinearLayout = m_activity.findViewById(R.id.speed_limit_linear_layout);
 //                            speedLimitLinearLayoutHeight = speedLimitLinearLayout.getLayoutParams().height;
                         switchGuidanceUiViews(View.GONE);
+                        gpsStatusImageView = m_activity.findViewById(R.id.gps_status_image_view);
                         /* Listeners of map buttons */
                         northUpButton = m_activity.findViewById(R.id.north_up);
                         northUpButton.setOnClickListener(v -> {
@@ -1012,42 +1045,42 @@ class MapFragmentView {
                         carRouteButton.setOnClickListener(vCarRouteButton -> {
                             calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.CAR));
                             carRouteButton.setAlpha(1.0f);
-                            truckRouteButton.setAlpha(0.5f);
-                            scooterRouteButton.setAlpha(0.5f);
-                            bikeRouteButton.setAlpha(0.5f);
-                            pedsRouteButton.setAlpha(0.5f);
+                            truckRouteButton.setAlpha(0.3f);
+                            scooterRouteButton.setAlpha(0.3f);
+                            bikeRouteButton.setAlpha(0.3f);
+                            pedsRouteButton.setAlpha(0.3f);
 
                         });
                         truckRouteButton.setOnClickListener(vTruckRouteButton -> {
                             calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.TRUCK));
-                            carRouteButton.setAlpha(0.5f);
+                            carRouteButton.setAlpha(0.3f);
                             truckRouteButton.setAlpha(1.0f);
-                            scooterRouteButton.setAlpha(0.5f);
-                            bikeRouteButton.setAlpha(0.5f);
-                            pedsRouteButton.setAlpha(0.5f);
+                            scooterRouteButton.setAlpha(0.3f);
+                            bikeRouteButton.setAlpha(0.3f);
+                            pedsRouteButton.setAlpha(0.3f);
                         });
                         scooterRouteButton.setOnClickListener(vScooterRouteButton -> {
                             calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.SCOOTER));
-                            carRouteButton.setAlpha(0.5f);
-                            truckRouteButton.setAlpha(0.5f);
+                            carRouteButton.setAlpha(0.3f);
+                            truckRouteButton.setAlpha(0.3f);
                             scooterRouteButton.setAlpha(1.0f);
-                            bikeRouteButton.setAlpha(0.5f);
-                            pedsRouteButton.setAlpha(0.5f);
+                            bikeRouteButton.setAlpha(0.3f);
+                            pedsRouteButton.setAlpha(0.3f);
                         });
                         bikeRouteButton.setOnClickListener(vBikeRouteButton -> {
                             calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.BICYCLE));
-                            carRouteButton.setAlpha(0.5f);
-                            truckRouteButton.setAlpha(0.5f);
-                            scooterRouteButton.setAlpha(0.5f);
+                            carRouteButton.setAlpha(0.3f);
+                            truckRouteButton.setAlpha(0.3f);
+                            scooterRouteButton.setAlpha(0.3f);
                             bikeRouteButton.setAlpha(1.0f);
-                            pedsRouteButton.setAlpha(0.5f);
+                            pedsRouteButton.setAlpha(0.3f);
                         });
                         pedsRouteButton.setOnClickListener(vPedsRouteButton -> {
                             calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.PEDESTRIAN));
-                            carRouteButton.setAlpha(0.5f);
-                            truckRouteButton.setAlpha(0.5f);
-                            scooterRouteButton.setAlpha(0.5f);
-                            bikeRouteButton.setAlpha(0.5f);
+                            carRouteButton.setAlpha(0.3f);
+                            truckRouteButton.setAlpha(0.3f);
+                            scooterRouteButton.setAlpha(0.3f);
+                            bikeRouteButton.setAlpha(0.3f);
                             pedsRouteButton.setAlpha(1.0f);
                         });
                         trafficButton = m_activity.findViewById(R.id.traffic_button);
@@ -1064,15 +1097,19 @@ class MapFragmentView {
                             }
                         });
 
-                        m_activity.findViewById(R.id.capture_button).setOnClickListener(new View.OnClickListener() {
+                        m_activity.findViewById(R.id.log_button).setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                supportMapFragment.getScreenCapture(new OnScreenCaptureListener() {
-                                    @Override
-                                    public void onScreenCaptured(Bitmap bitmap) {
-                                        new ScreenCapturer(bitmap, m_activity);
-                                    }
-                                });
+                                if (!isPositionLogging) {
+                                    isPositionLogging = true;
+                                    m_activity.findViewById(R.id.log_button).setBackgroundTintList(m_activity.getResources().getColorStateList(R.color.red));
+                                    m_positioningManager.setLogType(EnumSet.of(
+                                            PositioningManager.LogType.RAW,
+                                            PositioningManager.LogType.MATCHED,
+                                            PositioningManager.LogType.DATA_SOURCE
+                                    ));
+                                    Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "GPX Logging: " + m_activity.getFilesDir().getAbsolutePath() + File.separator + "gpx/", Snackbar.LENGTH_LONG).show();
+                                }
                             }
                         });
 
@@ -1114,7 +1151,7 @@ class MapFragmentView {
                         /* Download voice */
                         voiceActivation = new VoiceActivation(m_activity);
                         voiceActivation.setContext(m_activity);
-                        String desiredVoiceLanguageCode = "CHT";
+                        String desiredVoiceLanguageCode = "ENG";
                         voiceActivation.setDesiredLangCode(desiredVoiceLanguageCode);
                         voiceActivation.downloadCatalogAndSkin();
                     } else {
@@ -1241,7 +1278,8 @@ class MapFragmentView {
 
         zoomInButton.setVisibility(View.GONE);
         zoomOutButton.setVisibility(View.GONE);
-
+//        gpsStatusImageView.setVisibility(View.GONE);
+        gpsSwitch.setVisibility(View.GONE);
         switchUiControls(View.GONE);
         initGuidanceManeuverView(m_activity, m_navigationManager, m_route);
         initGuidanceNextManeuverView(m_activity, m_navigationManager, m_route);
@@ -1339,6 +1377,8 @@ class MapFragmentView {
     private void resetMap() {
         isNavigating = false;
         switchGuidanceUiViews(View.GONE);
+//        gpsStatusImageView.setVisibility(View.VISIBLE);
+        gpsSwitch.setVisibility(View.VISIBLE);
         m_activity.findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);
         m_activity.findViewById(R.id.signpostImageView).setVisibility(View.INVISIBLE);
         m_naviControlButton.setVisibility(View.GONE);

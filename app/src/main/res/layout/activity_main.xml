@@ -85,14 +85,15 @@
             app:layout_constraintTop_toBottomOf="@+id/top_button_linear_layout" />
 
         <Button
-            android:id="@+id/capture_button"
+            android:id="@+id/log_button"
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
-            android:background="#FFFFFFFF"
+            android:background="@drawable/ic_fiber_manual_record_dark_grey_24dp"
             android:elevation="2dp"
-            android:text="CAP"
+            android:text="R"
+            android:textColor="@color/lui_white"
             android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@+id/traffic_button"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -103,8 +104,8 @@
             android:layout_height="40dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
-            android:elevation="2dp"
             android:background="#FFFFFFFF"
+            android:elevation="2dp"
             android:foreground="@drawable/ic_congestion"
             android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -158,9 +159,11 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:background="@color/lui_light"
+                android:background="#00000000"
+                android:foreground="@drawable/ic_add_circle_white_24dp"
+
+                android:foregroundTint="#FF999999"
                 android:padding="2dp"
-                android:text="+"
                 android:textSize="24sp" />
 
             <Button
@@ -168,9 +171,10 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_weight="1"
-                android:background="@color/lui_light"
+                android:background="#00000000"
+                android:foreground="@drawable/ic_remove_circle_white_24dp"
+                android:foregroundTint="#FF999999"
                 android:padding="2dp"
-                android:text="-"
                 android:textSize="24sp" />
         </LinearLayout>
 
@@ -226,7 +230,7 @@
                     android:layout_height="40dp"
                     android:layout_margin="4dp"
                     android:background="@android:color/holo_red_dark"
-                    android:foreground="@drawable/ic_drive"
+                    android:foreground="@drawable/ic_directions_car_white_32dp"
                     android:padding="4dp"
                     android:visibility="invisible" />
 
@@ -246,7 +250,7 @@
                     android:layout_height="40dp"
                     android:layout_margin="4dp"
                     android:background="@android:color/holo_green_dark"
-                    android:foreground="@drawable/ic_scooter"
+                    android:foreground="@drawable/ic_motorcycle_white_32dp"
                     android:padding="4dp"
                     android:visibility="invisible" />
 
@@ -256,7 +260,7 @@
                     android:layout_height="40dp"
                     android:layout_margin="4dp"
                     android:background="@android:color/holo_blue_dark"
-                    android:foreground="@drawable/ic_bike_24"
+                    android:foreground="@drawable/ic_directions_bike_white_32dp"
                     android:padding="4dp"
                     android:visibility="invisible" />
 
@@ -266,7 +270,7 @@
                     android:layout_height="40dp"
                     android:layout_margin="4dp"
                     android:background="@android:color/holo_purple"
-                    android:foreground="@drawable/ic_walk_24"
+                    android:foreground="@drawable/ic_directions_run_white_32dp"
                     android:padding="4dp"
                     android:visibility="invisible" />
 
@@ -316,6 +320,30 @@
                 android:visibility="invisible" />
 
         </LinearLayout>
+
+        <Switch
+            android:id="@+id/gps_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text=" GPS "
+            android:textOff="GPS Off"
+            android:textOn="GPS On"
+            app:layout_constraintBottom_toBottomOf="@+id/gps_status_image_view"
+            app:layout_constraintStart_toEndOf="@+id/gps_status_image_view"
+            app:layout_constraintTop_toTopOf="@+id/gps_status_image_view" />
+
+        <ImageView
+            android:id="@+id/gps_status_image_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:tint="@color/red"
+            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
+            app:srcCompat="@drawable/ic_gps_off_white_24dp" />
+
     </android.support.constraint.ConstraintLayout>
 
 
