@@ -56,7 +56,10 @@ import static com.fancynavi.app.MapFragmentView.junctionViewImageView;
 import static com.fancynavi.app.MapFragmentView.laneMapOverlay;
 import static com.fancynavi.app.MapFragmentView.m_map;
 import static com.fancynavi.app.MapFragmentView.m_naviControlButton;
+import static com.fancynavi.app.MapFragmentView.m_navigationManager;
+import static com.fancynavi.app.MapFragmentView.mapOnTouchListener;
 import static com.fancynavi.app.MapFragmentView.signpostImageView;
+import static com.fancynavi.app.MapFragmentView.supportMapFragment;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
@@ -200,10 +203,10 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (!m_mapFragmentView.isRoadView) {
+        if (!MapFragmentView.isRoadView) {
             new ShiftMapCenter(m_map, 0.5f, 0.8f);
             m_map.setTilt(60);
-            MapFragmentView.m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             if (laneMapOverlay != null) {
                 m_map.addMapOverlay(laneMapOverlay);
             }
@@ -211,6 +214,8 @@ public class MainActivity extends AppCompatActivity {
             signpostImageView.setAlpha(1f);
             m_naviControlButton.setVisibility(View.GONE);
             clearButton.setVisibility(View.GONE);
+            m_navigationManager.resume();
+            supportMapFragment.setOnTouchListener(mapOnTouchListener);
         } else {
             MapFragmentView.isDragged = false;
         }

@@ -118,16 +118,41 @@ class MapFragmentView {
     static MapOverlay laneMapOverlay;
     static ImageView junctionViewImageView;
     static ImageView signpostImageView;
-    boolean isRoadView = false;
+    static boolean isRoadView = false;
+    static SupportMapFragment supportMapFragment;
+    private static boolean isRouteOverView;
+    private static OnTouchListener emptyMapOnTouchListener = new OnTouchListener() {
+        @Override
+        public boolean onTouch(View v, MotionEvent event) {
+            return false;
+        }
+    };
+    static OnTouchListener mapOnTouchListener = new OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            m_navigationManager.pause();
+            isRoadView = false;
+            isRouteOverView = true;
+//            m_map.removeMapOverlay(laneMapOverlay);
+            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+            new ShiftMapCenter(m_map, 0.5f, 0.6f);
+            m_map.setTilt(0);
+            m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
+            m_naviControlButton.setVisibility(View.VISIBLE);
+            clearButton.setVisibility(View.VISIBLE);
+//            junctionViewImageView.setAlpha(0f);
+//            signpostImageView.setAlpha(0f);
+            supportMapFragment.setOnTouchListener(emptyMapOnTouchListener);
+            return false;
+        }
+    };
     boolean isPositionLogging = false;
-    EnumSet<PositioningManager.LocationMethod> locationMethodEnum;
     LinearLayout laneDcmLinearLayout;
     LinearLayout laneInfoLinearLayoutOverlay;
     int laneInfoLinearLayoutOverlayHeight;
     int laneInfoLinearLayoutOverlayWidth;
     private ImageView gpsStatusImageView;
     private Switch gpsSwitch;
-    private boolean isRouteOverView;
     private boolean isNavigating;
     private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
@@ -143,7 +168,6 @@ class MapFragmentView {
     private GeoPolyline laneInformationOnRoad;
     private AppCompatActivity m_activity;
     private PositionIndicator positionIndicator;
-    private SupportMapFragment supportMapFragment;
     private VoiceActivation voiceActivation;
     private Button northUpButton;
     private Button zoomInButton;
@@ -186,24 +210,6 @@ class MapFragmentView {
         public void onGlobalLayout() {
         }
     };
-    private OnTouchListener mapOnTouchListener = new OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            isRoadView = false;
-            isRouteOverView = true;
-            m_map.removeMapOverlay(laneMapOverlay);
-            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
-            new ShiftMapCenter(m_map, 0.5f, 0.6f);
-            m_map.setTilt(0);
-            m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
-            m_naviControlButton.setVisibility(View.VISIBLE);
-            clearButton.setVisibility(View.VISIBLE);
-            junctionViewImageView.setAlpha(0f);
-            signpostImageView.setAlpha(0f);
-            return false;
-        }
-    };
-
     private NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
         @Override
         public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
@@ -433,6 +439,7 @@ class MapFragmentView {
         @Override
         public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
             super.onLaneInformation(list, roadElement);
+            Log.d("test", "LANE!!!");
             if (laneMapOverlay != null) {
                 m_map.removeMapOverlay(laneMapOverlay);
             }
@@ -919,7 +926,6 @@ class MapFragmentView {
             // (getExternalStorageDirectory()/.here-maps).
             // Also, ensure the provided intent name does not match the default intent name.
         } else {
-            /* Initialize the MapFragment, results will be given via the called back. */
             if (supportMapFragment != null) supportMapFragment.init(new OnEngineInitListener() {
                 @Override
                 public void onEngineInitializationCompleted(Error error) {
@@ -1117,6 +1123,10 @@ class MapFragmentView {
                         m_naviControlButton.setText("Create Route");
                         m_naviControlButton.setOnClickListener(v -> {
                             if (m_route != null) {
+                                if (laneMapOverlay != null) {
+                                    m_map.removeMapOverlay(laneMapOverlay);
+                                }
+                                laneMapOverlay = null;
                                 m_navigationManager.stop();
                                 m_map.removeMapObject(mapLocalModel);
                                 new ShiftMapCenter(m_map, 0.5f, 0.6f);
@@ -1162,8 +1172,6 @@ class MapFragmentView {
         }
     }
 
-    // Google has deprecated android.app.Fragment class. It is used in current SDK implementation.
-    // Will be fixed in future SDK version.
     private SupportMapFragment getMapFragment() {
         return (SupportMapFragment) m_activity.getSupportFragmentManager().findFragmentById(R.id.mapFragmentView);
     }
