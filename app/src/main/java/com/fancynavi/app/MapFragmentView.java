@@ -91,6 +91,8 @@ import com.here.msdkui.guidance.GuidanceStreetLabelListener;
 import com.here.msdkui.guidance.GuidanceStreetLabelPresenter;
 import com.here.msdkui.guidance.GuidanceStreetLabelView;
 
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -1345,15 +1347,12 @@ class MapFragmentView {
         Log.d("Test", "Clear " + diskCacheRoot);
 
         /* Purge cache before start */
-        new File(diskCacheRoot).delete();
-//        File dir = new File(diskCacheRoot);
-//        if (dir.isDirectory()) {
-//            String[] children = dir.list();
-//            for (String child : children) {
-//                Log.d("Test", "Delete: " + dir + "/" + child);
-//                new File(dir, child).delete();
-//            }
-//        }
+        File dir = new File(diskCacheRoot);
+        try {
+            FileUtils.deleteDirectory(dir);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         /* Purge cache before start */
 
         if (!success) {
