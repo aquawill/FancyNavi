@@ -55,7 +55,9 @@ class HereRouter {
         for (int i = 0; i < inputWaypointIcons.size(); i++) {
             MapMarker mapMarker = inputWaypointIcons.get(i);
             Log.d("Test", "i " + mapMarker.getCoordinate());
-            waypoints.add(mapMarker.getCoordinate());
+            GeoCoordinate mapMarkerGeocoordinate = mapMarker.getCoordinate();
+            mapMarkerGeocoordinate.setAltitude(0);
+            waypoints.add(mapMarkerGeocoordinate);
             m_map.removeMapObject(mapMarker);
         }
 
@@ -63,7 +65,9 @@ class HereRouter {
         routePlan = new RoutePlan();
 
         if (waypoints.size() == 1) {
-            waypoints.add(0, currentGeoPosition.getCoordinate());
+            GeoCoordinate currentGeoPositionCoordinate = currentGeoPosition.getCoordinate();
+            currentGeoPositionCoordinate.setAltitude(0);
+            waypoints.add(0, currentGeoPositionCoordinate);
         } else if (waypoints.isEmpty()) {
             Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "waypoints is empty.", Snackbar.LENGTH_LONG).show();
         }
@@ -71,9 +75,6 @@ class HereRouter {
 
         for (int i = 0; i < waypoints.size(); i++) {
             GeoCoordinate coord = waypoints.get(i);
-//            MapLabeledMarker mapLabeledMarker = new MapLabeledMarker(coord);
-//            mapLabeledMarker.setLabelText("eng", "Waypoint Index " + i);
-//            m_map.addMapObject(mapLabeledMarker);
             RouteWaypoint waypoint = new RouteWaypoint(coord);
             MapMarker mapMarker = new MapMarker();
             Image icon = new Image();
@@ -83,10 +84,12 @@ class HereRouter {
             } else {
                 if (i == 0) {
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_orig));
-                    mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
+                    mapMarker.setCoordinate(waypoint.getOriginalPosition());
+                    mapMarker.setIcon(icon);
                 } else if (i == waypoints.size() - 1) {
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_dest));
-                    mapMarker.setCoordinate(waypoint.getOriginalPosition()).setIcon(icon);
+                    mapMarker.setCoordinate(waypoint.getOriginalPosition());
+                    mapMarker.setIcon(icon);
                 }
             }
             outputWaypointIcons.add(mapMarker);
