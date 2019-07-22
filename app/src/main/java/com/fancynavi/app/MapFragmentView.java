@@ -122,13 +122,11 @@ class MapFragmentView {
     static ImageView signpostImageView;
     static boolean isRoadView = false;
     static SupportMapFragment supportMapFragment;
-    private static boolean isRouteOverView;
+    static boolean isRouteOverView;
 
     boolean isPositionLogging = false;
     LinearLayout laneDcmLinearLayout;
     LinearLayout laneInfoLinearLayoutOverlay;
-    int laneInfoLinearLayoutOverlayHeight;
-    int laneInfoLinearLayoutOverlayWidth;
     private ImageView gpsStatusImageView;
     private Switch gpsSwitch;
     private boolean isNavigating;
@@ -862,10 +860,9 @@ class MapFragmentView {
                     if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
                         laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
                     } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
-                        laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 128, 0));
+                        laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
                     } else {
-                        laneDcmImageView.setBackgroundColor(Color.argb(255, 64, 64, 64));
-                        laneDcmImageView.setAlpha(0.3f);
+                        laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
                     }
                     int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, m_activity);
                     laneDcmLinearLayout.addView(laneDcmImageView);
@@ -875,15 +872,16 @@ class MapFragmentView {
                 ImageView downArrowImageView = new ImageView(m_activity);
                 downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
                 laneInfoLinearLayoutOverlay.addView(downArrowImageView);
-                laneInfoLinearLayoutOverlay.post(new Runnable() {
+
+                laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
-                    public void run() {
-                        laneInfoLinearLayoutOverlayWidth = laneInfoLinearLayoutOverlay.getWidth();
-                        laneInfoLinearLayoutOverlayHeight = laneInfoLinearLayoutOverlay.getHeight();
+                    public void onGlobalLayout() {
+                        laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        laneMapOverlay.setAnchorPoint(getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
                     }
                 });
+
                 laneMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
-                laneMapOverlay.setAnchorPoint(getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlayWidth, laneInfoLinearLayoutOverlayHeight));
                 if (!isRouteOverView && isLaneDisplayed) {
                     m_map.addMapOverlay(laneMapOverlay);
                 }

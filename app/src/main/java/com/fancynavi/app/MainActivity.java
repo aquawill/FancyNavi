@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.fancynavi.app.MapFragmentView.clearButton;
+import static com.fancynavi.app.MapFragmentView.isRouteOverView;
 import static com.fancynavi.app.MapFragmentView.junctionViewImageView;
 import static com.fancynavi.app.MapFragmentView.laneMapOverlay;
 import static com.fancynavi.app.MapFragmentView.m_map;
@@ -207,6 +208,7 @@ public class MainActivity extends AppCompatActivity {
             new ShiftMapCenter(m_map, 0.5f, 0.8f);
             m_map.setTilt(60);
             m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            isRouteOverView = false;
             if (laneMapOverlay != null) {
                 m_map.addMapOverlay(laneMapOverlay);
             }
