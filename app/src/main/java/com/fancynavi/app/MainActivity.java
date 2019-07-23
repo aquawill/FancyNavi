@@ -34,7 +34,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -45,20 +44,26 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.mapping.Map;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import static com.fancynavi.app.MapFragmentView.clearButton;
+import static com.fancynavi.app.MapFragmentView.currentPositionMapLocalModel;
+import static com.fancynavi.app.MapFragmentView.isDragged;
+import static com.fancynavi.app.MapFragmentView.isNavigating;
 import static com.fancynavi.app.MapFragmentView.isRouteOverView;
 import static com.fancynavi.app.MapFragmentView.junctionViewImageView;
 import static com.fancynavi.app.MapFragmentView.laneMapOverlay;
 import static com.fancynavi.app.MapFragmentView.m_map;
 import static com.fancynavi.app.MapFragmentView.m_naviControlButton;
 import static com.fancynavi.app.MapFragmentView.m_navigationManager;
+import static com.fancynavi.app.MapFragmentView.m_positioningManager;
 import static com.fancynavi.app.MapFragmentView.mapOnTouchListener;
+import static com.fancynavi.app.MapFragmentView.northUpButton;
 import static com.fancynavi.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.app.MapFragmentView.supportMapFragment;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
@@ -69,9 +74,19 @@ import static com.google.android.gms.location.LocationServices.getFusedLocationP
 
 public class MainActivity extends AppCompatActivity {
     private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
-    static GeoCoordinate updatedLatLng;
+    static boolean isMapRotating = false;
     static float lightSensorValue;
-    private final SensorEventListener lightSensorListener = new SensorEventListener() {
+    static float azimuth = 0f;
+    SensorManager mySensorManager;
+    View mapFragmentView;
+    Bundle mViewBundle = new Bundle();
+
+    ArrayList<Float> azimuthArrayList = new ArrayList<>();
+
+
+    private final SensorEventListener sensorEventListener = new SensorEventListener() {
+        float[] mGravity;
+        float[] mGeomagnetic;
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -82,13 +97,53 @@ public class MainActivity extends AppCompatActivity {
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 lightSensorValue = event.values[0];
             }
+            if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                mGravity = event.values;
+            }
+            if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+                mGeomagnetic = event.values;
+            }
+            if (mGravity != null && mGeomagnetic != null) {
+                float[] R = new float[9];
+                float[] I = new float[9];
+                boolean success = SensorManager.getRotationMatrix(R, I, mGravity, mGeomagnetic);
+                if (success) {
+                    float[] orientation = new float[3];
+                    SensorManager.getOrientation(R, orientation);
+                    azimuth = (float) Math.toDegrees(orientation[0]);
+                    if (azimuthArrayList.size() > 255) {
+                        azimuthArrayList.remove(0);
+                    }
+                    azimuthArrayList.add(azimuth);
+                    if (currentPositionMapLocalModel != null && !isNavigating) {
+                        float rotatingAngle = 0f;
+                        float total = 0f;
+                        if (azimuthArrayList.size() > 0) {
+                            for (float v : azimuthArrayList) {
+                                total += v;
+                            }
+                            rotatingAngle = new BigDecimal(total / azimuthArrayList.size()).setScale(1, BigDecimal.ROUND_HALF_UP).floatValue();
+                        }
+                        currentPositionMapLocalModel.setYaw(rotatingAngle);
+                        if (!isMapRotating) {
+                            if (!isDragged) {
+                                northUpButton.setRotation(0);
+                                m_map.setOrientation(0);
+                            }
+                        } else {
+                            northUpButton.setRotation(rotatingAngle * -1);
+                            m_map.setCenter(m_positioningManager.getPosition().getCoordinate(), Map.Animation.NONE);
+                            m_map.setOrientation(rotatingAngle);
+                            isDragged = false;
+                        }
+                    }
+                }
+            }
         }
     };
-    View mapFragmentView;
-    Bundle mViewBundle = new Bundle();
-    private Button offlineMapButton;
     private MapFragmentView m_mapFragmentView;
     private LocationRequest mLocationRequest;
+
     private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
     private long FASTEST_INTERVAL = 2000; /* 2 sec */
 
@@ -121,10 +176,18 @@ public class MainActivity extends AppCompatActivity {
         hideJunctionView();
         requestPermissions();
         startLocationUpdates();
-        SensorManager mySensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        mySensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor lightSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
+        Sensor accelerometerSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        Sensor magneticSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
         if (lightSensor != null) {
-            mySensorManager.registerListener(lightSensorListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+            mySensorManager.registerListener(sensorEventListener, lightSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        if (magneticSensor != null) {
+            mySensorManager.registerListener(sensorEventListener, magneticSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        }
+        if (accelerometerSensor != null) {
+            mySensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
     }
 
