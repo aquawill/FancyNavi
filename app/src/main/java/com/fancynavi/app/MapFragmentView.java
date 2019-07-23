@@ -642,7 +642,10 @@ class MapFragmentView {
             geoPositionGeoCoordinateOnGround.setAltitude(0);
             if (!isNavigating && m_map.getZoomLevel() >= 17) {
                 positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
-                positionAccuracyMapCircle.setRadius((geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2);
+                float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
+                if (radius > 0) {
+                    positionAccuracyMapCircle.setRadius(radius);
+                }
             }
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
             if (locationMethod.equals(PositioningManager.LocationMethod.GPS)) {
