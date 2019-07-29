@@ -344,6 +344,16 @@
             app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
             app:srcCompat="@drawable/ic_gps_off_white_24dp" />
 
+        <ImageView
+            android:id="@+id/sign_imageView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@color/_light_green" />
+
     </android.support.constraint.ConstraintLayout>
 
 

@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -29,6 +30,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.here.android.mpa.common.CopyrightLogoPosition;
+import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;
@@ -39,6 +41,7 @@ import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
+import com.here.android.mpa.common.TrafficSign;
 import com.here.android.mpa.common.ViewObject;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
@@ -125,6 +128,7 @@ class MapFragmentView {
     static SupportMapFragment supportMapFragment;
     static boolean isRouteOverView;
     static boolean isNavigating;
+    static boolean isSignShowing;
     static MapLocalModel currentPositionMapLocalModel;
     static Button northUpButton;
     private static OnTouchListener emptyMapOnTouchListener = new OnTouchListener() {
@@ -155,11 +159,13 @@ class MapFragmentView {
     boolean isPositionLogging = false;
     LinearLayout laneDcmLinearLayout;
     LinearLayout laneInfoLinearLayoutOverlay;
+    //    private EletronicHorizonActivation eletronicHorizonActivation;
     private Snackbar searchResultSnackbar;
     private ImageView selectedFeatureImageView;
     private MapOverlay selectedFeatureMapOverlay;
     private MapCircle positionAccuracyMapCircle;
     private ImageView gpsStatusImageView;
+    private ImageView signImageView;
     private Switch gpsSwitch;
     private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
@@ -240,7 +246,6 @@ class MapFragmentView {
         @Override
         public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
             super.onLaneInformation(list, roadElement);
-            Log.d("test", "LANE!!!");
             boolean isLaneDisplayed = false;
             if (laneMapOverlay != null) {
                 m_map.removeMapOverlay(laneMapOverlay);
@@ -421,7 +426,6 @@ class MapFragmentView {
                         laneMapOverlay.setAnchorPoint(getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
                     }
                 });
-
                 laneMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
                 if (!isRouteOverView && isLaneDisplayed) {
                     m_map.addMapOverlay(laneMapOverlay);
@@ -643,6 +647,102 @@ class MapFragmentView {
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
             geoPositionGeoCoordinateOnGround.setAltitude(0);
+            RoadElement roadElement = m_positioningManager.getRoadElement();
+            signImageView.setVisibility(View.GONE);
+            if (roadElement != null) {
+                try {
+                    List<TrafficSign> trafficSignList = roadElement.getTrafficSigns();
+                    if (trafficSignList.size() == 0) {
+                        isSignShowing = false;
+                    }
+                    for (TrafficSign trafficSign : trafficSignList) {
+                        int trafficSignType = trafficSign.type;
+                        signImageView.setVisibility(View.VISIBLE);
+                        Log.d("test", "isSignShowing: " + isSignShowing);
+                        if (!isSignShowing) {
+                            MediaPlayer mediaPlayer = MediaPlayer.create(m_activity, R.raw.beep_short);
+                            mediaPlayer.start();
+                        }
+                        isSignShowing = true;
+                        switch (trafficSignType) {
+                            case 1:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_1);
+                                break;
+                            case 6:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_6);
+                                break;
+                            case 7:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_7);
+                                break;
+                            case 9:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_9);
+                                break;
+                            case 10:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_10);
+                                break;
+                            case 11:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_11);
+                                break;
+                            case 12:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_12);
+                                break;
+                            case 13:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_13);
+                                break;
+                            case 14:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_14);
+                                break;
+                            case 15:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_15);
+                                break;
+                            case 18:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_18);
+                                break;
+                            case 19:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_19);
+                                break;
+                            case 20:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_20);
+                                break;
+                            case 21:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_21);
+                                break;
+                            case 22:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_22);
+                                break;
+                            case 23:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_23);
+                                break;
+                            case 27:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_27);
+                                break;
+                            case 29:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_29);
+                                break;
+                            case 30:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_30);
+                                break;
+                            case 31:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_31);
+                                break;
+                            case 36:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_36);
+                                break;
+                            case 41:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_41);
+                                break;
+                            case 42:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_42);
+                                break;
+                            case 59:
+                                signImageView.setImageResource(R.drawable.traffic_sign_type_59);
+                                break;
+                        }
+                    }
+                } catch (DataNotReadyException e) {
+                    e.printStackTrace();
+                }
+            }
             if (!isNavigating && m_map.getZoomLevel() >= 17) {
                 positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
                 float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
@@ -1418,6 +1518,8 @@ class MapFragmentView {
                             }
                         });
 
+                        signImageView = m_activity.findViewById(R.id.sign_imageView);
+
                         new ShiftMapCenter(m_map, 0.5f, 0.6f);
                         mapSchemeChanger = new MapSchemeChanger(m_map, m_navigationManager);
 
@@ -1611,6 +1713,7 @@ class MapFragmentView {
         alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 isNavigating = true;
+                isSignShowing = false;
                 m_naviControlButton.setText("Stop Navi");
                 intoNavigationMode();
                 isRouteOverView = false;
@@ -1624,10 +1727,13 @@ class MapFragmentView {
         alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 isNavigating = true;
+                isSignShowing = false;
                 m_naviControlButton.setText("Stop Navi");
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
+//                EletronicHorizonActivation eletronicHorizonActivation = new EletronicHorizonActivation();
+//                eletronicHorizonActivation.setRoute(m_route);
                 m_naviControlButton.setVisibility(View.GONE);
                 clearButton.setVisibility(View.GONE);
                 startForegroundService();
