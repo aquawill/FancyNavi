@@ -919,12 +919,14 @@ class MapFragmentView {
             if (searchResultSnackbar != null) {
                 searchResultSnackbar.dismiss();
             }
+            m_map.removeMapOverlay(selectedFeatureMapOverlay);
             new SearchResultHandler(m_activity.findViewById(R.id.mapFragmentView), pointF, m_map);
             return false;
         }
 
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
+            m_map.removeMapOverlay(selectedFeatureMapOverlay);
             touchToAddWaypoint(pointF);
             switchUiControls(View.VISIBLE);
             m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
@@ -1125,6 +1127,7 @@ class MapFragmentView {
 
     private void touchToAddWaypoint(PointF p) {
         isDragged = true;
+        m_map.removeMapOverlay(selectedFeatureMapOverlay);
         GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
         mapMarker.setDraggable(true);
