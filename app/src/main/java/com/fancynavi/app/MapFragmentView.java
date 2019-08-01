@@ -753,6 +753,9 @@ class MapFragmentView {
                                     case 31:
                                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_31);
                                         break;
+                                    case 32:
+                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_32);
+                                        break;
                                     case 34:
                                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
                                         break;
