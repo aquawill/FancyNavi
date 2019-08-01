@@ -679,100 +679,98 @@ class MapFragmentView {
                                     break;
                             }
                             int trafficSignType = trafficSign.type;
-                            int trafficSignSubType = trafficSign.subType;
-                            String signValue = trafficSign.signValue;
-
-                            TrafficSign.Location location = trafficSign.location;
-                            TrafficSign.Direction direction = trafficSign.direction;
-                            Log.d("test", "trafficSignType: " + trafficSignType + " trafficSignSubType: " + trafficSignSubType + " signValue: " + signValue);
-                            if (targetSignImageView != null) {
-                                targetSignImageView.setVisibility(View.VISIBLE);
-                                if (!isSignShowing) {
-                                    MediaPlayer mediaPlayer = MediaPlayer.create(m_activity, R.raw.beep_short);
-                                    mediaPlayer.start();
-                                }
-                                isSignShowing = true;
-                                switch (trafficSignType) {
-                                    case 1:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_1);
-                                        break;
-                                    case 6:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_6);
-                                        break;
-                                    case 7:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_7);
-                                        break;
-                                    case 9:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_9);
-                                        break;
-                                    case 10:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_10);
-                                        break;
-                                    case 11:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
-                                        break;
-                                    case 12:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);
-                                        break;
-                                    case 13:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_13);
-                                        break;
-                                    case 14:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_14);
-                                        break;
-                                    case 15:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_15);
-                                        break;
-                                    case 18:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_18);
-                                        break;
-                                    case 19:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_19);
-                                        break;
-                                    case 20:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_20);
-                                        break;
-                                    case 21:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_21);
-                                        break;
-                                    case 22:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_22);
-                                        break;
-                                    case 23:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_23);
-                                        break;
-                                    case 27:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_27);
-                                        break;
-                                    case 29:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_29);
-                                        break;
-                                    case 30:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_30);
-                                        break;
-                                    case 31:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_31);
-                                        break;
-                                    case 32:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_32);
-                                        break;
-                                    case 34:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
-                                        break;
-                                    case 36:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_36);
-                                        break;
-                                    case 41:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_41);
-                                        break;
-                                    case 42:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_42);
-                                        break;
-                                    case 59:
-                                        targetSignImageView.setImageResource(R.drawable.traffic_sign_type_59);
-                                        break;
+                            List<GeoCoordinate> roadElementGeometry = roadElement.getGeometry();
+                            if (roadElementGeometry.get(0).distanceTo(trafficSign.coordinate) > 0) {
+                                if (targetSignImageView != null) {
+                                    targetSignImageView.setVisibility(View.VISIBLE);
+                                    if (!isSignShowing) {
+                                        MediaPlayer mediaPlayer = MediaPlayer.create(m_activity, R.raw.beep_short);
+                                        mediaPlayer.start();
+                                    }
+                                    isSignShowing = true;
+                                    switch (trafficSignType) {
+                                        case 1:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_1);
+                                            break;
+                                        case 6:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_6);
+                                            break;
+                                        case 7:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_7);
+                                            break;
+                                        case 9:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_9);
+                                            break;
+                                        case 10:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_10);
+                                            break;
+                                        case 11:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
+                                            break;
+                                        case 12:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);
+                                            break;
+                                        case 13:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_13);
+                                            break;
+                                        case 14:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_14);
+                                            break;
+                                        case 15:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_15);
+                                            break;
+                                        case 18:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_18);
+                                            break;
+                                        case 19:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_19);
+                                            break;
+                                        case 20:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_20);
+                                            break;
+                                        case 21:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_21);
+                                            break;
+                                        case 22:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_22);
+                                            break;
+                                        case 23:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_23);
+                                            break;
+                                        case 27:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_27);
+                                            break;
+                                        case 29:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_29);
+                                            break;
+                                        case 30:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_30);
+                                            break;
+                                        case 31:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_31);
+                                            break;
+                                        case 32:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_32);
+                                            break;
+                                        case 34:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
+                                            break;
+                                        case 36:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_36);
+                                            break;
+                                        case 41:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_41);
+                                            break;
+                                        case 42:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_42);
+                                            break;
+                                        case 59:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_59);
+                                            break;
+                                    }
                                 }
                             }
+
 
                             i++;
                         }
