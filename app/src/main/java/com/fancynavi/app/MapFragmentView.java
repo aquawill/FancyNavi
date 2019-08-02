@@ -814,11 +814,11 @@ class MapFragmentView {
                                         }
                                         textToSpeech.speak(signName, TextToSpeech.QUEUE_FLUSH, null);
                                     }
-                                    isSignShowing = true;
                                 }
                             }
                             i++;
                         }
+                        isSignShowing = true;
                     }
                 } catch (DataNotReadyException e) {
                     e.printStackTrace();
