@@ -13,6 +13,7 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -105,6 +106,7 @@ import java.util.List;
 
 import static com.fancynavi.app.MainActivity.isMapRotating;
 import static com.fancynavi.app.MainActivity.lightSensorValue;
+import static com.fancynavi.app.MainActivity.textToSpeech;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
 //import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
@@ -218,12 +220,22 @@ class MapFragmentView {
     //HERE UI Kit
     private long simulationSpeedMs = 20; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
+    double distanceToSafetyCamera;
+    private double proceedingDistance = 0;
     private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
 //            if (electronicHorizonActivation != null) {
 //                electronicHorizonActivation.startElectronicHorizonUpdate();
 //            }
+            if (lastKnownLocation != null) {
+                proceedingDistance = lastKnownLocation.distanceTo(geoPosition.getCoordinate());
+                if (lastKnownLocation.distanceTo(geoPosition.getCoordinate()) > 0) {
+                    lastKnownLocation = geoPosition.getCoordinate();
+                }
+            } else {
+                lastKnownLocation = geoPosition.getCoordinate();
+            }
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
@@ -554,6 +566,12 @@ class MapFragmentView {
         @Override
         public void onRerouteBegin() {
             super.onRerouteBegin();
+            safetyCameraAhead = false;
+            m_map.removeMapObject(safetyCameraMapMarker);
+            safetyCamImageView.setVisibility(View.INVISIBLE);
+            safetyCamTextView.setVisibility(View.INVISIBLE);
+            safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
+            gpsStatusImageView.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -621,7 +639,6 @@ class MapFragmentView {
                 safetyCameraMapMarker = new MapMarker();
                 SafetySpotNotificationInfo safetySpotInfo = safetySpotNotificationInfoList.get(i);
                 safetyCameraLocation = safetySpotInfo.getSafetySpot().getCoordinate();
-
                 /* Adding MapMarker to indicate selected safety camera */
                 safetyCameraMapMarker.setCoordinate(safetyCameraLocation);
                 Image icon = new Image();
@@ -630,7 +647,7 @@ class MapFragmentView {
                 safetyCameraMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(safetyCameraMapMarker));
                 m_map.addMapObject(safetyCameraMapMarker);
 
-                double distanceToSafetyCamera = safetySpotInfo.getDistance();
+                distanceToSafetyCamera = safetySpotInfo.getDistance();
                 safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
                 Log.d("Test", "safetyCameraSpeedLimit = " + safetyCameraSpeedLimit);
                 Log.d("Test", "safetyCameraSpeedLimit * 3.6) % 5 = " + (safetyCameraSpeedLimit * 3.6) % 5);
@@ -653,6 +670,7 @@ class MapFragmentView {
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
             geoPositionGeoCoordinateOnGround.setAltitude(0);
             RoadElement roadElement = m_positioningManager.getRoadElement();
+            String signName = "";
             signImageView1.setVisibility(View.GONE);
             signImageView2.setVisibility(View.GONE);
             signImageView3.setVisibility(View.GONE);
@@ -678,106 +696,130 @@ class MapFragmentView {
                                     targetSignImageView = signImageView3;
                                     break;
                             }
-                            int trafficSignType = trafficSign.type;
                             List<GeoCoordinate> roadElementGeometry = roadElement.getGeometry();
-                            if (roadElementGeometry.get(0).distanceTo(trafficSign.coordinate) > 0) {
+                            double distanceToSign = roadElementGeometry.get(0).distanceTo(trafficSign.coordinate);
+                            if (distanceToSign > 0) {
                                 if (targetSignImageView != null) {
                                     targetSignImageView.setVisibility(View.VISIBLE);
+                                    switch (trafficSign.type) {
+                                        case 1:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_1);
+                                            signName = signName.concat("禁止超車。");
+                                            break;
+                                        case 6:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_6);
+                                            signName = signName.concat("右側來車。");
+                                            break;
+                                        case 7:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_7);
+                                            signName = signName.concat("左側來車。");
+                                            break;
+                                        case 9:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_9);
+                                            signName = signName.concat("有柵門鐵路平交道。");
+                                            break;
+                                        case 10:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_10);
+                                            signName = signName.concat("無柵門鐵路平交道。");
+                                            break;
+                                        case 11:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
+                                            signName = signName.concat("狹路。");
+                                            break;
+                                        case 12:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);
+                                            signName = signName.concat("左彎。");
+                                            break;
+                                        case 13:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_13);
+                                            signName = signName.concat("右彎。");
+                                            break;
+                                        case 14:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_14);
+                                            signName = signName.concat("連續彎路先向左。");
+                                            break;
+                                        case 15:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_15);
+                                            signName = signName.concat("連續彎路先向右。");
+                                            break;
+                                        case 18:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_18);
+                                            signName = signName.concat("險升坡。");
+                                            break;
+                                        case 19:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_19);
+                                            signName = signName.concat("險降坡。");
+                                            break;
+                                        case 20:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_20);
+                                            signName = signName.concat("停車再開。");
+                                            break;
+                                        case 21:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_21);
+                                            signName = signName.concat("注意強風。");
+                                            break;
+                                        case 22:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_22);
+                                            signName = signName.concat("危險。");
+                                            break;
+                                        case 23:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_23);
+                                            signName = signName.concat("路面高突。");
+                                            break;
+                                        case 27:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_27);
+                                            signName = signName.concat("當心動物。");
+                                            break;
+                                        case 29:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_29);
+                                            signName = signName.concat("路滑。");
+                                            break;
+                                        case 30:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_30);
+                                            signName = signName.concat("注意落石。");
+                                            break;
+                                        case 31:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_31);
+                                            signName = signName.concat("當心兒童。");
+                                            break;
+                                        case 32:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_32);
+                                            signName = signName.concat("當心輕軌。");
+                                            break;
+                                        case 34:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
+                                            signName = signName.concat("危險。");
+                                            break;
+                                        case 36:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_36);
+                                            signName = signName.concat("禁止會車。");
+                                            break;
+                                        case 41:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_41);
+                                            signName = signName.concat("當心行人。");
+                                            break;
+                                        case 42:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_42);
+                                            signName = signName.concat("讓路。");
+                                            break;
+                                        case 59:
+                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_59);
+                                            signName = signName.concat("當心腳踏車。");
+                                            break;
+                                    }
                                     if (!isSignShowing) {
                                         MediaPlayer mediaPlayer = MediaPlayer.create(m_activity, R.raw.beep_short);
                                         if (mediaPlayer != null) {
                                             mediaPlayer.start();
                                         }
+                                        textToSpeech.speak(signName, TextToSpeech.QUEUE_FLUSH, null);
                                     }
                                     isSignShowing = true;
-                                    switch (trafficSignType) {
-                                        case 1:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_1);
-                                            break;
-                                        case 6:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_6);
-                                            break;
-                                        case 7:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_7);
-                                            break;
-                                        case 9:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_9);
-                                            break;
-                                        case 10:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_10);
-                                            break;
-                                        case 11:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
-                                            break;
-                                        case 12:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);
-                                            break;
-                                        case 13:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_13);
-                                            break;
-                                        case 14:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_14);
-                                            break;
-                                        case 15:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_15);
-                                            break;
-                                        case 18:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_18);
-                                            break;
-                                        case 19:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_19);
-                                            break;
-                                        case 20:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_20);
-                                            break;
-                                        case 21:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_21);
-                                            break;
-                                        case 22:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_22);
-                                            break;
-                                        case 23:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_23);
-                                            break;
-                                        case 27:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_27);
-                                            break;
-                                        case 29:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_29);
-                                            break;
-                                        case 30:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_30);
-                                            break;
-                                        case 31:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_31);
-                                            break;
-                                        case 32:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_32);
-                                            break;
-                                        case 34:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
-                                            break;
-                                        case 36:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_36);
-                                            break;
-                                        case 41:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_41);
-                                            break;
-                                        case 42:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_42);
-                                            break;
-                                        case 59:
-                                            targetSignImageView.setImageResource(R.drawable.traffic_sign_type_59);
-                                            break;
-                                    }
                                 }
                             }
-
-
                             i++;
                         }
                     }
-
                 } catch (DataNotReadyException e) {
                     e.printStackTrace();
                 }
@@ -825,7 +867,8 @@ class MapFragmentView {
                 }
             }
             if (safetyCameraAhead) {
-                if (lastKnownLocation.distanceTo(safetyCameraLocation) < geoPosition.getCoordinate().distanceTo(safetyCameraLocation)) {
+                distanceToSafetyCamera -= proceedingDistance;
+                if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     m_map.removeMapObject(safetyCameraMapMarker);
                     safetyCamImageView.setVisibility(View.INVISIBLE);
@@ -836,18 +879,12 @@ class MapFragmentView {
                     safetyCamImageView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setVisibility(View.VISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.VISIBLE);
-                    safetyCamTextView.setText((int) geoPosition.getCoordinate().distanceTo(safetyCameraLocation) + "m");
+                    safetyCamTextView.setText((int) distanceToSafetyCamera + "m");
                     safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
                     gpsStatusImageView.setVisibility(View.INVISIBLE);
                 }
             }
-            if (lastKnownLocation != null) {
-                if (lastKnownLocation.distanceTo(geoPosition.getCoordinate()) > 0) {
-                    lastKnownLocation = geoPosition.getCoordinate();
-                }
-            } else {
-                lastKnownLocation = geoPosition.getCoordinate();
-            }
+
         }
 
         @Override
@@ -1358,6 +1395,9 @@ class MapFragmentView {
     }
 
     private void calculateRoute(RouteOptions routeOptions) {
+        if (selectedFeatureMapOverlay != null) {
+            m_map.removeMapOverlay(selectedFeatureMapOverlay);
+        }
         HereRouter hereRouter = new HereRouter(m_activity, routeOptions);
         hereRouter.setContext(m_activity);
         if (wayPointIcons.size() == 0) {
@@ -1484,6 +1524,7 @@ class MapFragmentView {
                 @Override
                 public void onEngineInitializationCompleted(Error error) {
                     if (error == Error.NONE) {
+
                         coreRouter = new CoreRouter();
                         m_map = supportMapFragment.getMap();
                         isNavigating = false;
@@ -1720,7 +1761,7 @@ class MapFragmentView {
                         /* Download voice */
                         voiceActivation = new VoiceActivation(m_activity);
                         voiceActivation.setContext(m_activity);
-                        String desiredVoiceLanguageCode = "ENG";
+                        String desiredVoiceLanguageCode = "CHT";
                         voiceActivation.setDesiredLangCode(desiredVoiceLanguageCode);
                         voiceActivation.downloadCatalogAndSkin();
 

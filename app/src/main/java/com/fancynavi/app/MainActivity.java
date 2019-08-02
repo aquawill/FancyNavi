@@ -26,6 +26,7 @@ import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 import android.support.design.widget.Snackbar;
@@ -50,6 +51,7 @@ import com.here.android.mpa.mapping.Map;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import static com.fancynavi.app.MapFragmentView.clearButton;
 import static com.fancynavi.app.MapFragmentView.currentPositionMapLocalModel;
@@ -77,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
     static boolean isMapRotating = false;
     static float lightSensorValue;
     static float azimuth = 0f;
+    static TextToSpeech textToSpeech;
     SensorManager mySensorManager;
     View mapFragmentView;
     Bundle mViewBundle = new Bundle();
@@ -166,6 +169,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int i) {
+                if (textToSpeech.isLanguageAvailable(Locale.US) == TextToSpeech.LANG_AVAILABLE) {
+                    textToSpeech.setLanguage(Locale.US);
+                }
+            }
+        });
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getSupportActionBar().hide();
