@@ -347,7 +347,7 @@
         <ImageView
             android:id="@+id/sign_imageView_1"
             android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_height="wrap_content"
             android:paddingTop="8dp"
             android:paddingEnd="8dp"
             android:visibility="gone"
@@ -357,7 +357,7 @@
         <ImageView
             android:id="@+id/sign_imageView_2"
             android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_height="wrap_content"
             android:paddingTop="8dp"
             android:paddingEnd="8dp"
             android:visibility="gone"
@@ -367,7 +367,7 @@
         <ImageView
             android:id="@+id/sign_imageView_3"
             android:layout_width="64dp"
-            android:layout_height="64dp"
+            android:layout_height="wrap_content"
             android:paddingTop="8dp"
             android:paddingEnd="8dp"
             android:visibility="gone"

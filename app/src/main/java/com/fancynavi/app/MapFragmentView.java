@@ -788,7 +788,7 @@ class MapFragmentView {
                                             break;
                                         case 34:
                                             targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
-                                            signName = signName.concat("危險。");
+                                            signName = signName.concat("易肇事路段。");
                                             break;
                                         case 36:
                                             targetSignImageView.setImageResource(R.drawable.traffic_sign_type_36);
