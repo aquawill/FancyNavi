@@ -62,7 +62,7 @@ class VoiceActivation {
 
     private void downloadVoice(Context context, final long voiceSkinId) {
         Log.d("Test", "Downloading voice skin ID: " + voiceSkinId);
-        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Downloading voice skin ID: " + voiceSkinId, Snackbar.LENGTH_SHORT).show();
+//        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Downloading voice skin ID: " + voiceSkinId, Snackbar.LENGTH_SHORT).show();
 
         voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
             @Override
@@ -71,7 +71,7 @@ class VoiceActivation {
                     retryVoiceDownload(context, voiceSkinId);
                     Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Failed downloading voice skin " + voiceSkinId, Snackbar.LENGTH_SHORT).show();
                 } else {
-                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + voiceSkinId + " downloaded and activated.", Snackbar.LENGTH_SHORT).show();
+//                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + voiceSkinId + " downloaded and activated.", Snackbar.LENGTH_SHORT).show();
                     //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
@@ -115,7 +115,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + desiredVoiceId + " downloaded and activated", Snackbar.LENGTH_SHORT).show();
+//                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + desiredVoiceId + " downloaded and activated", Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
