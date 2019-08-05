@@ -103,8 +103,8 @@ class VoiceActivation {
                         Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                     }
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-                    localInstalledSkins.clear();
-//                        Log.d("Test", "# of local skins: " + localInstalledSkins.size());
+//                    localInstalledSkins.clear();
+                    Log.d("Test", "# of local skins: " + localInstalledSkins.size());
                     for (VoiceSkin voice : localInstalledSkins) {
                         Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
                         if (voice.getId() == desiredVoiceId) {
@@ -115,7 +115,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-//                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + desiredVoiceId + " downloaded and activated", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), desiredLangCode + "voice activated", Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
