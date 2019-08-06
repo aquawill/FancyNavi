@@ -1408,6 +1408,7 @@ class MapFragmentView {
 
                         coreRouter = new CoreRouter();
                         m_map = supportMapFragment.getMap();
+                        ((MapScaleView) m_activity.findViewById(R.id.map_scale_view)).setMap(m_map);
                         isNavigating = false;
                         GeoCoordinate defaultMapCenter = new GeoCoordinate(25.038137, 121.513936);
                         m_map.setCenter(defaultMapCenter, Map.Animation.NONE);
