@@ -62,7 +62,9 @@ import com.here.android.mpa.mapping.MapOverlay;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapState;
 import com.here.android.mpa.mapping.OnMapRenderListener;
+import com.here.android.mpa.mapping.SafetySpotObject;
 import com.here.android.mpa.mapping.SupportMapFragment;
+import com.here.android.mpa.mapping.TrafficEventObject;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.DynamicPenalty;
@@ -1840,14 +1842,34 @@ class MapFragmentView {
             }
             List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
             if (selectedMapObjects.size() > 0) {
-                Log.d("Test", selectedMapObjects.get(0).getClass().getName());
-                if (selectedMapObjects.get(0).getClass().getName().equals("com.here.android.mpa.mapping.MapCartoMarker")) {
-                    MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
-                    Location location = selectedMapCartoMarker.getLocation();
-                    showSelectionFocus(location.getCoordinate());
-                    String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
-                    String category = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
-                    showResultSnackbar(location.getCoordinate(), placeName + " / " + category, view, Snackbar.LENGTH_INDEFINITE);
+                Log.d("test", selectedMapObjects.get(0).getClass().getName());
+                switch (selectedMapObjects.get(0).getClass().getName()) {
+                    case "com.here.android.mpa.mapping.MapCartoMarker":
+                        MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
+                        Location location = selectedMapCartoMarker.getLocation();
+                        showSelectionFocus(location.getCoordinate());
+                        String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
+                        String category = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
+                        showResultSnackbar(location.getCoordinate(), placeName + " / " + category, view, Snackbar.LENGTH_INDEFINITE);
+                        break;
+                    case "com.here.android.mpa.mapping.TrafficEventObject":
+                        TrafficEventObject trafficEventObject = (TrafficEventObject) selectedMapObjects.get(0);
+                        GeoCoordinate trafficEventObjectGeoCoordinate = trafficEventObject.getCoordinate();
+                        String trafficEventShortText = trafficEventObject.getTrafficEvent().getEventText();
+                        String trafficEventAffectedStreet = trafficEventObject.getTrafficEvent().getFirstAffectedStreet();
+                        showResultSnackbar(trafficEventObjectGeoCoordinate, trafficEventShortText + " / " + trafficEventAffectedStreet, view, Snackbar.LENGTH_SHORT);
+                        break;
+                    case "com.here.android.mpa.mapping.SafetySpotObject":
+                        SafetySpotObject safetySpotObject = (SafetySpotObject) selectedMapObjects.get(0);
+                        safetyCameraSpeedLimit = safetySpotObject.getSafetySpotInfo().getSpeedLimit1();
+                        int safetyCameraSpeedLimitKM;
+                        if (safetyCameraSpeedLimit * 3.6 % 10 >= 8 || safetyCameraSpeedLimit * 3.6 % 10 <= 2) {
+                            safetyCameraSpeedLimitKM = (int) ((Math.round((safetyCameraSpeedLimit * 3.6) / 10)) * 10);
+                        } else {
+                            safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
+                        }
+                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), "Safety Camera / " + safetyCameraSpeedLimitKM + " km/h", view, Snackbar.LENGTH_SHORT);
+                        break;
                 }
             }
         }

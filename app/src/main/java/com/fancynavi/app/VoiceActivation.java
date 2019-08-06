@@ -115,7 +115,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), desiredLangCode + "voice activated", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), desiredLangCode + " voice activated", Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
