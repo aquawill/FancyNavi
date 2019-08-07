@@ -12,6 +12,10 @@ Route calculation.
 
 ![](https://i.imgur.com/pzjsKsm.gif)
 
+Draggable waypoints.
+
+![](https://i.imgur.com/rFOLoRl.gif)
+
 Routes for different vehicle types.
 
 ![](https://i.imgur.com/KeKqgmh.gif)
