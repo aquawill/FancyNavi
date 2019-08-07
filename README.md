@@ -1,13 +1,21 @@
 # HERE Android Premium SDK + UI Kit
 
-1. Double tap on map to create waypoints.
+1. Double tap on map or search for places/POI to create waypoints .
 2. Create route with buttons of different vehicle types.
 3. Start navigation or guidance simulation.
 
-![](https://i.imgur.com/KmvHdkT.png)
+Search for places/POI.
+![](https://i.imgur.com/d8uHfMu.gif)
 
-Lane info/Speed Camera/Junction View
+Route calculation.
+![](https://i.imgur.com/pzjsKsm.gif)
 
-![](https://i.imgur.com/Y6JKA6d.png)
+Routes for different vehicle types.
+![](https://i.imgur.com/KeKqgmh.gif)
 
-Driver Alert
+Junction view, lane info and speed camera alert.
+![](https://i.imgur.com/tCSkgj6.gif)
+
+Speed camera alert and traffic signs.
+![](https://i.imgur.com/OFbjbiU.gif)
+

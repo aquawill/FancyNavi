@@ -584,7 +584,7 @@ class MapFragmentView {
             safetyCamImageView.setVisibility(View.INVISIBLE);
             safetyCamTextView.setVisibility(View.INVISIBLE);
             safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
-            gpsStatusImageView.setVisibility(View.VISIBLE);
+//            gpsStatusImageView.setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -761,14 +761,14 @@ class MapFragmentView {
                     safetyCamImageView.setVisibility(View.INVISIBLE);
                     safetyCamTextView.setVisibility(View.INVISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
-                    gpsStatusImageView.setVisibility(View.VISIBLE);
+//                    gpsStatusImageView.setVisibility(View.VISIBLE);
                 } else {
                     safetyCamImageView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setVisibility(View.VISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.VISIBLE);
                     safetyCamTextView.setText((int) distanceToSafetyCamera + "m");
                     safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
-                    gpsStatusImageView.setVisibility(View.INVISIBLE);
+//                    gpsStatusImageView.setVisibility(View.INVISIBLE);
                 }
             }
 
