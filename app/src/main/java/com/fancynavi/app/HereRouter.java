@@ -35,6 +35,10 @@ class HereRouter {
         return routePlan;
     }
 
+    public void setRoutePlan(RoutePlan routePlan) {
+        this.routePlan = routePlan;
+    }
+
     void setWaypoints(ArrayList<GeoCoordinate> waypoints) {
         this.waypoints = waypoints;
     }
@@ -76,23 +80,26 @@ class HereRouter {
         for (int i = 0; i < waypoints.size(); i++) {
             GeoCoordinate coord = waypoints.get(i);
             RouteWaypoint waypoint = new RouteWaypoint(coord);
-            MapMarker mapMarker = new MapMarker();
+            MapMarker waypointMapMarker = new MapMarker();
+            waypointMapMarker.setDraggable(true);
+            waypointMapMarker.setTitle(String.valueOf(i));
+
             Image icon = new Image();
             if (i != 0 && i != waypoints.size() - 1) {
                 waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
-                mapMarker.setCoordinate(waypoint.getOriginalPosition());
+                waypointMapMarker.setCoordinate(waypoint.getOriginalPosition());
             } else {
                 if (i == 0) {
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_orig));
-                    mapMarker.setCoordinate(waypoint.getOriginalPosition());
-                    mapMarker.setIcon(icon);
+                    waypointMapMarker.setCoordinate(waypoint.getOriginalPosition());
+                    waypointMapMarker.setIcon(icon);
                 } else if (i == waypoints.size() - 1) {
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_dest));
-                    mapMarker.setCoordinate(waypoint.getOriginalPosition());
-                    mapMarker.setIcon(icon);
+                    waypointMapMarker.setCoordinate(waypoint.getOriginalPosition());
+                    waypointMapMarker.setIcon(icon);
                 }
             }
-            outputWaypointIcons.add(mapMarker);
+            outputWaypointIcons.add(waypointMapMarker);
             routePlan.addWaypoint(waypoint);
             routePlan.setRouteOptions(routeOptions);
         }

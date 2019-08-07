@@ -16,12 +16,16 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewTreeObserver;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -70,13 +74,18 @@ import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.DynamicPenalty;
 import com.here.android.mpa.routing.Route;
 import com.here.android.mpa.routing.RouteOptions;
+import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteResult;
+import com.here.android.mpa.routing.RouteWaypoint;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
+import com.here.android.mpa.search.DiscoveryResultPage;
 import com.here.android.mpa.search.ErrorCode;
+import com.here.android.mpa.search.PlaceLink;
 import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeMode;
 import com.here.android.mpa.search.ReverseGeocodeRequest;
+import com.here.android.mpa.search.SearchRequest;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalView;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewPresenter;
 import com.here.msdkui.guidance.GuidanceManeuverData;
@@ -155,17 +164,18 @@ class MapFragmentView {
             return false;
         }
     };
-    boolean isPositionLogging = false;
-    LinearLayout laneDcmLinearLayout;
-    LinearLayout laneInfoLinearLayoutOverlay;
-    double distanceToSafetyCamera;
+    private boolean isPositionLogging = false;
+    private LinearLayout laneDcmLinearLayout;
+    private LinearLayout laneInfoLinearLayoutOverlay;
+    private double distanceToSafetyCamera;
+    private HereRouter hereRouter;
     private List<TrafficSign> lastTrafficSignList = new ArrayList<>();
     private RoadElement lastRoadElement;
     private String signName;
     private ElectronicHorizonActivation electronicHorizonActivation;
     private Snackbar searchResultSnackbar;
-    private ImageView selectedFeatureImageView;
-    private MapOverlay selectedFeatureMapOverlay;
+    private String searchResultString;
+    private MapMarker selectedFeatureMapMarker;
     private MapCircle positionAccuracyMapCircle;
     private ImageView gpsStatusImageView;
     private ImageView signImageView1;
@@ -194,6 +204,9 @@ class MapFragmentView {
     private Button bikeRouteButton;
     private Button pedsRouteButton;
     private Button trafficButton;
+    private Button searchButton;
+    private EditText searchTextBar;
+    private LinearLayout searchBarLinearLayout;
     private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView calculatingTextView;
@@ -800,28 +813,13 @@ class MapFragmentView {
         public boolean onMapObjectsSelected(List<ViewObject> list) {
             Log.d("Test", "onMapObjectsSelected: " + list.size());
             for (ViewObject viewObject : list) {
+                Log.d("Test", "viewObject: " + viewObject.getClass().getName());
                 if (viewObject.getBaseType() == ViewObject.Type.USER_OBJECT) {
                     if (viewObject.equals(currentPositionMapLocalModel)) {
                         isMapRotating = !isMapRotating;
                     } else if (viewObject.equals(positionAccuracyMapCircle)) {
                         isMapRotating = !isMapRotating;
-                    } else {
-                        MapMarker mapMarkerOnMap = (MapMarker) viewObject;
-
-                        String parkingTitle = mapMarkerOnMap.getTitle();
-                        Snackbar goToParkSnackBar = Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), parkingTitle, 30000);
-                        goToParkSnackBar.setAction("Go!", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                userInputWaypoints.add((MapMarker) viewObject);
-                                calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.CAR));
-                                m_naviControlButton.setVisibility(View.VISIBLE);
-                                clearButton.setVisibility(View.VISIBLE);
-                            }
-                        });
-                        goToParkSnackBar.show();
                     }
-
                 }
             }
             return false;
@@ -829,20 +827,26 @@ class MapFragmentView {
 
         @Override
         public boolean onTapEvent(PointF pointF) {
+            searchBarLinearLayout.setVisibility(View.GONE);
             if (searchResultSnackbar != null) {
                 searchResultSnackbar.dismiss();
             }
-            if (selectedFeatureMapOverlay != null) {
-                m_map.removeMapOverlay(selectedFeatureMapOverlay);
+            if (selectedFeatureMapMarker != null) {
+                m_map.removeMapObject(selectedFeatureMapMarker);
             }
+            InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
             new SearchResultHandler(m_activity.findViewById(R.id.mapFragmentView), pointF, m_map);
             return false;
         }
 
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
+            searchBarLinearLayout.setVisibility(View.GONE);
             touchToAddWaypoint(pointF);
             switchUiControls(View.VISIBLE);
+            InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
             m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
             return true;
         }
@@ -879,7 +883,8 @@ class MapFragmentView {
         public boolean onLongPressEvent(PointF pointF) {
             GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(pointF);
             GeoCoordinate coordinate = new GeoCoordinate(touchPointGeoCoordinate);
-
+            InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
             ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(coordinate, ReverseGeocodeMode.RETRIEVE_ADDRESSES, 0);
             reverseGeocodeRequest.execute(new ResultListener<com.here.android.mpa.search.Location>() {
                 @Override
@@ -905,6 +910,35 @@ class MapFragmentView {
         @Override
         public boolean onTwoFingerTapEvent(PointF pointF) {
             return false;
+        }
+    };
+    MapMarker.OnDragListener mapMarkerOnDragListenerForRoute = new MapMarker.OnDragListener() {
+        @Override
+        public void onMarkerDrag(MapMarker mapMarker) {
+
+        }
+
+        @Override
+        public void onMarkerDragEnd(MapMarker mapMarker) {
+            int mapMarkerIndex = Integer.valueOf(mapMarker.getTitle());
+            wayPointIcons.get(mapMarkerIndex).setCoordinate(mapMarker.getCoordinate());
+            waypointList.clear();
+            RoutePlan routePlan = m_route.getRoutePlan();
+            RouteOptions.TransportMode transportMode = routePlan.getRouteOptions().getTransportMode();
+            routePlan.removeAllWaypoints();
+            for (MapMarker waypointMapMarker : wayPointIcons) {
+                Log.d("test", "mapMarkerIndex: " + waypointMapMarker.getTitle() + " getCoordinate: " + mapMarker.getCoordinate());
+                routePlan.addWaypoint(new RouteWaypoint(waypointMapMarker.getCoordinate()));
+                waypointList.add(waypointMapMarker.getCoordinate());
+            }
+            hereRouter.setRoutePlan(routePlan);
+            hereRouter.setWaypoints(waypointList);
+            calculateRoute(prepareRouteOptions(transportMode));
+        }
+
+        @Override
+        public void onMarkerDragStart(MapMarker mapMarker) {
+
         }
     };
 
@@ -1048,8 +1082,8 @@ class MapFragmentView {
 
     private void touchToAddWaypoint(PointF p) {
         isDragged = true;
-        if (selectedFeatureMapOverlay != null) {
-            m_map.removeMapOverlay(selectedFeatureMapOverlay);
+        if (selectedFeatureMapMarker != null) {
+            m_map.removeMapObject(selectedFeatureMapMarker);
         }
         GeoCoordinate touchPointGeoCoordinate = m_map.pixelToGeo(p);
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
@@ -1179,6 +1213,7 @@ class MapFragmentView {
         zoomOutButton.setVisibility(View.GONE);
 //        gpsStatusImageView.setVisibility(View.GONE);
         gpsSwitch.setVisibility(View.GONE);
+        searchButton.setVisibility(View.GONE);
         switchUiControls(View.GONE);
         initGuidanceManeuverView(m_activity, m_navigationManager, m_route);
         initGuidanceNextManeuverView(m_activity, m_navigationManager, m_route);
@@ -1276,11 +1311,12 @@ class MapFragmentView {
     }
 
     private void calculateRoute(RouteOptions routeOptions) {
-        if (selectedFeatureMapOverlay != null) {
-            m_map.removeMapOverlay(selectedFeatureMapOverlay);
+        searchBarLinearLayout.setVisibility(View.GONE);
+        searchButton.setVisibility(View.GONE);
+        if (selectedFeatureMapMarker != null) {
+            m_map.removeMapObject(selectedFeatureMapMarker);
         }
-        HereRouter hereRouter = new HereRouter(m_activity, routeOptions);
-        hereRouter.setContext(m_activity);
+        hereRouter = new HereRouter(m_activity, routeOptions);
         if (wayPointIcons.size() == 0) {
             for (int i = 0; i < userInputWaypoints.size(); i++) {
                 MapMarker mapMarker = userInputWaypoints.get(i);
@@ -1293,7 +1329,7 @@ class MapFragmentView {
             wayPointIcons = hereRouter.getOutputWaypointIcons();
         }
         hereRouter.setWaypoints(waypointList);
-
+        hereRouter.setContext(m_activity);
         hereRouter.createRouteForNavi();
         for (MapMarker m : wayPointIcons) {
             m.setAnchorPoint(getMapMarkerAnchorPoint(m));
@@ -1331,8 +1367,8 @@ class MapFragmentView {
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
-                        Log.d("Test", "isRouteOverView " + isRouteOverView);
                         m_route = routeResults.get(0).getRoute();
+                        supportMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
                         resetMapRoute(m_route);
                         mapRouteBBox = m_route.getBoundingBox();
                         GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(mapRouteBBox);
@@ -1340,8 +1376,7 @@ class MapFragmentView {
                         mapRouteBBox.expand((float) (geoBoundingBoxDimensionCalculator.getBBoxHeight() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getBBoxWidth() * 0.6));
                         m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         m_naviControlButton.setText("Start Navi");
-                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Length: " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
-
+                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
                         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
                     } else {
@@ -1588,6 +1623,32 @@ class MapFragmentView {
                                 trafficButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
                             }
                         });
+                        searchButton = m_activity.findViewById(R.id.search_button);
+                        searchTextBar = m_activity.findViewById(R.id.search_input_text);
+                        searchBarLinearLayout = m_activity.findViewById(R.id.search_bar_linear_layout);
+                        searchButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                if (searchResultSnackbar != null) {
+                                    searchResultSnackbar.dismiss();
+                                }
+                                searchTextBar.setText("");
+                                searchBarLinearLayout.setVisibility(View.VISIBLE);
+                            }
+                        });
+                        searchTextBar.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                            @Override
+                            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                                if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                                    new SearchResultHandler(m_activity.findViewById(R.id.mapFragmentView), m_map.getCenter(), searchTextBar.getText().toString(), m_map);
+                                    searchTextBar.clearFocus();
+                                    InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                                    inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
+                                    return true;
+                                }
+                                return false;
+                            }
+                        });
 
                         m_activity.findViewById(R.id.log_button).setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -1721,10 +1782,14 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        if (searchResultSnackbar != null) {
+            searchResultSnackbar.dismiss();
+        }
         isMapRotating = false;
         isNavigating = false;
         m_navigationManager = null;
         switchGuidanceUiViews(View.GONE);
+        searchButton.setVisibility(View.VISIBLE);
 //        gpsStatusImageView.setVisibility(View.VISIBLE);
         gpsSwitch.setVisibility(View.VISIBLE);
         m_activity.findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);
@@ -1827,19 +1892,57 @@ class MapFragmentView {
     }
 
     class SearchResultHandler {
+        String placesSearchResultTitle;
+        String placesSearchCategoryName;
         private Map map = m_map;
 
-        SearchResultHandler(View view, com.here.android.mpa.search.Location location, Map map) {
-            if (selectedFeatureMapOverlay != null) {
-                m_map.removeMapOverlay(selectedFeatureMapOverlay);
+        public SearchResultHandler(View view, String placesSearchResultTitle) {
+            this.placesSearchResultTitle = placesSearchResultTitle;
+        }
+
+        SearchResultHandler(View view, GeoCoordinate geoCoordinate, String inputString, Map map) {
+            if (selectedFeatureMapMarker != null) {
+                map.removeMapObject(selectedFeatureMapMarker);
             }
-            this.showSelectionFocus(location.getCoordinate());
+            SearchRequest request = new SearchRequest(inputString);
+            request.setSearchCenter(geoCoordinate);
+            request.setCollectionSize(1);
+            ErrorCode error = request.execute(new ResultListener<DiscoveryResultPage>() {
+                @Override
+                public void onCompleted(DiscoveryResultPage discoveryResultPage, ErrorCode errorCode) {
+                    if (discoveryResultPage.getPlaceLinks().size() > 0) {
+                        List<PlaceLink> discoveryResultPlaceLink = discoveryResultPage.getPlaceLinks();
+                        for (PlaceLink placeLink : discoveryResultPlaceLink) {
+                            Log.d("Test", placeLink.getTitle());
+                            placesSearchResultTitle = placeLink.getTitle();
+                            placesSearchCategoryName = placeLink.getCategory().getName();
+                            GeoCoordinate placesSearchresultGeoCoordinate = placeLink.getPosition();
+                            searchResultString = placesSearchResultTitle + " / " + placesSearchCategoryName;
+                            showSelectionFocus(placesSearchresultGeoCoordinate, searchResultString);
+                            showResultSnackbar(placesSearchresultGeoCoordinate, searchResultString, view, Snackbar.LENGTH_INDEFINITE);
+                            searchBarLinearLayout.setVisibility(View.GONE);
+                            isDragged = true;
+                            map.setCenter(placesSearchresultGeoCoordinate, Map.Animation.LINEAR);
+                        }
+                    } else {
+                        Snackbar.make(view, "No result returned.", Snackbar.LENGTH_SHORT).show();
+                    }
+                }
+            });
+        }
+
+        SearchResultHandler(View view, com.here.android.mpa.search.Location location, Map map) {
+            if (selectedFeatureMapMarker != null) {
+                map.removeMapObject(selectedFeatureMapMarker);
+            }
+            searchResultString = location.getAddress().getText();
+            this.showSelectionFocus(location.getCoordinate(), searchResultString);
             showResultSnackbar(location.getCoordinate(), location.getAddress().getText(), view, Snackbar.LENGTH_INDEFINITE);
         }
 
         SearchResultHandler(View view, PointF pointF, Map map) {
-            if (selectedFeatureMapOverlay != null) {
-                m_map.removeMapOverlay(selectedFeatureMapOverlay);
+            if (selectedFeatureMapMarker != null) {
+                map.removeMapObject(selectedFeatureMapMarker);
             }
             List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
             if (selectedMapObjects.size() > 0) {
@@ -1848,17 +1951,19 @@ class MapFragmentView {
                     case "com.here.android.mpa.mapping.MapCartoMarker":
                         MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
                         Location location = selectedMapCartoMarker.getLocation();
-                        showSelectionFocus(location.getCoordinate());
                         String placeName = location.getInfo().getField(LocationInfo.Field.PLACE_NAME);
                         String category = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
-                        showResultSnackbar(location.getCoordinate(), placeName + " / " + category, view, Snackbar.LENGTH_INDEFINITE);
+                        searchResultString = placeName + " / " + category;
+                        showSelectionFocus(location.getCoordinate(), searchResultString);
+                        showResultSnackbar(location.getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         break;
                     case "com.here.android.mpa.mapping.TrafficEventObject":
                         TrafficEventObject trafficEventObject = (TrafficEventObject) selectedMapObjects.get(0);
                         GeoCoordinate trafficEventObjectGeoCoordinate = trafficEventObject.getCoordinate();
                         String trafficEventShortText = trafficEventObject.getTrafficEvent().getEventText();
                         String trafficEventAffectedStreet = trafficEventObject.getTrafficEvent().getFirstAffectedStreet();
-                        showResultSnackbar(trafficEventObjectGeoCoordinate, trafficEventShortText + " / " + trafficEventAffectedStreet, view, Snackbar.LENGTH_SHORT);
+                        searchResultString = trafficEventShortText + " / " + trafficEventAffectedStreet;
+                        showResultSnackbar(trafficEventObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_SHORT);
                         break;
                     case "com.here.android.mpa.mapping.SafetySpotObject":
                         SafetySpotObject safetySpotObject = (SafetySpotObject) selectedMapObjects.get(0);
@@ -1869,24 +1974,22 @@ class MapFragmentView {
                         } else {
                             safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                         }
-                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), "Safety Camera / " + safetyCameraSpeedLimitKM + " km/h", view, Snackbar.LENGTH_SHORT);
+                        searchResultString = "Safety Camera / " + safetyCameraSpeedLimitKM + " km/h";
+                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_SHORT);
                         break;
                 }
             }
         }
 
-        private void showSelectionFocus(GeoCoordinate geoCoordinate) {
-
-            selectedFeatureImageView = new ImageView(m_activity);
-            selectedFeatureImageView.setImageResource(R.drawable.ic_circular_target);
-//            RotateAnimation rotateAnimation = new RotateAnimation(0, 180, Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF, 0.5f);
-//            rotateAnimation.setInterpolator(new LinearInterpolator());
-//            rotateAnimation.setDuration(800);
-//            rotateAnimation.setRepeatMode(Animation.RESTART);
-//            rotateAnimation.setRepeatCount(Animation.INFINITE);
-//            selectedFeatureImageView.startAnimation(rotateAnimation);
-            selectedFeatureMapOverlay = new MapOverlay(selectedFeatureImageView, geoCoordinate);
-            m_map.addMapOverlay(selectedFeatureMapOverlay);
+        private void showSelectionFocus(GeoCoordinate geoCoordinate, String string) {
+            selectedFeatureMapMarker = new MapMarker();
+            selectedFeatureMapMarker.setCoordinate(geoCoordinate);
+            Image icon = new Image();
+            icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(m_activity, R.drawable.ic_search_result));
+            selectedFeatureMapMarker.setIcon(icon);
+            selectedFeatureMapMarker.setTitle(string);
+            selectedFeatureMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(selectedFeatureMapMarker));
+            m_map.addMapObject(selectedFeatureMapMarker);
         }
 
         private void showResultSnackbar(GeoCoordinate waypointMapMakerGeoCoordinate, String stringToShow, View view, int duration) {
@@ -1895,8 +1998,8 @@ class MapFragmentView {
             searchResultSnackbar.setAction("Add Waypoint", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    if (selectedFeatureMapOverlay != null) {
-                        m_map.removeMapOverlay(selectedFeatureMapOverlay);
+                    if (selectedFeatureMapMarker != null) {
+                        map.removeMapObject(selectedFeatureMapMarker);
                     }
                     addingWaypointMapMarker(waypointMapMakerGeoCoordinate);
                     map.setCenter(waypointMapMakerGeoCoordinate, Map.Animation.LINEAR);

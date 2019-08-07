@@ -86,17 +86,17 @@
 
         <Button
             android:id="@+id/log_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginStart="8dp"
             android:background="@drawable/ic_fiber_manual_record_dark_grey_24dp"
             android:elevation="2dp"
             android:text="R"
             android:textColor="@color/lui_white"
             android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/traffic_button"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintBottom_toBottomOf="@+id/gps_switch"
+            app:layout_constraintStart_toEndOf="@+id/gps_switch"
+            app:layout_constraintTop_toTopOf="@+id/gps_switch" />
 
         <Button
             android:id="@+id/traffic_button"
@@ -108,7 +108,7 @@
             android:elevation="2dp"
             android:foreground="@drawable/ic_congestion"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
@@ -379,10 +379,55 @@
             android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:layout_margin="4dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
             android:paddingStart="8dp"
             android:paddingBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/gps_switch" />
+            app:layout_constraintStart_toEndOf="@+id/log_button" />
+
+        <Button
+            android:id="@+id/search_button"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="#00000000"
+            android:foreground="@drawable/ic_search"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/top_button_linear_layout" />
+
+        <LinearLayout
+            android:id="@+id/search_bar_linear_layout"
+            android:layout_width="match_parent"
+            android:layout_height="32dp"
+            android:layout_marginStart="80dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="64dp"
+            android:elevation="10dp"
+            android:orientation="horizontal"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tableLayout">
+
+            <EditText
+                android:id="@+id/search_input_text"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="4"
+                android:background="@drawable/edittext_background"
+                android:elevation="10dp"
+                android:hint="Search Places..."
+                android:imeOptions="actionSearch"
+                android:inputType="text"
+                android:maxLines="1"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:shadowColor="#FF5722"
+                android:singleLine="false" />
+
+        </LinearLayout>
 
     </android.support.constraint.ConstraintLayout>
 
