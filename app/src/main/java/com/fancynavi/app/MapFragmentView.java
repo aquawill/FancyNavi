@@ -1542,6 +1542,9 @@ class MapFragmentView {
                         /* Listeners of map buttons */
                         northUpButton = m_activity.findViewById(R.id.north_up);
                         northUpButton.setOnClickListener(v -> {
+                            if (searchResultSnackbar != null) {
+                                searchResultSnackbar.dismiss();
+                            }
                             isMapRotating = false;
                             m_map.setOrientation(0);
                             northUpButton.setRotation(0);
@@ -1634,6 +1637,9 @@ class MapFragmentView {
                                 }
                                 searchTextBar.setText("");
                                 searchBarLinearLayout.setVisibility(View.VISIBLE);
+                                searchTextBar.requestFocus();
+                                InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+                                inputMethodManager.showSoftInput(searchTextBar, InputMethodManager.SHOW_IMPLICIT);
                             }
                         });
                         searchTextBar.setOnEditorActionListener(new TextView.OnEditorActionListener() {
