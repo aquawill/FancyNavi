@@ -14,13 +14,13 @@ import java.util.List;
 import static com.fancynavi.app.MainActivity.textToSpeech;
 import static com.fancynavi.app.MapFragmentView.isSignShowing;
 
-public class TrafficSignPresenter {
+class TrafficSignPresenter {
 
     private ImageView imageView1;
     private ImageView imageView2;
     private ImageView imageView3;
 
-    public void setSignImageViews(ImageView imageView1, ImageView imageView2, ImageView imageView3) {
+    void setSignImageViews(ImageView imageView1, ImageView imageView2, ImageView imageView3) {
         this.imageView1 = imageView1;
         this.imageView2 = imageView2;
         this.imageView3 = imageView3;
@@ -38,7 +38,7 @@ public class TrafficSignPresenter {
         }.start();
     }
 
-    public void showTrafficSigns(List<TrafficSign> trafficSigns, Context context) {
+    void showTrafficSigns(List<TrafficSign> trafficSigns, Context context) {
 
         int numberOfTrafficSigns = trafficSigns.size();
         int i = 0;

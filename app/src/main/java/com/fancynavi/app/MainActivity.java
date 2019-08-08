@@ -22,6 +22,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -52,6 +53,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
+import com.here.odnp.util.Log;
 
 import org.apache.commons.io.FileUtils;
 
@@ -106,14 +108,32 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
+
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 lightSensorValue = event.values[0];
+                Log.d("test", String.valueOf(lightSensorValue));
             }
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 mGravity = event.values;
             }
             if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
                 mGeomagnetic = event.values;
+            }
+            if (!Build.FINGERPRINT.contains("generic")) {
+                if (m_map != null) {
+                    if (lightSensorValue < 50) {
+                        setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
+                        new MapSchemeChanger(m_map, m_navigationManager).darkenMap();
+                        ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);
+                        findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_dark);
+                    } else {
+                        setTheme(R.style.MSDKUIDarkTheme);
+                        new MapSchemeChanger(m_map, m_navigationManager).lightenMap();
+                        ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.BLACK);
+                        findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_bright);
+                    }
+                }
+
             }
             if (mGravity != null && mGeomagnetic != null) {
                 float[] R = new float[9];

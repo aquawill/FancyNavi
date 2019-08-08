@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
@@ -113,7 +112,6 @@ import java.util.EnumSet;
 import java.util.List;
 
 import static com.fancynavi.app.MainActivity.isMapRotating;
-import static com.fancynavi.app.MainActivity.lightSensorValue;
 import static com.fancynavi.app.MainActivity.textToSpeech;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
@@ -135,6 +133,7 @@ class MapFragmentView {
     static ImageView junctionViewImageView;
     static ImageView signpostImageView;
     static boolean isRoadView = false;
+    static boolean isSatMap = false;
     static SupportMapFragment supportMapFragment;
     static boolean isRouteOverView;
     static boolean isNavigating;
@@ -167,6 +166,7 @@ class MapFragmentView {
         }
     };
     private boolean isPositionLogging = false;
+    private MapSchemeChanger mapSchemeChanger;
     private LinearLayout laneDcmLinearLayout;
     private LinearLayout laneInfoLinearLayoutOverlay;
     private double distanceToSafetyCamera;
@@ -184,7 +184,6 @@ class MapFragmentView {
     private ImageView signImageView2;
     private ImageView signImageView3;
     private Switch gpsSwitch;
-    private MapSchemeChanger mapSchemeChanger;
     private boolean safetyCameraAhead;
     private GeoCoordinate safetyCameraLocation;
     private double safetyCameraSpeedLimit;
@@ -206,6 +205,7 @@ class MapFragmentView {
     private Button bikeRouteButton;
     private Button pedsRouteButton;
     private Button trafficButton;
+    private Button satMapButton;
     private Button searchButton;
     private EditText searchTextBar;
     private LinearLayout searchBarLinearLayout;
@@ -741,15 +741,6 @@ class MapFragmentView {
             }
 
             currentGeoPosition = geoPosition;
-            if (!Build.FINGERPRINT.contains("generic")) {
-                if (lightSensorValue < 50) {
-                    m_activity.setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
-                    mapSchemeChanger.darkenMap();
-                } else {
-                    m_activity.setTheme(R.style.MSDKUIDarkTheme);
-                    mapSchemeChanger.lightenMap();
-                }
-            }
 
             if (!isRouteOverView) {
                 if (!isDragged) {
@@ -1283,12 +1274,10 @@ class MapFragmentView {
                 break;
             case BICYCLE:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.BICYCLE);
-                m_map.setMapScheme(Map.Scheme.TERRAIN_DAY);
                 routeOptions.setHighwaysAllowed(false);
                 break;
             case PEDESTRIAN:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.PEDESTRIAN);
-                m_map.setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
                 m_map.setPedestrianFeaturesVisible(pedestrianFeatureEnumSet);
                 routeOptions.setHighwaysAllowed(false);
                 break;
@@ -1442,10 +1431,14 @@ class MapFragmentView {
                 @Override
                 public void onEngineInitializationCompleted(Error error) {
                     if (error == Error.NONE) {
-
                         coreRouter = new CoreRouter();
                         m_map = supportMapFragment.getMap();
-                        ((MapScaleView) m_activity.findViewById(R.id.map_scale_view)).setMap(m_map);
+                        MapScaleView mapScaleView = m_activity.findViewById(R.id.map_scale_view);
+                        mapScaleView.setMap(m_map);
+                        mapScaleView.setColor(R.color.black);
+
+                        mapSchemeChanger = new MapSchemeChanger(m_map);
+
                         isNavigating = false;
                         GeoCoordinate defaultMapCenter = new GeoCoordinate(25.038137, 121.513936);
                         m_map.setCenter(defaultMapCenter, Map.Animation.NONE);
@@ -1467,6 +1460,8 @@ class MapFragmentView {
                                 northUpButton.setRotation(mapState.getOrientation() * -1);
                             }
                         });
+
+                        m_map.addSchemeChangedListener(s -> Log.d("test", "onMapSchemeChanged: " + s));
 
                         supportMapFragment.addOnMapRenderListener(new OnMapRenderListener() {
                             @Override
@@ -1528,8 +1523,6 @@ class MapFragmentView {
                         signImageView3 = m_activity.findViewById(R.id.sign_imageView_3);
 
                         new ShiftMapCenter(m_map, 0.5f, 0.6f);
-                        mapSchemeChanger = new MapSchemeChanger(m_map, m_navigationManager);
-
                         m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
                         m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                         m_map.setSafetySpotsVisible(true);
@@ -1626,6 +1619,24 @@ class MapFragmentView {
                                 trafficEnabled = false;
                                 m_map.setTrafficInfoVisible(false);
                                 trafficButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+                            }
+                        });
+                        satMapButton = m_activity.findViewById(R.id.sat_map_button);
+                        satMapButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+                        satMapButton.setOnClickListener(v -> {
+                            if (!isSatMap) {
+                                isSatMap = true;
+                                satMapButton.setBackgroundColor(Color.parseColor("#FF00FF00"));
+                                Log.d("test", "old: " + m_map.getMapScheme());
+                                mapSchemeChanger.satMapOn();
+                                Log.d("test", "new: " + m_map.getMapScheme());
+
+                            } else {
+                                isSatMap = false;
+                                satMapButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+                                Log.d("test", "old: " + m_map.getMapScheme());
+                                mapSchemeChanger.satMapOff();
+                                Log.d("test", "new: " + m_map.getMapScheme());
                             }
                         });
                         searchButton = m_activity.findViewById(R.id.search_button);
@@ -1786,10 +1797,12 @@ class MapFragmentView {
         alertDialog.getButton(alertDialog.BUTTON_POSITIVE).setTextColor(m_activity.getResources().getColor(R.color.red));
         m_navigationManager = NavigationManager.getInstance();
         m_navigationManager.setMap(m_map);
+        mapSchemeChanger = new MapSchemeChanger(m_map, m_navigationManager);
         addNavigationListeners();
     }
 
     private void resetMap() {
+        mapSchemeChanger = new MapSchemeChanger(m_map);
         if (searchResultSnackbar != null) {
             searchResultSnackbar.dismiss();
         }
@@ -1825,11 +1838,6 @@ class MapFragmentView {
         m_naviControlButton.setText("Create Route");
         m_route = null;
         switchGuidanceUiPresenters(false);
-        if (m_map.isTrafficInfoVisible()) {
-            m_map.setMapScheme(Map.Scheme.NORMAL_TRAFFIC_DAY);
-        } else {
-            m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
-        }
 
         new ShiftMapCenter(m_map, 0.5f, 0.6f);
 

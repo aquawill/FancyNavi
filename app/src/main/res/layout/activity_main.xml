@@ -77,7 +77,6 @@
             android:layout_marginTop="8dp"
             android:background="@null"
             android:elevation="2dp"
-            android:foreground="@drawable/compass"
             android:shadowColor="#00FFFFFF"
             android:stateListAnimator="@null"
             android:visibility="visible"
@@ -100,15 +99,28 @@
 
         <Button
             android:id="@+id/traffic_button"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:layout_marginEnd="8dp"
             android:layout_marginBottom="8dp"
             android:background="#FFFFFFFF"
             android:elevation="2dp"
             android:foreground="@drawable/ic_congestion"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintBottom_toTopOf="@id/sat_map_button"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
+            android:id="@+id/sat_map_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:background="#FFFFFFFF"
+            android:elevation="2dp"
+            android:foreground="@drawable/ic_satellite"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
@@ -327,6 +339,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:text=" GPS "
+            android:textColor="@color/dim_gray"
             android:textOff="GPS Off"
             android:textOn="GPS On"
             app:layout_constraintBottom_toBottomOf="@+id/gps_status_image_view"
@@ -379,12 +392,12 @@
             android:layout_width="80dp"
             android:layout_height="wrap_content"
             android:layout_margin="4dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
             android:paddingStart="8dp"
             android:paddingBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/gps_switch" />
+            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintEnd_toStartOf="@+id/traffic_button" />
 
         <Button
             android:id="@+id/search_button"

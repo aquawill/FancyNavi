@@ -27,6 +27,7 @@ public class MapScaleView extends View implements Map.OnTransformListener {
     private final Rect[] rulerRects = {new Rect(), new Rect(), new Rect()};
     private String m_text = "NaN";
     private Map m_map;
+    private int color = Color.BLACK;
 
     public MapScaleView(Context context) {
         super(context);
@@ -38,6 +39,10 @@ public class MapScaleView extends View implements Map.OnTransformListener {
 
     public MapScaleView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
+    }
+
+    public void setColor(int color) {
+        this.color = color;
     }
 
     public void setMap(Map map) {
@@ -71,6 +76,7 @@ public class MapScaleView extends View implements Map.OnTransformListener {
                 TypedValue.COMPLEX_UNIT_IN, VIEW_HEIGHT_INCH, getResources().getDisplayMetrics());
 
         painter.setTextSize(desiredHeight / 3);
+        painter.setColor(color);
 
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         int widthSize = MeasureSpec.getSize(widthMeasureSpec);
@@ -106,7 +112,7 @@ public class MapScaleView extends View implements Map.OnTransformListener {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        painter.setColor(Color.BLACK);
+        painter.setColor(color);
         for (Rect r : rulerRects) {
             canvas.drawRect(r, painter);
         }
