@@ -12,6 +12,7 @@ import android.graphics.PointF;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -113,6 +114,7 @@ import java.util.List;
 
 import static com.fancynavi.app.MainActivity.isMapRotating;
 import static com.fancynavi.app.MainActivity.lightSensorValue;
+import static com.fancynavi.app.MainActivity.textToSpeech;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
 //import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
@@ -659,7 +661,6 @@ class MapFragmentView {
                 safetyCameraMapMarker.setIcon(icon);
                 safetyCameraMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(safetyCameraMapMarker));
                 m_map.addMapObject(safetyCameraMapMarker);
-
                 distanceToSafetyCamera = safetySpotInfo.getDistance();
                 safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
                 Log.d("Test", "safetyCameraSpeedLimit = " + safetyCameraSpeedLimit);
@@ -670,7 +671,7 @@ class MapFragmentView {
                 } else {
                     safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                 }
-
+                textToSpeech.speak("前方有測速照相，速限：" + safetyCameraSpeedLimitKM + "公里", TextToSpeech.QUEUE_FLUSH, null);
                 safetyCameraAhead = true;
             }
         }
@@ -682,41 +683,43 @@ class MapFragmentView {
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
             geoPositionGeoCoordinateOnGround.setAltitude(0);
-            RoadElement roadElement = m_positioningManager.getRoadElement();
-            List<GeoCoordinate> geoCoordinateList = roadElement.getGeometry();
-            if (!roadElement.equals(lastRoadElement)) {
-                List<TrafficSign> targetTrafficSignList = new ArrayList<>();
-                GeoCoordinate trafficSignGeoCoordinate = null;
-                try {
-                    List<TrafficSign> trafficSignList = roadElement.getTrafficSigns();
-                    for (TrafficSign trafficSign : trafficSignList) {
-                        double distanceToSign = geoCoordinateList.get(0).distanceTo(trafficSign.coordinate);
-                        if (distanceToSign > 0 && !lastTrafficSignList.equals(trafficSignList)) {
-                            targetTrafficSignList.add(trafficSign);
-                            trafficSignGeoCoordinate = trafficSign.coordinate;
+            if (m_positioningManager.getRoadElement() != null) {
+                RoadElement roadElement = m_positioningManager.getRoadElement();
+                List<GeoCoordinate> geoCoordinateList = roadElement.getGeometry();
+                if (!roadElement.equals(lastRoadElement)) {
+                    List<TrafficSign> targetTrafficSignList = new ArrayList<>();
+                    GeoCoordinate trafficSignGeoCoordinate = null;
+                    try {
+                        List<TrafficSign> trafficSignList = roadElement.getTrafficSigns();
+                        for (TrafficSign trafficSign : trafficSignList) {
+                            double distanceToSign = geoCoordinateList.get(0).distanceTo(trafficSign.coordinate);
+                            if (distanceToSign > 0 && !lastTrafficSignList.equals(trafficSignList)) {
+                                targetTrafficSignList.add(trafficSign);
+                                trafficSignGeoCoordinate = trafficSign.coordinate;
+                            }
+                        }
+                        lastTrafficSignList = targetTrafficSignList;
+                    } catch (DataNotReadyException e) {
+                        e.printStackTrace();
+                    }
+                    if (trafficSignGeoCoordinate != null && lastKnownLocation != null) {
+                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
+                            isSignShowing = false;
+                            TrafficSignPresenter trafficSignPresenter = new TrafficSignPresenter();
+                            trafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
+                            trafficSignPresenter.showTrafficSigns(targetTrafficSignList, m_activity);
                         }
                     }
-                    lastTrafficSignList = targetTrafficSignList;
-                } catch (DataNotReadyException e) {
-                    e.printStackTrace();
-                }
-                if (trafficSignGeoCoordinate != null && lastKnownLocation != null) {
-                    if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
-                        isSignShowing = false;
-                        TrafficSignPresenter trafficSignPresenter = new TrafficSignPresenter();
-                        trafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
-                        trafficSignPresenter.showTrafficSigns(targetTrafficSignList, m_activity);
+                    if (!isNavigating && m_map.getZoomLevel() >= 17) {
+                        positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
+                        float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
+                        if (radius > 0) {
+                            positionAccuracyMapCircle.setRadius(radius);
+                        }
                     }
                 }
-                if (!isNavigating && m_map.getZoomLevel() >= 17) {
-                    positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
-                    float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
-                    if (radius > 0) {
-                        positionAccuracyMapCircle.setRadius(radius);
-                    }
-                }
+                lastRoadElement = roadElement;
             }
-            lastRoadElement = roadElement;
 
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
             if (locationMethod.equals(PositioningManager.LocationMethod.GPS)) {
@@ -1246,7 +1249,6 @@ class MapFragmentView {
         EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
                 NavigationManager.AudioEvent.MANEUVER,
                 NavigationManager.AudioEvent.ROUTE,
-                NavigationManager.AudioEvent.SAFETY_SPOT,
                 NavigationManager.AudioEvent.SPEED_LIMIT,
                 NavigationManager.AudioEvent.GPS
         );

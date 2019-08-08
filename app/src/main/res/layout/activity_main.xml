@@ -86,17 +86,17 @@
 
         <Button
             android:id="@+id/log_button"
-            android:layout_width="30dp"
-            android:layout_height="30dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
             android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
             android:background="@drawable/ic_fiber_manual_record_dark_grey_24dp"
             android:elevation="2dp"
             android:text="R"
             android:textColor="@color/lui_white"
             android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="@+id/gps_switch"
-            app:layout_constraintStart_toEndOf="@+id/gps_switch"
-            app:layout_constraintTop_toTopOf="@+id/gps_switch" />
+            app:layout_constraintBottom_toTopOf="@+id/gps_status_image_view"
+            app:layout_constraintStart_toStartOf="@+id/mapFragmentView" />
 
         <Button
             android:id="@+id/traffic_button"
@@ -384,7 +384,7 @@
             android:paddingStart="8dp"
             android:paddingBottom="8dp"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/log_button" />
+            app:layout_constraintStart_toEndOf="@+id/gps_switch" />
 
         <Button
             android:id="@+id/search_button"
