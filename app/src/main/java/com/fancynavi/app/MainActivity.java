@@ -308,19 +308,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         if (!MapFragmentView.isRoadView) {
-            new ShiftMapCenter(m_map, 0.5f, 0.8f);
-            m_map.setTilt(60);
-            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-            isRouteOverView = false;
-            if (laneMapOverlay != null) {
-                m_map.addMapOverlay(laneMapOverlay);
+            if (m_navigationManager != null) {
+                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+                new ShiftMapCenter(m_map, 0.5f, 0.8f);
+                m_map.setTilt(60);
+                isRouteOverView = false;
+                if (laneMapOverlay != null) {
+                    m_map.addMapOverlay(laneMapOverlay);
+                }
+                junctionViewImageView.setAlpha(1f);
+                signpostImageView.setAlpha(1f);
+                m_naviControlButton.setVisibility(View.GONE);
+                clearButton.setVisibility(View.GONE);
+                m_navigationManager.resume();
+                supportMapFragment.setOnTouchListener(mapOnTouchListener);
             }
-            junctionViewImageView.setAlpha(1f);
-            signpostImageView.setAlpha(1f);
-            m_naviControlButton.setVisibility(View.GONE);
-            clearButton.setVisibility(View.GONE);
-            m_navigationManager.resume();
-            supportMapFragment.setOnTouchListener(mapOnTouchListener);
         } else {
             MapFragmentView.isDragged = false;
         }
