@@ -36,7 +36,6 @@ import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
-import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.MapSettings;
@@ -194,7 +193,6 @@ class MapFragmentView {
     private MapMarker safetyCameraMapMarker;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
-    private GeoPolyline laneInformationOnRoad;
     private AppCompatActivity m_activity;
     private VoiceActivation voiceActivation;
     private Button zoomInButton;
@@ -1609,34 +1607,30 @@ class MapFragmentView {
                             pedsRouteButton.setAlpha(1.0f);
                         });
                         trafficButton = m_activity.findViewById(R.id.traffic_button);
-                        trafficButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+                        trafficButton.setBackgroundResource(R.drawable.round_button_off);
                         trafficButton.setOnClickListener(v -> {
                             if (!m_map.isTrafficInfoVisible()) {
                                 trafficEnabled = true;
                                 m_map.setTrafficInfoVisible(true);
-                                trafficButton.setBackgroundColor(Color.parseColor("#FF00FF00"));
+                                trafficButton.setBackgroundResource(R.drawable.round_button_on);
                             } else {
                                 trafficEnabled = false;
                                 m_map.setTrafficInfoVisible(false);
-                                trafficButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+                                trafficButton.setBackgroundResource(R.drawable.round_button_off);
                             }
                         });
                         satMapButton = m_activity.findViewById(R.id.sat_map_button);
-                        satMapButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
+                        satMapButton.setBackgroundResource(R.drawable.round_button_off);
                         satMapButton.setOnClickListener(v -> {
                             if (!isSatMap) {
                                 isSatMap = true;
-                                satMapButton.setBackgroundColor(Color.parseColor("#FF00FF00"));
-                                Log.d("test", "old: " + m_map.getMapScheme());
+                                satMapButton.setBackgroundResource(R.drawable.round_button_on);
                                 mapSchemeChanger.satMapOn();
-                                Log.d("test", "new: " + m_map.getMapScheme());
 
                             } else {
                                 isSatMap = false;
-                                satMapButton.setBackgroundColor(Color.parseColor("#FFFFFFFF"));
-                                Log.d("test", "old: " + m_map.getMapScheme());
+                                satMapButton.setBackgroundResource(R.drawable.round_button_off);
                                 mapSchemeChanger.satMapOff();
-                                Log.d("test", "new: " + m_map.getMapScheme());
                             }
                         });
                         searchButton = m_activity.findViewById(R.id.search_button);
