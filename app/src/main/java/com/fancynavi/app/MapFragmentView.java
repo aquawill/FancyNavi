@@ -488,44 +488,7 @@ class MapFragmentView {
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
             m_navigationManager.removeLaneInformationListener(m_LaneInformationListener);
-//            Snackbar snackbarForSearchParking = Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), navigationMode + " was ended", Snackbar.LENGTH_LONG);
-//            snackbarForSearchParking.setAction("Find Parking!", new View.OnClickListener() {
-//                @Override
-//                public void onClick(View v) {
-//                    placeSearchResultIcons.clear();
-//                    resetMap();
-//                    /* Places search request */
-//                    SearchRequest request = new SearchRequest("parking-facility");
-//                    request.setSearchArea(m_positioningManager.getPosition().getCoordinate(), 2000);
-//                    request.setCollectionSize(10);
-//                    ErrorCode error = request.execute(new ResultListener<DiscoveryResultPage>() {
-//                        @Override
-//                        public void onCompleted(DiscoveryResultPage discoveryResultPage, ErrorCode errorCode) {
-//                            List<PlaceLink> discoveryResultPlaceLink = discoveryResultPage.getPlaceLinks();
-//                            for (PlaceLink placeLink : discoveryResultPlaceLink) {
-//                                Log.d("Test", placeLink.getTitle());
-////                                placeResultGeoBoundingBox.merge(placeLink.getBoundingBox());
-//                                MapMarker placeSearchResultMapMarker = new MapMarker(placeLink.getPosition());
-//                                placeSearchResultMapMarker.setTitle(placeLink.getTitle());
-//                                placeSearchResultMapMarker.setDescription(placeLink.getId());
-//                                Image icon = new Image();
-//                                icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(m_activity, R.drawable.ic_parking, 64, 64));
-//                                placeSearchResultMapMarker.setIcon(icon);
-////                                placeSearchResultMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(placeSearchResultMapMarker));
-////                                m_map.addMapObject(placeSearchResultMapMarker);
-////
-//                                placeSearchResultIcons.add(placeSearchResultMapMarker);
-//                            }
-//                            for (MapMarker mapMarker : placeSearchResultIcons) {
-//                                m_map.addMapObject(mapMarker);
-//                            }
-//                            clearButton.setVisibility(View.VISIBLE);
-//                        }
-//                    });
-//                }
-//            });
-//            snackbarForSearchParking.setDuration(30000);
-//            snackbarForSearchParking.show();
+            mapSchemeChanger.navigationMapOff();
             isNavigating = false;
             isRoadView = false;
             isRouteOverView = true;
@@ -1612,10 +1575,12 @@ class MapFragmentView {
                             if (!m_map.isTrafficInfoVisible()) {
                                 trafficEnabled = true;
                                 m_map.setTrafficInfoVisible(true);
+                                mapSchemeChanger.trafficMapOn();
                                 trafficButton.setBackgroundResource(R.drawable.round_button_on);
                             } else {
                                 trafficEnabled = false;
                                 m_map.setTrafficInfoVisible(false);
+                                mapSchemeChanger.trafficMapOff();
                                 trafficButton.setBackgroundResource(R.drawable.round_button_off);
                             }
                         });
@@ -1625,12 +1590,12 @@ class MapFragmentView {
                             if (!isSatMap) {
                                 isSatMap = true;
                                 satMapButton.setBackgroundResource(R.drawable.round_button_on);
-                                mapSchemeChanger.satMapOn();
+                                mapSchemeChanger.satelliteMapOn();
 
                             } else {
                                 isSatMap = false;
                                 satMapButton.setBackgroundResource(R.drawable.round_button_off);
-                                mapSchemeChanger.satMapOff();
+                                mapSchemeChanger.satelliteMapOff();
                             }
                         });
                         searchButton = m_activity.findViewById(R.id.search_button);
@@ -1763,6 +1728,7 @@ class MapFragmentView {
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.startNavigation(m_route);
+                mapSchemeChanger.navigationMapOn();
                 m_naviControlButton.setVisibility(View.GONE);
                 clearButton.setVisibility(View.GONE);
                 Log.e("Error: ", error.toString());
@@ -1778,6 +1744,7 @@ class MapFragmentView {
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
+                mapSchemeChanger.navigationMapOn();
 //                ElectronicHorizonActivation electronicHorizonActivation = new ElectronicHorizonActivation();
 //                electronicHorizonActivation.setRoute(m_route);
                 m_naviControlButton.setVisibility(View.GONE);
@@ -1797,6 +1764,7 @@ class MapFragmentView {
 
     private void resetMap() {
         mapSchemeChanger = new MapSchemeChanger(m_map);
+        mapSchemeChanger.navigationMapOff();
         if (searchResultSnackbar != null) {
             searchResultSnackbar.dismiss();
         }

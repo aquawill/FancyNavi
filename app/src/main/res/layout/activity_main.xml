@@ -173,8 +173,7 @@
                 android:foreground="@drawable/ic_add_circle_white_24dp"
 
                 android:foregroundTint="#FF999999"
-                android:padding="2dp"
-                android:textSize="24sp" />
+                android:paddingBottom="4dp" />
 
             <Button
                 android:id="@+id/zoom_out"
@@ -184,7 +183,7 @@
                 android:background="#00000000"
                 android:foreground="@drawable/ic_remove_circle_white_24dp"
                 android:foregroundTint="#FF999999"
-                android:padding="2dp"
+                android:paddingTop="4dp"
                 android:textSize="24sp" />
         </LinearLayout>
 

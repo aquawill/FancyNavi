@@ -105,8 +105,10 @@ class VoiceActivation {
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
 //                    localInstalledSkins.clear();
                     Log.d("Test", "# of local skins: " + localInstalledSkins.size());
+                    String languageName = "";
                     for (VoiceSkin voice : localInstalledSkins) {
                         Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+                        languageName = voice.getLanguage();
                         if (voice.getId() == desiredVoiceId) {
                             localVoiceSkinExisted[0] = true;
                         }
@@ -115,7 +117,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), desiredLangCode + " voice activated", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice activated: " + languageName, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
