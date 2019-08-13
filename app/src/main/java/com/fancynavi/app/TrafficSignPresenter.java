@@ -42,7 +42,7 @@ class TrafficSignPresenter {
 
         int numberOfTrafficSigns = trafficSigns.size();
         int i = 0;
-        String signName = "";
+        String signName = "注意。";
         ImageView targetSignImageView = null;
         while (i < numberOfTrafficSigns) {
             TrafficSign trafficSign = trafficSigns.get(i);

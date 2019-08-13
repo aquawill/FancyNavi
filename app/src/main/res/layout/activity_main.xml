@@ -75,7 +75,7 @@
             android:layout_height="50dp"
             android:layout_marginStart="8dp"
             android:layout_marginTop="8dp"
-            android:background="@null"
+            android:background="@drawable/compass_bright"
             android:elevation="2dp"
             android:shadowColor="#00FFFFFF"
             android:stateListAnimator="@null"
@@ -166,24 +166,22 @@
 
             <Button
                 android:id="@+id/zoom_in"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginBottom="4dp"
                 android:layout_weight="1"
                 android:background="#00000000"
-                android:foreground="@drawable/ic_add_circle_white_24dp"
-
-                android:foregroundTint="#FF999999"
+                android:foreground="@drawable/ic_plus"
                 android:paddingBottom="4dp" />
 
             <Button
                 android:id="@+id/zoom_out"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginTop="4dp"
                 android:layout_weight="1"
                 android:background="#00000000"
-                android:foreground="@drawable/ic_remove_circle_white_24dp"
-                android:foregroundTint="#FF999999"
-                android:paddingTop="4dp"
+                android:foreground="@drawable/ic_minus"
                 android:textSize="24sp" />
         </LinearLayout>
 

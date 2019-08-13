@@ -50,6 +50,8 @@ import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.SafetySpotNotification;
 import com.here.android.mpa.guidance.SafetySpotNotificationInfo;
 import com.here.android.mpa.guidance.TrafficNotification;
+import com.here.android.mpa.guidance.TrafficNotificationInfo;
+import com.here.android.mpa.guidance.TrafficWarner;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceGuidanceOptions;
 import com.here.android.mpa.mapping.LocalMesh;
@@ -67,6 +69,7 @@ import com.here.android.mpa.mapping.MapState;
 import com.here.android.mpa.mapping.OnMapRenderListener;
 import com.here.android.mpa.mapping.SafetySpotObject;
 import com.here.android.mpa.mapping.SupportMapFragment;
+import com.here.android.mpa.mapping.TrafficEvent;
 import com.here.android.mpa.mapping.TrafficEventObject;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.routing.CoreRouter;
@@ -164,6 +167,7 @@ class MapFragmentView {
             return false;
         }
     };
+    private TrafficWarner trafficWarner;
     private boolean isPositionLogging = false;
     private MapSchemeChanger mapSchemeChanger;
     private LinearLayout laneDcmLinearLayout;
@@ -503,7 +507,7 @@ class MapFragmentView {
 
         @Override
         public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-            Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
+//            Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
         }
 
         @Override
@@ -516,11 +520,42 @@ class MapFragmentView {
         }
     };
     /* Navigation Listeners */
+    private TrafficWarner.Listener trafficWarnerListener = new TrafficWarner.Listener() {
+        @Override
+        public void onTraffic(TrafficNotification trafficNotification) {
+            Log.d("Test", "trafficWarner.isAhead(): " + trafficWarner.isAhead(trafficNotification));
+            List<TrafficNotificationInfo> trafficNotificationInfoList = trafficNotification.getInfoList();
+            for (TrafficNotificationInfo trafficNotificationInfo : trafficNotificationInfoList) {
+                TrafficNotificationInfo.Type trafficNotificationInfoType = trafficNotificationInfo.getType();
+                TrafficEvent.Severity trafficEventSeverity = trafficNotificationInfo.getSeverity();
+                if (trafficEventSeverity == TrafficEvent.Severity.VERY_HIGH || trafficEventSeverity == TrafficEvent.Severity.BLOCKING) {
+                    long trafficNotificationInfoDistance = trafficNotificationInfo.getDistanceInMeters();
+                    if (trafficNotificationInfoDistance < 1000 && trafficNotificationInfoDistance > 0) {
+                        switch (trafficNotificationInfoType) {
+                            case ON_ROUTE:
+                                textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                break;
+                            case ON_HIGHWAY:
+                                textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                break;
+                            case NEAR_DESTINATION:
+                                textToSpeech.speak("目的地附近為壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                break;
+                        }
+                    }
+                }
+
+
+            }
+        }
+    };
+
     private NavigationManager.TrafficRerouteListener m_trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
             resetMapRoute(routeResult.getRoute());
+            Log.d("test", "traffic rerouted.");
         }
 
         @Override
@@ -624,8 +659,8 @@ class MapFragmentView {
                 m_map.addMapObject(safetyCameraMapMarker);
                 distanceToSafetyCamera = safetySpotInfo.getDistance();
                 safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
-                Log.d("Test", "safetyCameraSpeedLimit = " + safetyCameraSpeedLimit);
-                Log.d("Test", "safetyCameraSpeedLimit * 3.6) % 5 = " + (safetyCameraSpeedLimit * 3.6) % 5);
+//                Log.d("Test", "safetyCameraSpeedLimit = " + safetyCameraSpeedLimit);
+//                Log.d("Test", "safetyCameraSpeedLimit * 3.6) % 5 = " + (safetyCameraSpeedLimit * 3.6) % 5);
 
                 if (safetyCameraSpeedLimit * 3.6 % 10 >= 8 || safetyCameraSpeedLimit * 3.6 % 10 <= 2) {
                     safetyCameraSpeedLimitKM = (int) ((Math.round((safetyCameraSpeedLimit * 3.6) / 10)) * 10);
@@ -766,9 +801,9 @@ class MapFragmentView {
 
         @Override
         public boolean onMapObjectsSelected(List<ViewObject> list) {
-            Log.d("Test", "onMapObjectsSelected: " + list.size());
+//            Log.d("Test", "onMapObjectsSelected: " + list.size());
             for (ViewObject viewObject : list) {
-                Log.d("Test", "viewObject: " + viewObject.getClass().getName());
+//                Log.d("Test", "viewObject: " + viewObject.getClass().getName());
                 if (viewObject.getBaseType() == ViewObject.Type.USER_OBJECT) {
                     if (viewObject.equals(currentPositionMapLocalModel)) {
                         isMapRotating = !isMapRotating;
@@ -882,7 +917,7 @@ class MapFragmentView {
             RouteOptions.TransportMode transportMode = routePlan.getRouteOptions().getTransportMode();
             routePlan.removeAllWaypoints();
             for (MapMarker waypointMapMarker : wayPointIcons) {
-                Log.d("test", "mapMarkerIndex: " + waypointMapMarker.getTitle() + " getCoordinate: " + mapMarker.getCoordinate());
+//                Log.d("test", "mapMarkerIndex: " + waypointMapMarker.getTitle() + " getCoordinate: " + mapMarker.getCoordinate());
                 routePlan.addWaypoint(new RouteWaypoint(waypointMapMarker.getCoordinate()));
                 waypointList.add(waypointMapMarker.getCoordinate());
             }
@@ -925,7 +960,7 @@ class MapFragmentView {
         guidanceStreetLabelPresenter.addListener(new GuidanceStreetLabelListener() {
             @Override
             public void onDataChanged(GuidanceStreetLabelData guidanceStreetLabelData) {
-                Log.d("Test", guidanceStreetLabelData.getCurrentStreetName());
+//                Log.d("Test", guidanceStreetLabelData.getCurrentStreetName());
                 guidanceStreetLabelView.setCurrentStreetData(guidanceStreetLabelData);
             }
         });
@@ -1163,7 +1198,10 @@ class MapFragmentView {
 
     private void intoNavigationMode() {
         initJunctionView();
-
+        safetyCameraAhead = false;
+        safetyCamImageView.setVisibility(View.INVISIBLE);
+        safetyCamTextView.setVisibility(View.INVISIBLE);
+        safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
         zoomInButton.setVisibility(View.GONE);
         zoomOutButton.setVisibility(View.GONE);
 //        gpsStatusImageView.setVisibility(View.GONE);
@@ -1187,6 +1225,8 @@ class MapFragmentView {
                 NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
         );
         m_navigationManager.setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
+        m_navigationManager.setRouteRequestInterval(180);
+
         m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
         new ShiftMapCenter(m_map, 0.5f, 0.8f);
         //hudMapScheme(m_map);
@@ -1287,7 +1327,7 @@ class MapFragmentView {
             m.setAnchorPoint(getMapMarkerAnchorPoint(m));
             m_map.addMapObject(m);
         }
-        Log.d("Test", "wayPointIcons: " + wayPointIcons.size());
+//        Log.d("Test", "wayPointIcons: " + wayPointIcons.size());
 
 
         if (m_map.isTrafficInfoVisible()) {
@@ -1298,7 +1338,7 @@ class MapFragmentView {
 
         progressBar = m_activity.findViewById(R.id.progressBar);
         calculatingTextView = m_activity.findViewById(R.id.calculatingTextView);
-        Log.d("Test", "Route Calculation Started.");
+//        Log.d("Test", "Route Calculation Started.");
         coreRouter.calculateRoute(hereRouter.getRoutePlan(), new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
             public void onProgress(int i) {
@@ -1314,8 +1354,8 @@ class MapFragmentView {
 
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
-                Log.d("Test", "Route Calculation Ended.");
-                Log.d("Test", routingError.toString());
+//                Log.d("Test", "Route Calculation Ended.");
+//                Log.d("Test", routingError.toString());
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
@@ -1366,12 +1406,12 @@ class MapFragmentView {
             Bundle bundle = ai.metaData;
             intentName = bundle.getString("INTENT_NAME");
         } catch (PackageManager.NameNotFoundException e) {
-            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
+//            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
         }
 
 
         boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
-        Log.d("Test", "Clear " + diskCacheRoot);
+//        Log.d("Test", "Clear " + diskCacheRoot);
 
         /* Purge cache before start */
 //        File dir = new File(diskCacheRoot);
@@ -1440,7 +1480,7 @@ class MapFragmentView {
                                 } else {
                                     new ShiftMapCenter(m_map, 0.5f, 0.8f);
                                 }
-                                Log.d("test", "isRouteOverView " + isRouteOverView);
+//                                Log.d("test", "isRouteOverView " + isRouteOverView);
 
                                 if (isRouteOverView) {
                                     m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
@@ -1728,6 +1768,9 @@ class MapFragmentView {
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.startNavigation(m_route);
+                trafficWarner = m_navigationManager.getTrafficWarner();
+                trafficWarner.init();
+                trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
                 mapSchemeChanger.navigationMapOn();
                 m_naviControlButton.setVisibility(View.GONE);
                 clearButton.setVisibility(View.GONE);
@@ -1744,6 +1787,9 @@ class MapFragmentView {
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
+                trafficWarner = m_navigationManager.getTrafficWarner();
+                trafficWarner.init();
+                trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
                 mapSchemeChanger.navigationMapOn();
 //                ElectronicHorizonActivation electronicHorizonActivation = new ElectronicHorizonActivation();
 //                electronicHorizonActivation.setRoute(m_route);
@@ -1764,6 +1810,9 @@ class MapFragmentView {
 
     private void resetMap() {
         mapSchemeChanger = new MapSchemeChanger(m_map);
+        if (trafficWarner != null) {
+            trafficWarner.stop();
+        }
         mapSchemeChanger.navigationMapOff();
         if (searchResultSnackbar != null) {
             searchResultSnackbar.dismiss();
@@ -1891,7 +1940,7 @@ class MapFragmentView {
                     if (discoveryResultPage.getPlaceLinks().size() > 0) {
                         List<PlaceLink> discoveryResultPlaceLink = discoveryResultPage.getPlaceLinks();
                         for (PlaceLink placeLink : discoveryResultPlaceLink) {
-                            Log.d("Test", placeLink.getTitle());
+//                            Log.d("Test", placeLink.getTitle());
                             placesSearchResultTitle = placeLink.getTitle();
                             placesSearchCategoryName = placeLink.getCategory().getName();
                             GeoCoordinate placesSearchresultGeoCoordinate = placeLink.getPosition();
@@ -1924,7 +1973,7 @@ class MapFragmentView {
             }
             List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
             if (selectedMapObjects.size() > 0) {
-                Log.d("test", selectedMapObjects.get(0).getClass().getName());
+//                Log.d("test", selectedMapObjects.get(0).getClass().getName());
                 switch (selectedMapObjects.get(0).getClass().getName()) {
                     case "com.here.android.mpa.mapping.MapCartoMarker":
                         MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
