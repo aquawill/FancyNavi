@@ -578,7 +578,7 @@ class MapFragmentView {
         public void onRerouteBegin() {
             super.onRerouteBegin();
             safetyCameraAhead = false;
-            m_map.removeMapObject(safetyCameraMapMarker);
+            safetyCameraMapMarker.setTransparency(0);
             safetyCamImageView.setVisibility(View.INVISIBLE);
             safetyCamTextView.setVisibility(View.INVISIBLE);
             safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
@@ -647,7 +647,6 @@ class MapFragmentView {
             super.onSafetySpot(safetySpotNotification);
             List<SafetySpotNotificationInfo> safetySpotNotificationInfoList = safetySpotNotification.getSafetySpotNotificationInfos();
             for (int i = 0; i < safetySpotNotificationInfoList.size(); i++) {
-                safetyCameraMapMarker = new MapMarker();
                 SafetySpotNotificationInfo safetySpotInfo = safetySpotNotificationInfoList.get(i);
                 safetyCameraLocation = safetySpotInfo.getSafetySpot().getCoordinate();
                 /* Adding MapMarker to indicate selected safety camera */
@@ -656,12 +655,9 @@ class MapFragmentView {
                 icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(m_activity, R.drawable.ic_pin, 128, 128));
                 safetyCameraMapMarker.setIcon(icon);
                 safetyCameraMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(safetyCameraMapMarker));
-                m_map.addMapObject(safetyCameraMapMarker);
+                safetyCameraMapMarker.setTransparency(1);
                 distanceToSafetyCamera = safetySpotInfo.getDistance();
                 safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
-//                Log.d("Test", "safetyCameraSpeedLimit = " + safetyCameraSpeedLimit);
-//                Log.d("Test", "safetyCameraSpeedLimit * 3.6) % 5 = " + (safetyCameraSpeedLimit * 3.6) % 5);
-
                 if (safetyCameraSpeedLimit * 3.6 % 10 >= 8 || safetyCameraSpeedLimit * 3.6 % 10 <= 2) {
                     safetyCameraSpeedLimitKM = (int) ((Math.round((safetyCameraSpeedLimit * 3.6) / 10)) * 10);
                 } else {
@@ -747,7 +743,7 @@ class MapFragmentView {
                 distanceToSafetyCamera -= proceedingDistance;
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
-                    m_map.removeMapObject(safetyCameraMapMarker);
+                    safetyCameraMapMarker.setTransparency(0);
                     safetyCamImageView.setVisibility(View.INVISIBLE);
                     safetyCamTextView.setVisibility(View.INVISIBLE);
                     safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
@@ -1055,9 +1051,7 @@ class MapFragmentView {
 
     private void resetMapRoute(Route route) {
         safetyCameraAhead = false;
-        if (safetyCameraMapMarker != null) {
-            m_map.removeMapObject(safetyCameraMapMarker);
-        }
+        safetyCameraMapMarker.setTransparency(0);
         if (mapRoute != null) {
             m_map.removeMapObject(mapRoute);
         }
@@ -1717,8 +1711,6 @@ class MapFragmentView {
 
                         supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
 
-                        resetMap();
-
                         /* Download voice */
                         voiceActivation = new VoiceActivation(m_activity);
                         voiceActivation.setContext(m_activity);
@@ -1735,6 +1727,8 @@ class MapFragmentView {
                         positionAccuracyMapCircle.setLineColor(Color.argb(0, 0, 0, 0));
                         positionAccuracyMapCircle.setCenter(defaultMapCenter);
                         m_map.addMapObject(positionAccuracyMapCircle);
+                        safetyCameraMapMarker = new MapMarker();
+                        m_map.addMapObject(safetyCameraMapMarker);
                     } else {
                         Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
                     }
@@ -1809,6 +1803,7 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        safetyCameraMapMarker.setTransparency(0);
         mapSchemeChanger = new MapSchemeChanger(m_map);
         if (trafficWarner != null) {
             trafficWarner.stop();
