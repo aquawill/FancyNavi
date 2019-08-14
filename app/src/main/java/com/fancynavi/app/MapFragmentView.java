@@ -45,6 +45,10 @@ import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.common.TrafficSign;
 import com.here.android.mpa.common.ViewObject;
+import com.here.android.mpa.customlocation2.CLE2Geometry;
+import com.here.android.mpa.customlocation2.CLE2ProximityRequest;
+import com.here.android.mpa.customlocation2.CLE2Request;
+import com.here.android.mpa.customlocation2.CLE2Result;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.SafetySpotNotification;
@@ -167,6 +171,7 @@ class MapFragmentView {
             return false;
         }
     };
+    CLE2ProximityRequest cle2ProximityRequest;
     private TrafficWarner trafficWarner;
     private boolean isPositionLogging = false;
     private MapSchemeChanger mapSchemeChanger;
@@ -675,9 +680,52 @@ class MapFragmentView {
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
             geoPositionGeoCoordinateOnGround.setAltitude(0);
+
+            if (!isNavigating && m_map.getZoomLevel() >= 17) {
+                positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
+                float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
+                if (radius > 0) {
+                    positionAccuracyMapCircle.setRadius(radius);
+                }
+            }
+
             if (m_positioningManager.getRoadElement() != null) {
                 RoadElement roadElement = m_positioningManager.getRoadElement();
                 List<GeoCoordinate> geoCoordinateList = roadElement.getGeometry();
+
+                RoadElement.FormOfWay formOfWay = roadElement.getFormOfWay();
+                if (isNavigating) {
+                    if (formOfWay == RoadElement.FormOfWay.MOTORWAY) {
+                        String routeName = roadElement.getRouteName();
+                        String layerId = "TWN_FREEWAYS_MILAGE";
+                        int radius = 15;
+                        cle2ProximityRequest = new CLE2ProximityRequest(layerId, geoPositionGeoCoordinateOnGround, radius);
+                        cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
+                            @Override
+                            public void onCompleted(CLE2Result result, String error) {
+                                if (error.equals(CLE2Request.CLE2Error.NONE)) {
+                                    List<CLE2Geometry> geometries = result.getGeometries();
+                                    if (geometries.size() > 0) {
+                                        CLE2Geometry geometry = geometries.get(0);
+                                        java.util.Map<String, String> attributeMap = geometry.getAttributes();
+                                        String markerId = attributeMap.get("MARKER_ID");
+                                        String freewayId = attributeMap.get("FREE_WAY_ID");
+                                        if (routeName.equals(freewayId)) {
+                                            Log.d("test", markerId);
+                                        }
+                                    }
+
+                                } else {
+                                    Log.d("test", "CLE2Result: " + error);
+
+                                }
+                            }
+                        });
+                    }
+                }
+
+
+                /* Traffic Sign display*/
                 if (!roadElement.equals(lastRoadElement)) {
                     List<TrafficSign> targetTrafficSignList = new ArrayList<>();
                     GeoCoordinate trafficSignGeoCoordinate = null;
@@ -702,13 +750,7 @@ class MapFragmentView {
                             trafficSignPresenter.showTrafficSigns(targetTrafficSignList, m_activity);
                         }
                     }
-                    if (!isNavigating && m_map.getZoomLevel() >= 17) {
-                        positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
-                        float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
-                        if (radius > 0) {
-                            positionAccuracyMapCircle.setRadius(radius);
-                        }
-                    }
+
                 }
                 lastRoadElement = roadElement;
             }

@@ -53,13 +53,13 @@ Developers should put application credentials here.To obtain them, please regist
         -->
         <meta-data
             android:name="com.here.android.maps.appid"
-            android:value="nvAyScuaUcvPRYibjqNe" />
+            android:value="MdgrnOU2OsdYuPbPNz2t" />
         <meta-data
             android:name="com.here.android.maps.apptoken"
-            android:value="jO-1TVGxGG3X-wZahIVA-g" />
+            android:value="jeXznopbGvE8KRhVK3wkMw" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="cQPqCvFeFtoZvO8oQeBSxsn6Gwvk3AzecGCtmRw/vJ+9ACz9xs8c7d0Ba4rJ+TRkUQMA5/3ZtEUUvQi/hk5uA3op1UpZAbnn9wru6zAwL2+/ovTOL4mmM8EQFK3G4vji3S48nJgR/khqJndAYX8wEWjN2rTyCezn1jidJvf2no2/wDZJe9nUgMJKhiEgYHX0X8XyqC+Vgxme+IjHurrofoePAqDHqmKoVPJURhaN5EZs+8p74ngw2Uf7HbmQdMgTn1auDRU4AL8vq5wHJ5y/RDFebfASSBPcVYoXHmpFOAbY8jeS0niSqwxKvnjuTkGIGi8/m7rvbJL2dzbw0XpNPmTalO8ALhvnaPIZqBUMpMG7L2hRBWyrq6x4xtEFzkuOLgZV9mQAESxxqs/mbtxzLsxx1dpgwC1+Vqz/NzoTG1kwYuVBKKiVUGCrq/LS0gDj0J2Lykz6iDPejoW+4TR8Fhh1b8HDWZGy4zZNRyopk+007SZpje8sWMquTeUAnUyX4JlVsJEX77ZlYhn6MYtFMiabgcRzzX8U/+TbJL7D/AsZ1mPrYkEGRg2txJ0vuJqsWLsVcgCU5Tq+d6o51FJKSYIo7YCejqMBnBs1IR+mmEowqRnLr/+i+5uqa7cJpM1VQd/RoqH1KvMh4dsoBmIsknWjeM4A5bTiskGEJ8+2b/E=" />
+            android:value="QHrZPQDBGGICPsPWcDNG4VRxjB0MU1wSpZeOsysfATTk/2ZFYo+suBCLtsUl+ICG4K6TTAY0vuLaaOnjNqxE2gKZiomogbZLS0iBo/7ZL706vX8joOY2DrlinsbBXDtUHHS6eJsBkvA0u5XtWCItVCbwzO9LKsVdWAqjdQf/wXh904Ee58KumbKZAqsrJ5rA/DM5UYdqi4LtHg83IkKGNm0if58HU/nomNDQjmI/Li4VNs/9JaS/BwEddMa+jjG+XoLARGgUTm3yIMLal/JGulqRwTldyKuIRaSAp4/QUK7bP4ZcBC5Arz5eVestMy4OO06duv7BmjMIZIiWMg6rRu0vXeTnvRjJ2gJzTuJJJJnm0Xt1UAiDwCUE9oy4zWb+xaDI1OE7ixh2GU65+tR26Qh0oQLH6IhK0U5aYkF59FP6rBsVlVIzgmD/n+kbwQcNgUTOnbqyzMLhEW9zY1zGpeibXW+ygrYriwFe4kpSAn6xakplbygVSJlV/ZCFONldtc5k26tMLbt393oUljB1BiTKoQiRY+vNTMpup6w6oc2Tx09csb++pdVt30XipVFZi38Mzg05QU+aMUguwrp9Zj+tpQaUCC5jFVcq3+Kmu0i1k9MTlwpWumuBzuXGZc0XHq3REedLTuJwDfIW7vN/5NNuCAa8QWBrMWmSS/A/V6U=" />
         <!--
 Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
         Do not reuse HERE SDK defaults.
