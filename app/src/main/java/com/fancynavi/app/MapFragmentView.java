@@ -698,20 +698,21 @@ class MapFragmentView {
             if (m_positioningManager.getRoadElement() != null) {
                 RoadElement roadElement = m_positioningManager.getRoadElement();
                 List<GeoCoordinate> geoCoordinateList = roadElement.getGeometry();
-
                 RoadElement.FormOfWay formOfWay = roadElement.getFormOfWay();
+                String routeName = roadElement.getRouteName();
+                String roadName = roadElement.getRoadName();
+                Log.d("test", formOfWay + " \\ " + routeName + " \\ " + roadName);
                 if (isNavigating) {
-
-                    if (formOfWay == RoadElement.FormOfWay.MOTORWAY) {
-                        String routeName = roadElement.getRouteName();
+                    if (formOfWay == RoadElement.FormOfWay.MOTORWAY && routeName != null) {
                         String layerId = "TWN_HWAY_DIST_MARKER";
-                        int radius = 100;
+                        int radius = 150;
                         cle2ProximityRequest = new CLE2ProximityRequest(layerId, geoPositionGeoCoordinateOnGround, radius);
                         cle2ProximityRequest.setConnectivityMode(CLE2Request.CLE2ConnectivityMode.AUTO);
                         cle2ProximityRequest.setCachingEnabled(true);
                         cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
                             @Override
                             public void onCompleted(CLE2Result result, String error) {
+                                /*Display mileage and route number on the upper right corner*/
                                 if (error.equals(CLE2Request.CLE2Error.NONE)) {
                                     List<CLE2Geometry> geometries = result.getGeometries();
                                     if (geometries.size() > 0) {
@@ -719,7 +720,10 @@ class MapFragmentView {
                                         java.util.Map<String, String> geometryAttributeMap = geometry.getAttributes();
                                         String distanceValue = geometryAttributeMap.get("DISTANCE_VALUE");
                                         String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
-                                        if (routeName.equals(freeWayId)) {
+                                        Log.d("test", routeName + " \\ " + freeWayId + " \\ " + distanceValue);
+                                        Log.d("test", "routeName.equals(freeWayId) " + (routeName.equals(freeWayId)));
+                                        if (routeName.equals(freeWayId) && !isRouteOverView) {
+                                            distanceMarkerLinearLayout.setVisibility(View.VISIBLE);
                                             switch (freeWayId) {
                                                 case "1":
                                                     distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_1);
@@ -733,10 +737,16 @@ class MapFragmentView {
                                                 case "2a":
                                                     distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_2a);
                                                     break;
+                                                case "2甲":
+                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_2a);
+                                                    break;
                                                 case "3":
                                                     distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_3);
                                                     break;
                                                 case "3a":
+                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_3a);
+                                                    break;
+                                                case "3甲":
                                                     distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_3a);
                                                     break;
                                                 case "4":
@@ -754,16 +764,15 @@ class MapFragmentView {
                                                 case "8":
                                                     distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_8);
                                                     break;
+                                                default:
+                                                    distanceMarkerLinearLayout.setVisibility(View.GONE);
                                             }
                                             distanceMarkerDistanceValue.setText(distanceValue);
-                                            if (!isRouteOverView) {
-                                                distanceMarkerLinearLayout.setVisibility(View.VISIBLE);
-                                            } else {
-                                                distanceMarkerLinearLayout.setVisibility(View.GONE);
-                                            }
                                         } else {
                                             distanceMarkerLinearLayout.setVisibility(View.GONE);
                                         }
+                                    } else {
+                                        distanceMarkerLinearLayout.setVisibility(View.GONE);
                                     }
                                 } else {
                                     distanceMarkerLinearLayout.setVisibility(View.GONE);
