@@ -1,9 +1,9 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
 
-public class GeoBoundingBoxDimensionCalculator {
+class GeoBoundingBoxDimensionCalculator {
 
     private GeoBoundingBox geoBoundingBox;
     private double bBoxHeightMeters;

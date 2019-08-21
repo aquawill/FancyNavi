@@ -1,11 +1,11 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 
-import static com.fancynavi.app.MapFragmentView.isNavigating;
+import static com.fancynavi.android.app.MapFragmentView.isNavigating;
 
-public class MapSchemeChanger {
+class MapSchemeChanger {
 
     private Map map;
     private NavigationManager navigationManager;

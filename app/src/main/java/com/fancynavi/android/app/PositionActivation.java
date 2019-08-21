@@ -1,14 +1,14 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.os.Build;
 
 import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.PositioningManager;
 
-public class PositionActivation {
+class PositionActivation {
     PositioningManager m_positioningManager;
 
-    public PositionActivation(PositioningManager.LocationMethod locationMethod) {
+    PositionActivation(PositioningManager.LocationMethod locationMethod) {
         /* PositioningManager init */
         m_positioningManager = PositioningManager.getInstance();
 
@@ -25,7 +25,7 @@ public class PositionActivation {
         }
     }
 
-    public PositioningManager getPositioningManager() {
+    PositioningManager getPositioningManager() {
         return m_positioningManager;
     }
 }

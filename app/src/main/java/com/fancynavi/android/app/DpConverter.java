@@ -1,16 +1,16 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
 
-public class DpConverter {
+class DpConverter {
 
-    public static float convertDpToPixel(float dp, Context context) {
+    static float convertDpToPixel(float dp, Context context) {
         float px = dp * getDensity(context);
         return px;
     }
 
-    public static float convertPixelToDp(float px, Context context) {
+    static float convertPixelToDp(float px, Context context) {
         float dp = px / getDensity(context);
         return dp;
     }

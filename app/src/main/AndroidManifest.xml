@@ -38,7 +38,7 @@
             android:resource="@xml/network_security_config" />
 
         <activity
-            android:name=".MainActivity"
+            android:name="com.fancynavi.android.app.MainActivity"
             android:configChanges="orientation|screenSize"
             android:screenOrientation="portrait">
             <intent-filter>
@@ -59,7 +59,7 @@ Developers should put application credentials here.To obtain them, please regist
             android:value="jeXznopbGvE8KRhVK3wkMw" />
         <meta-data
             android:name="com.here.android.maps.license.key"
-            android:value="QHrZPQDBGGICPsPWcDNG4VRxjB0MU1wSpZeOsysfATTk/2ZFYo+suBCLtsUl+ICG4K6TTAY0vuLaaOnjNqxE2gKZiomogbZLS0iBo/7ZL706vX8joOY2DrlinsbBXDtUHHS6eJsBkvA0u5XtWCItVCbwzO9LKsVdWAqjdQf/wXh904Ee58KumbKZAqsrJ5rA/DM5UYdqi4LtHg83IkKGNm0if58HU/nomNDQjmI/Li4VNs/9JaS/BwEddMa+jjG+XoLARGgUTm3yIMLal/JGulqRwTldyKuIRaSAp4/QUK7bP4ZcBC5Arz5eVestMy4OO06duv7BmjMIZIiWMg6rRu0vXeTnvRjJ2gJzTuJJJJnm0Xt1UAiDwCUE9oy4zWb+xaDI1OE7ixh2GU65+tR26Qh0oQLH6IhK0U5aYkF59FP6rBsVlVIzgmD/n+kbwQcNgUTOnbqyzMLhEW9zY1zGpeibXW+ygrYriwFe4kpSAn6xakplbygVSJlV/ZCFONldtc5k26tMLbt393oUljB1BiTKoQiRY+vNTMpup6w6oc2Tx09csb++pdVt30XipVFZi38Mzg05QU+aMUguwrp9Zj+tpQaUCC5jFVcq3+Kmu0i1k9MTlwpWumuBzuXGZc0XHq3REedLTuJwDfIW7vN/5NNuCAa8QWBrMWmSS/A/V6U=" />
+            android:value="UPTaWVOoRFajEFCEsbKeU90tlM+YxolaCWOX8pRWgNq9JVXegK83ohjN7ou/ix1kisqafUQ0/L1vTu0tXpN8V01n31OSmVp9ZWpWIILLc5sQTDKSewAMmmIoYAOd54Zf336wAuK9daZvrK3i4aDnHRrF0m81inch8cRxjTetOYWX4CFDyRXpsxbfvokFZTFoABIWs2GkBTBNXgwOS6o701o/5/ehvs9cjWttI/qSuUZAWD8wjEmtP0INaal6AlQpis5Bmm4cwl4z8qGM6gy2j+pZsEo9M41PAIgPwSDOgMdBqpUJwHjsN1uFEOCSYteAKBZXMX91JyPy670qc1jVBzv9EIDTnaleTr1xKJDDLhL7TmrJeXqMLiKPqjfcIXQhlwp4GIr5V4Hs9WF17aep49+YQgqr61WUZ5gPSGryeavV6zUMhZujZ9cXM0BPga+OHjuGgVk323XQBvOZhV9LQVx3FDpNbMk0NO4GhUfnQMxWKdVYygEN8EAUJw8e6gxDAMgxGy33wIWvKhZG1PTf/3DR/vyo1ywEQKftrdXCruf4mSVtzIB8DnPJvZ4vamxbf9vZQoT4DZbTYZxWiDlqws82GRQq687rek/mosA1Uq0nUgPMT4y9PpePuXQ78zVY3ttKF0wWpzh6jMSa6buBeKr/hszJlbqersym64V6cSU=" />
         <!--
 Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
         Do not reuse HERE SDK defaults.
@@ -82,7 +82,7 @@ Developers should always provide custom values for each of {YOUR_LABEL_NAME} and
             android:enabled="true"
             android:exported="false"
             android:process=":remote"></service>
-        <service android:name=".ForegroundService" />
+        <service android:name="com.fancynavi.android.app.ForegroundService" />
     </application>
 
 </manifest>

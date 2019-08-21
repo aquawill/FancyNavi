@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
@@ -32,6 +33,7 @@ import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.fancynavi.app.R;
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -45,6 +47,7 @@ import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.common.TrafficSign;
 import com.here.android.mpa.common.ViewObject;
+import com.here.android.mpa.customlocation2.CLE2DataManager;
 import com.here.android.mpa.customlocation2.CLE2Geometry;
 import com.here.android.mpa.customlocation2.CLE2ProximityRequest;
 import com.here.android.mpa.customlocation2.CLE2Request;
@@ -117,8 +120,8 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
-import static com.fancynavi.app.MainActivity.isMapRotating;
-import static com.fancynavi.app.MainActivity.textToSpeech;
+import static com.fancynavi.android.app.MainActivity.isMapRotating;
+import static com.fancynavi.android.app.MainActivity.textToSpeech;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
 //import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
@@ -179,6 +182,7 @@ class MapFragmentView {
     private boolean isPositionLogging = false;
     private MapSchemeChanger mapSchemeChanger;
     private LinearLayout laneDcmLinearLayout;
+    private LinearLayout safetyCamLinearLayout;
     private LinearLayout laneInfoLinearLayoutOverlay;
     private double distanceToSafetyCamera;
     private HereRouter hereRouter;
@@ -222,6 +226,7 @@ class MapFragmentView {
     private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView calculatingTextView;
+    private TextView trafficWarningTextView;
     private Route m_route;
     private MapRoute mapRoute;
     private boolean m_foregroundServiceStarted;
@@ -260,6 +265,16 @@ class MapFragmentView {
                 }
             } else {
                 lastKnownLocation = geoPosition.getCoordinate();
+                CLE2ProximityRequest cle2ProximityRequest = new CLE2ProximityRequest("TWN_HWAY_DIST_MARKER", geoPosition.getCoordinate(), 30000);
+                cle2ProximityRequest.setCachingEnabled(true);
+                cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
+                    @Override
+                    public void onCompleted(CLE2Result cle2Result, String s) {
+                        Log.d("Test", "cle2Result.getGeometries().size(): " + cle2Result.getGeometries().size());
+                        int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_DIST_MARKER");
+                        Log.d("Test", "CLE2ProximityRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
+                    }
+                });
             }
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
@@ -534,7 +549,7 @@ class MapFragmentView {
     private TrafficWarner.Listener trafficWarnerListener = new TrafficWarner.Listener() {
         @Override
         public void onTraffic(TrafficNotification trafficNotification) {
-            Log.d("Test", "trafficWarner.isAhead(): " + trafficWarner.isAhead(trafficNotification));
+            String warningText = "";
             List<TrafficNotificationInfo> trafficNotificationInfoList = trafficNotification.getInfoList();
             for (TrafficNotificationInfo trafficNotificationInfo : trafficNotificationInfoList) {
                 TrafficNotificationInfo.Type trafficNotificationInfoType = trafficNotificationInfo.getType();
@@ -544,15 +559,29 @@ class MapFragmentView {
                     if (trafficNotificationInfoDistance < 1000 && trafficNotificationInfoDistance > 0) {
                         switch (trafficNotificationInfoType) {
                             case ON_ROUTE:
-                                textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
+                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                } else {
+                                    warningText = "經過\n壅塞路段";
+                                    textToSpeech.speak("經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                }
                                 break;
                             case ON_HIGHWAY:
-                                textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
+                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                } else {
+                                    warningText = "經過\n壅塞路段";
+                                    textToSpeech.speak("經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                }
                                 break;
                             case NEAR_DESTINATION:
+                                warningText = "目的地\n附近壅塞";
                                 textToSpeech.speak("目的地附近為壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
                                 break;
                         }
+                        showTrafficWarningTextView(trafficWarningTextView, warningText);
                     }
                 }
 
@@ -560,11 +589,11 @@ class MapFragmentView {
             }
         }
     };
-
     private NavigationManager.TrafficRerouteListener m_trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
+            textToSpeech.speak("路徑已避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
             resetMapRoute(routeResult.getRoute());
             Log.d("test", "traffic rerouted.");
         }
@@ -582,6 +611,7 @@ class MapFragmentView {
         @Override
         public void onTrafficRerouteState(TrafficEnabledRoutingState trafficEnabledRoutingState) {
             super.onTrafficRerouteState(trafficEnabledRoutingState);
+
         }
     };
     private NavigationManager.RerouteListener m_rerouteListener = new NavigationManager.RerouteListener() {
@@ -590,9 +620,7 @@ class MapFragmentView {
             super.onRerouteBegin();
             safetyCameraAhead = false;
             safetyCameraMapMarker.setTransparency(0);
-            safetyCamImageView.setVisibility(View.INVISIBLE);
-            safetyCamTextView.setVisibility(View.INVISIBLE);
-            safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
+            safetyCamLinearLayout.setVisibility(View.GONE);
 //            gpsStatusImageView.setVisibility(View.VISIBLE);
         }
 
@@ -682,6 +710,7 @@ class MapFragmentView {
     private OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
+
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
@@ -712,9 +741,12 @@ class MapFragmentView {
                         cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
                             @Override
                             public void onCompleted(CLE2Result result, String error) {
+                                Log.d("test", "cle2ProximityRequest completed: " + result.getConnectivityModeUsed());
                                 /*Display mileage and route number on the upper right corner*/
                                 if (error.equals(CLE2Request.CLE2Error.NONE)) {
                                     List<CLE2Geometry> geometries = result.getGeometries();
+                                    Log.d("test", "geometries " + geometries.toString());
+
                                     if (geometries.size() > 0) {
                                         CLE2Geometry geometry = geometries.get(0);
                                         java.util.Map<String, String> geometryAttributeMap = geometry.getAttributes();
@@ -785,7 +817,6 @@ class MapFragmentView {
                     }
                 }
 
-
                 /* Traffic Sign display*/
                 if (!roadElement.equals(lastRoadElement)) {
                     List<TrafficSign> targetTrafficSignList = new ArrayList<>();
@@ -847,14 +878,10 @@ class MapFragmentView {
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
-                    safetyCamImageView.setVisibility(View.INVISIBLE);
-                    safetyCamTextView.setVisibility(View.INVISIBLE);
-                    safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
+                    safetyCamLinearLayout.setVisibility(View.GONE);
 //                    gpsStatusImageView.setVisibility(View.VISIBLE);
                 } else {
-                    safetyCamImageView.setVisibility(View.VISIBLE);
-                    safetyCamTextView.setVisibility(View.VISIBLE);
-                    safetyCamSpeedTextView.setVisibility(View.VISIBLE);
+                    safetyCamLinearLayout.setVisibility(View.VISIBLE);
                     safetyCamTextView.setText((int) distanceToSafetyCamera + "m");
                     safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
 //                    gpsStatusImageView.setVisibility(View.INVISIBLE);
@@ -1030,7 +1057,6 @@ class MapFragmentView {
 
         }
     };
-
     MapFragmentView(AppCompatActivity activity) {
         m_activity = activity;
         initSupportMapFragment();
@@ -1044,6 +1070,20 @@ class MapFragmentView {
 
     private static PointF getMapOverlayAnchorPoint(int width, int height) {
         return new PointF((float) (width / 2), (float) height);
+    }
+
+    private void showTrafficWarningTextView(TextView textView, String warningString) {
+        textView.setText(warningString);
+        textView.setVisibility(View.VISIBLE);
+        new CountDownTimer(4000, 1000) {
+            public void onTick(long millisUntilFinished) {
+            }
+
+            public void onFinish() {
+                textView.setVisibility(View.GONE);
+                textView.setText("");
+            }
+        }.start();
     }
 
     private void hideTrafficSigns() {
@@ -1296,9 +1336,7 @@ class MapFragmentView {
     private void intoNavigationMode() {
         initJunctionView();
         safetyCameraAhead = false;
-        safetyCamImageView.setVisibility(View.INVISIBLE);
-        safetyCamTextView.setVisibility(View.INVISIBLE);
-        safetyCamSpeedTextView.setVisibility(View.INVISIBLE);
+        safetyCamLinearLayout.setVisibility(View.GONE);
         zoomInButton.setVisibility(View.GONE);
         zoomOutButton.setVisibility(View.GONE);
 //        gpsStatusImageView.setVisibility(View.GONE);
@@ -1508,17 +1546,6 @@ class MapFragmentView {
 
 
         boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
-//        Log.d("Test", "Clear " + diskCacheRoot);
-
-        /* Purge cache before start */
-//        File dir = new File(diskCacheRoot);
-//        try {
-//            FileUtils.deleteDirectory(dir);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
-        /* Purge cache before start */
-
         if (!success) {
             // Setting the isolated disk cache was not successful, please check if the path is valid and
             // ensure that it does not match the default location
@@ -1531,6 +1558,7 @@ class MapFragmentView {
                     if (error == Error.NONE) {
                         coreRouter = new CoreRouter();
                         m_map = supportMapFragment.getMap();
+
                         MapScaleView mapScaleView = m_activity.findViewById(R.id.map_scale_view);
                         mapScaleView.setMap(m_map);
                         mapScaleView.setColor(R.color.black);
@@ -1597,6 +1625,8 @@ class MapFragmentView {
 
                         m_positioningManager = new PositionActivation(PositioningManager.LocationMethod.GPS_NETWORK).getPositioningManager();
                         m_positioningManager.addListener(new WeakReference<>(positionChangedListener));
+
+                        trafficWarningTextView = m_activity.findViewById(R.id.traffic_warning_text_view);
 
                         gpsSwitch = m_activity.findViewById(R.id.gps_switch);
                         gpsSwitch.setChecked(true);
@@ -1807,7 +1837,7 @@ class MapFragmentView {
                         });
                         clearButton = m_activity.findViewById(R.id.clear);
                         clearButton.setOnClickListener(v -> resetMap());
-
+                        safetyCamLinearLayout = m_activity.findViewById(R.id.safety_cam_linear_layout);
                         safetyCamImageView = m_activity.findViewById(R.id.safety_cam_image_view);
                         safetyCamTextView = m_activity.findViewById(R.id.safety_cam_text_view);
                         safetyCamSpeedTextView = m_activity.findViewById(R.id.safety_cam_speed_text_view);

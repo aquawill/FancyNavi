@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.content.Context;
 import android.graphics.Bitmap;

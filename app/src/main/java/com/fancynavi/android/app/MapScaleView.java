@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -25,7 +25,7 @@ public class MapScaleView extends View implements Map.OnTransformListener {
     private static final int RULER_HEIGHT_PX = 20;
     private final Paint painter = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final Rect[] rulerRects = {new Rect(), new Rect(), new Rect()};
-    private String m_text = "NaN";
+    private String m_text = "";
     private Map m_map;
     private int color = Color.BLACK;
 

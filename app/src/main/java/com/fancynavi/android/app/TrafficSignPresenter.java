@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.content.Context;
 import android.media.MediaPlayer;
@@ -7,12 +7,13 @@ import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.ImageView;
 
+import com.fancynavi.app.R;
 import com.here.android.mpa.common.TrafficSign;
 
 import java.util.List;
 
-import static com.fancynavi.app.MainActivity.textToSpeech;
-import static com.fancynavi.app.MapFragmentView.isSignShowing;
+import static com.fancynavi.android.app.MainActivity.textToSpeech;
+import static com.fancynavi.android.app.MapFragmentView.isSignShowing;
 
 class TrafficSignPresenter {
 

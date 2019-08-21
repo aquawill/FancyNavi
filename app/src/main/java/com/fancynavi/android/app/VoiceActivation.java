@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -7,6 +7,7 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.fancynavi.app.R;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoicePackage;
@@ -92,7 +93,7 @@ class VoiceActivation {
                     Log.d("Test", "Failed to download catalog.");
                 } else {
                     List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
-                    Log.d("Test", "# of available voicePackages: " + voicePackages.size());
+//                    Log.d("Test", "# of available voicePackages: " + voicePackages.size());
                     for (VoicePackage lang : voicePackages) {
                         if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
                             if (lang.isTts()) {
@@ -100,7 +101,7 @@ class VoiceActivation {
                                 break;
                             }
                         }
-                        Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+//                        Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                     }
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
 //                    localInstalledSkins.clear();

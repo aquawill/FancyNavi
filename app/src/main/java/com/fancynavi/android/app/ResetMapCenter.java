@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.PositioningManager;

@@ -1,4 +1,4 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.support.annotation.Nullable;
 import android.util.Log;

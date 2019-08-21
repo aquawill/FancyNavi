@@ -1,10 +1,11 @@
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.content.Context;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import com.fancynavi.app.R;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.mapping.MapMarker;
@@ -14,8 +15,8 @@ import com.here.android.mpa.routing.RouteWaypoint;
 
 import java.util.ArrayList;
 
-import static com.fancynavi.app.MapFragmentView.currentGeoPosition;
-import static com.fancynavi.app.MapFragmentView.m_map;
+import static com.fancynavi.android.app.MapFragmentView.currentGeoPosition;
+import static com.fancynavi.android.app.MapFragmentView.m_map;
 
 class HereRouter {
     private AppCompatActivity m_activity;
@@ -26,16 +27,16 @@ class HereRouter {
     private ArrayList<MapMarker> inputWaypointIcons = new ArrayList<>();
     private ArrayList<MapMarker> outputWaypointIcons = new ArrayList<>();
 
-    public HereRouter(AppCompatActivity m_activity, RouteOptions routeOptions) {
+    HereRouter(AppCompatActivity m_activity, RouteOptions routeOptions) {
         this.m_activity = m_activity;
         this.routeOptions = routeOptions;
     }
 
-    public RoutePlan getRoutePlan() {
+    RoutePlan getRoutePlan() {
         return routePlan;
     }
 
-    public void setRoutePlan(RoutePlan routePlan) {
+    void setRoutePlan(RoutePlan routePlan) {
         this.routePlan = routePlan;
     }
 

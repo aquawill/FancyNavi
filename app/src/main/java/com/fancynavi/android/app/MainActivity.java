@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.Manifest;
 import android.app.AlarmManager;
@@ -42,6 +42,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
 
+import com.fancynavi.app.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -51,6 +52,10 @@ import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.here.android.mpa.customlocation2.CLE2DataManager;
+import com.here.android.mpa.customlocation2.CLE2OperationResult;
+import com.here.android.mpa.customlocation2.CLE2Request;
+import com.here.android.mpa.customlocation2.CLE2Task;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 import com.here.odnp.util.Log;
@@ -64,21 +69,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import static com.fancynavi.app.MapFragmentView.clearButton;
-import static com.fancynavi.app.MapFragmentView.currentPositionMapLocalModel;
-import static com.fancynavi.app.MapFragmentView.isDragged;
-import static com.fancynavi.app.MapFragmentView.isNavigating;
-import static com.fancynavi.app.MapFragmentView.isRouteOverView;
-import static com.fancynavi.app.MapFragmentView.junctionViewImageView;
-import static com.fancynavi.app.MapFragmentView.laneMapOverlay;
-import static com.fancynavi.app.MapFragmentView.m_map;
-import static com.fancynavi.app.MapFragmentView.m_naviControlButton;
-import static com.fancynavi.app.MapFragmentView.m_navigationManager;
-import static com.fancynavi.app.MapFragmentView.m_positioningManager;
-import static com.fancynavi.app.MapFragmentView.mapOnTouchListener;
-import static com.fancynavi.app.MapFragmentView.northUpButton;
-import static com.fancynavi.app.MapFragmentView.signpostImageView;
-import static com.fancynavi.app.MapFragmentView.supportMapFragment;
+import static com.fancynavi.android.app.MapFragmentView.clearButton;
+import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
+import static com.fancynavi.android.app.MapFragmentView.isDragged;
+import static com.fancynavi.android.app.MapFragmentView.isNavigating;
+import static com.fancynavi.android.app.MapFragmentView.isRouteOverView;
+import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
+import static com.fancynavi.android.app.MapFragmentView.laneMapOverlay;
+import static com.fancynavi.android.app.MapFragmentView.m_map;
+import static com.fancynavi.android.app.MapFragmentView.m_naviControlButton;
+import static com.fancynavi.android.app.MapFragmentView.m_navigationManager;
+import static com.fancynavi.android.app.MapFragmentView.m_positioningManager;
+import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListener;
+import static com.fancynavi.android.app.MapFragmentView.northUpButton;
+import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
+import static com.fancynavi.android.app.MapFragmentView.supportMapFragment;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
@@ -234,6 +239,14 @@ public class MainActivity extends AppCompatActivity {
         purgeCacheSnackBar.setAction("Yes", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                CLE2DataManager.getInstance().newPurgeLocalStorageTask().start(new CLE2Task.Callback<CLE2OperationResult>() {
+                    @Override
+                    public void onTaskFinished(CLE2OperationResult cle2OperationResult, CLE2Request.CLE2Error cle2Error) {
+                        Log.d("Test", "getAffectedLayerIds: " + cle2OperationResult.getAffectedLayerIds());
+                        Log.d("Test", "getAffectedItemCount: " + cle2OperationResult.getAffectedItemCount());
+                        Log.d("Test", "getErrorCode: " + cle2Error.getErrorCode());
+                    }
+                });
                 File dir = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps");
                 try {
                     FileUtils.deleteDirectory(dir);

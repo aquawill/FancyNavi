@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.fancynavi.app;
+package com.fancynavi.android.app;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -26,6 +26,8 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+
+import com.fancynavi.app.R;
 
 
 public class ForegroundService extends Service {
