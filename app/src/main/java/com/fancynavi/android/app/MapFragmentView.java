@@ -593,7 +593,7 @@ class MapFragmentView {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
-            textToSpeech.speak("路徑已避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+            textToSpeech.speak("路徑已自動避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
             resetMapRoute(routeResult.getRoute());
             Log.d("test", "traffic rerouted.");
         }
