@@ -536,10 +536,10 @@ class MapFragmentView {
                             case ON_ROUTE:
                                 if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
                                     warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後為壅塞路段。", TextToSpeech.QUEUE_FLUSH, null);
                                 } else {
                                     warningText = "經過\n壅塞路段";
-                                    textToSpeech.speak("經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                    textToSpeech.speak("經過壅塞路段。", TextToSpeech.QUEUE_FLUSH, null);
                                 }
                                 break;
                             case ON_HIGHWAY:
@@ -571,6 +571,9 @@ class MapFragmentView {
             textToSpeech.speak("路徑已自動避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
             resetMapRoute(routeResult.getRoute());
             Log.d("test", "traffic rerouted.");
+            safetyCameraAhead = false;
+            safetyCameraMapMarker.setTransparency(0);
+            safetyCamLinearLayout.setVisibility(View.GONE);
         }
 
         @Override
@@ -704,7 +707,6 @@ class MapFragmentView {
                 List<GeoCoordinate> geoCoordinateList = roadElement.getGeometry();
                 RoadElement.FormOfWay formOfWay = roadElement.getFormOfWay();
                 String routeName = roadElement.getRouteName();
-                Log.d("Test", "getSpeed: " + geoPosition.getSpeed());
                 if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 300) {
                     guidanceSpeedView.setVisibility(View.VISIBLE);
                     guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
