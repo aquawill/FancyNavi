@@ -712,8 +712,14 @@ class MapFragmentView {
                         guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.red));
                         speedLabelTextView.setTextColor(m_activity.getResources().getColor(R.color.red));
                     } else {
-                        guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.black));
-                        speedLabelTextView.setTextColor(m_activity.getResources().getColor(R.color.black));
+                        if (m_map.getMapScheme().contains("hybrid") || m_map.getMapScheme().contains("night")) {
+                            guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.white));
+                            speedLabelTextView.setTextColor(m_activity.getResources().getColor(R.color.white));
+                        } else {
+                            guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.black));
+                            speedLabelTextView.setTextColor(m_activity.getResources().getColor(R.color.black));
+                        }
+
                     }
                 } else {
                     guidanceSpeedView.setText("0");
