@@ -23,10 +23,68 @@
 
     </com.here.msdkui.guidance.GuidanceManeuverView>
 
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/map_constraint_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
+        <Button
+            android:id="@+id/log_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginBottom="8dp"
+            android:background="@drawable/ic_fiber_manual_record_dark_grey_24dp"
+            android:elevation="2dp"
+            android:text="R"
+            android:textColor="@color/lui_white"
+            android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@+id/traffic_button"
+            app:layout_constraintEnd_toEndOf="@+id/traffic_button"
+            app:layout_constraintStart_toStartOf="@+id/traffic_button" />
+
+        <ImageView
+            android:id="@+id/gps_status_image_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:tint="@color/red"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:srcCompat="@drawable/ic_gps_off_white_24dp" />
+
+        <LinearLayout
+            android:id="@+id/safety_cam_linear_layout"
+            android:layout_width="64dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginBottom="8dp"
+            android:elevation="2dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/gps_status_image_view"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/safety_cam_image_view"
+                android:layout_width="match_parent"
+                android:layout_height="64dp"
+                android:alpha="0.8"
+                android:background="@android:color/holo_red_light"
+                android:foreground="@drawable/ic_speed_camera" />
+
+            <TextView
+                android:id="@+id/safety_cam_text_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:alpha="0.8"
+                android:background="@android:color/holo_red_light"
+                android:textAlignment="center"
+                android:textColor="@color/lui_white"
+                android:textSize="24sp" />
+
+        </LinearLayout>
 
         <com.here.msdkui.guidance.GuidanceStreetLabelView
             android:id="@+id/guidance_street_label_view"
@@ -61,13 +119,37 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/signpostImageView" />
 
-        <fragment
-            android:id="@+id/mapFragmentView"
-            class="com.here.android.mpa.mapping.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            app:layout_constraintTop_toTopOf="@+id/top_button_linear_layout"
-            tools:layout_editor_absoluteX="-180dp" />
+        <LinearLayout
+            android:id="@+id/distance_marker_linear_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/guidance_speed_limit_view">
+
+            <ImageView
+                android:id="@+id/distance_marker_freeway_id"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginBottom="2dp"
+                android:alpha="0.8"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/distance_marker_distance_value"
+                android:layout_width="40dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:alpha="0.8"
+                android:background="#FF064627"
+                android:textAlignment="center"
+                android:textColor="@color/white"
+                android:textSize="12sp"
+                android:visibility="visible" />
+        </LinearLayout>
 
         <Button
             android:id="@+id/north_up"
@@ -83,19 +165,18 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/top_button_linear_layout" />
 
-        <Button
-            android:id="@+id/log_button"
-            android:layout_width="24dp"
-            android:layout_height="24dp"
+        <Switch
+            android:id="@+id/gps_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
-            android:layout_marginBottom="8dp"
-            android:background="@drawable/ic_fiber_manual_record_dark_grey_24dp"
-            android:elevation="2dp"
-            android:text="R"
-            android:textColor="@color/lui_white"
-            android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/gps_status_image_view"
-            app:layout_constraintStart_toStartOf="@+id/mapFragmentView" />
+            android:text=" GPS "
+            android:textColor="@color/dim_gray"
+            android:textOff="GPS Off"
+            android:textOn="GPS On"
+            app:layout_constraintBottom_toBottomOf="@id/gps_status_image_view"
+            app:layout_constraintStart_toEndOf="@id/gps_status_image_view"
+            app:layout_constraintTop_toTopOf="@id/gps_status_image_view" />
 
         <Button
             android:id="@+id/traffic_button"
@@ -284,71 +365,47 @@
             </TableRow>
         </TableLayout>
 
-        <LinearLayout
-            android:id="@+id/safety_cam_linear_layout"
-            android:layout_width="80dp"
+        <TextView
+            android:id="@+id/guidance_speed_view"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
             android:layout_marginBottom="8dp"
             android:elevation="2dp"
-            android:orientation="vertical"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/log_button"
-            app:layout_constraintStart_toStartOf="@+id/mapFragmentView">
+            android:shadowColor="@color/white"
+            android:shadowRadius="16"
+            android:textAlignment="center"
+            android:textSize="48sp"
+            app:layout_constraintBottom_toTopOf="@id/log_button"
+            app:layout_constraintEnd_toEndOf="@+id/log_button"
+            app:layout_constraintStart_toStartOf="@+id/log_button" />
 
-            <ImageView
-                android:id="@+id/safety_cam_image_view"
-                android:layout_width="match_parent"
-                android:layout_height="80dp"
-                android:alpha="0.8"
-                android:background="@android:color/holo_red_light"
-                android:foreground="@drawable/ic_speed_camera" />
-
-            <TextView
-                android:id="@+id/safety_cam_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:alpha="0.8"
-                android:background="@android:color/holo_red_light"
-                android:textAlignment="center"
-                android:textColor="@color/lui_white"
-                android:textSize="24sp" />
-
-            <TextView
-                android:id="@+id/safety_cam_speed_text_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:alpha="0.8"
-                android:background="@android:color/holo_red_light"
-                android:textAlignment="center"
-                android:textColor="@color/lui_white"
-                android:textSize="16sp" />
-
-        </LinearLayout>
-
-        <Switch
-            android:id="@+id/gps_switch"
+        <TextView
+            android:id="@+id/spd_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:text=" GPS "
-            android:textColor="@color/dim_gray"
-            android:textOff="GPS Off"
-            android:textOn="GPS On"
-            app:layout_constraintBottom_toBottomOf="@+id/gps_status_image_view"
-            app:layout_constraintStart_toEndOf="@+id/gps_status_image_view"
-            app:layout_constraintTop_toTopOf="@+id/gps_status_image_view" />
+            android:elevation="2dp"
+            android:shadowColor="@color/white"
+            android:shadowRadius="16"
+            android:text="SPEED"
+            android:textAlignment="center"
+            android:textSize="16sp"
+            app:layout_constraintBottom_toTopOf="@+id/guidance_speed_view"
+            app:layout_constraintEnd_toEndOf="@+id/guidance_speed_view"
+            app:layout_constraintStart_toStartOf="@+id/guidance_speed_view" />
 
-        <ImageView
-            android:id="@+id/gps_status_image_view"
+        <TextView
+            android:id="@+id/traffic_warning_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_margin="4dp"
             android:layout_marginBottom="8dp"
-            android:tint="@color/red"
-            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
-            app:layout_constraintStart_toStartOf="@+id/mapFragmentView"
-            app:srcCompat="@drawable/ic_gps_off_white_24dp" />
+            android:background="@color/dark_red"
+            android:textAlignment="center"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toTopOf="@id/safety_cam_linear_layout"
+            app:layout_constraintStart_toStartOf="@id/safety_cam_linear_layout" />
 
         <ImageView
             android:id="@+id/sign_imageView_1"
@@ -380,19 +437,17 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/sign_imageView_2" />
 
-        <TextView
-            android:id="@+id/traffic_warning_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <com.fancynavi.android.app.MapScaleView
+            android:id="@+id/map_scale_view"
+            android:layout_width="80dp"
+            android:layout_height="24dp"
             android:layout_margin="4dp"
-            android:layout_marginBottom="8dp"
-            android:background="@color/dark_red"
-            android:textAlignment="center"
-            android:textColor="@color/white"
-            android:textSize="18sp"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@+id/safety_cam_linear_layout"
-            app:layout_constraintStart_toStartOf="@+id/safety_cam_linear_layout" />
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="16dp"
+            android:paddingStart="8dp"
+            android:paddingBottom="8dp"
+            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintEnd_toStartOf="@+id/traffic_button" />
 
         <Button
             android:id="@+id/search_button"
@@ -437,49 +492,25 @@
 
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/distance_marker_linear_layout"
+        <com.here.msdkui.guidance.GuidanceSpeedLimitView
+            android:id="@+id/guidance_speed_limit_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
-            android:orientation="vertical"
-            android:visibility="gone"
+            android:alpha="0.7"
+            android:background="@drawable/speed_limit_background"
+            android:elevation="2dp"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/top_button_linear_layout">
+            app:layout_constraintTop_toBottomOf="@+id/search_button" />
 
-            <ImageView
-                android:id="@+id/distance_marker_freeway_id"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginBottom="2dp"
-                android:alpha="0.8"
-                android:visibility="visible" />
-
-            <TextView
-                android:id="@+id/distance_marker_distance_value"
-                android:layout_width="40dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
-                android:alpha="0.8"
-                android:background="#FF064627"
-                android:textAlignment="center"
-                android:textColor="@color/white"
-                android:textSize="12sp"
-                android:visibility="visible" />
-        </LinearLayout>
-
-        <com.fancynavi.android.app.MapScaleView
-            android:id="@+id/map_scale_view"
-            android:layout_width="80dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="4dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="16dp"
-            android:paddingStart="8dp"
-            android:paddingBottom="8dp"
-            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
-            app:layout_constraintEnd_toStartOf="@+id/traffic_button" />
+        <fragment
+            android:id="@+id/mapFragmentView"
+            class="com.here.android.mpa.mapping.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_constraintTop_toTopOf="@+id/top_button_linear_layout"
+            tools:layout_editor_absoluteX="25dp" />
 
     </android.support.constraint.ConstraintLayout>
 

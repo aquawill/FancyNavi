@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
+import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -79,6 +80,8 @@ import com.here.android.mpa.mapping.SupportMapFragment;
 import com.here.android.mpa.mapping.TrafficEvent;
 import com.here.android.mpa.mapping.TrafficEventObject;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
+import com.here.android.mpa.mapping.customization.CustomizableVariables;
+import com.here.android.mpa.mapping.customization.ZoomRange;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.DynamicPenalty;
 import com.here.android.mpa.routing.Route;
@@ -96,6 +99,8 @@ import com.here.android.mpa.search.ReverseGeocodeMode;
 import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.android.mpa.search.SearchRequest;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalView;
+import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
+import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewListener;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewPresenter;
 import com.here.msdkui.guidance.GuidanceManeuverData;
 import com.here.msdkui.guidance.GuidanceManeuverListener;
@@ -105,9 +110,8 @@ import com.here.msdkui.guidance.GuidanceNextManeuverData;
 import com.here.msdkui.guidance.GuidanceNextManeuverListener;
 import com.here.msdkui.guidance.GuidanceNextManeuverPresenter;
 import com.here.msdkui.guidance.GuidanceNextManeuverView;
+import com.here.msdkui.guidance.GuidanceSpeedData;
 import com.here.msdkui.guidance.GuidanceSpeedLimitView;
-import com.here.msdkui.guidance.GuidanceSpeedPresenter;
-import com.here.msdkui.guidance.GuidanceSpeedView;
 import com.here.msdkui.guidance.GuidanceStreetLabelData;
 import com.here.msdkui.guidance.GuidanceStreetLabelListener;
 import com.here.msdkui.guidance.GuidanceStreetLabelPresenter;
@@ -238,18 +242,17 @@ class MapFragmentView {
     private GuidanceStreetLabelPresenter guidanceStreetLabelPresenter;
     private GuidanceEstimatedArrivalView guidanceEstimatedArrivalView;
     private GuidanceSpeedLimitView guidanceSpeedLimitView;
-    private GuidanceSpeedPresenter guidanceSpeedPresenter;
     private GuidanceStreetLabelView guidanceStreetLabelView;
     private GuidanceNextManeuverView guidanceNextManeuverView;
     private GuidanceNextManeuverPresenter guidanceNextManeuverPresenter;
-    private GuidanceSpeedView guidanceSpeedView;
+    private TextView guidanceSpeedView;
+    private TextView speedLabelTextView;
     private ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
     private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
     private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
-    //HERE UI Kit
-    private long simulationSpeedMs = 20; //defines the speed of navigation simulation
+    private long simulationSpeedMs = 16; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
     private double proceedingDistance = 0;
     private NavigationManager.PositionListener m_positionListener = new NavigationManager.PositionListener() {
@@ -283,21 +286,6 @@ class MapFragmentView {
         }
 
     };
-
-    //    private void initGuidanceEstimatedArrivalView(NavigationManager navigationManager) {
-//        guidanceEstimatedArrivalView = m_activity.findViewById(R.id.guidance_estimated_arrival_view);
-//        guidanceEstimatedArrivalViewPresenter = new GuidanceEstimatedArrivalViewPresenter(navigationManager);
-//        guidanceEstimatedArrivalViewPresenter.addListener(new GuidanceEstimatedArrivalViewListener() {
-//            @Override
-//            public void onDataChanged(GuidanceEstimatedArrivalViewData guidanceEstimatedArrivalViewData) {
-//                Log.d("Test", "onDataChanged");
-//                guidanceEstimatedArrivalView.setEstimatedArrivalData(guidanceEstimatedArrivalViewData);
-//                if (guidanceEstimatedArrivalViewData != null) {
-//                    Log.d("Test", "guidanceEstimatedArrivalViewData " + guidanceEstimatedArrivalViewData.getEta());
-//                }
-//            }
-//        });
-//    }
     private NavigationManager.LaneInformationListener m_LaneInformationListener = new NavigationManager.LaneInformationListener() {
 
         @Override
@@ -490,19 +478,6 @@ class MapFragmentView {
             }
         }
     };
-
-    //    private void initGuidanceSpeedView(NavigationManager navigationManager, PositioningManager positioningManager) {
-//        guidanceSpeedLimitView = m_activity.findViewById(R.id.guidance_speed_limit_view);
-//        guidanceSpeedView = m_activity.findViewById(R.id.guidance_speed_view);
-//        guidanceSpeedPresenter = new GuidanceSpeedPresenter(navigationManager, positioningManager);
-//        guidanceSpeedPresenter.addListener(new GuidanceSpeedListener() {
-//            @Override
-//            public void onDataChanged(@Nullable GuidanceSpeedData guidanceSpeedData) {
-//                guidanceSpeedLimitView.setCurrentSpeedData(guidanceSpeedData);
-//                guidanceSpeedView.setCurrentSpeedData(guidanceSpeedData);
-//            }
-//        });
-//    }
     private NavigationManager.NavigationManagerEventListener m_navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
         public void onRunningStateChanged() {
@@ -729,8 +704,27 @@ class MapFragmentView {
                 List<GeoCoordinate> geoCoordinateList = roadElement.getGeometry();
                 RoadElement.FormOfWay formOfWay = roadElement.getFormOfWay();
                 String routeName = roadElement.getRouteName();
-                String roadName = roadElement.getRoadName();
-                Log.d("test", formOfWay + " \\ " + routeName + " \\ " + roadName);
+                Log.d("Test", "getSpeed: " + geoPosition.getSpeed());
+                if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 300) {
+                    guidanceSpeedView.setVisibility(View.VISIBLE);
+                    guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
+                    if (geoPosition.getSpeed() > roadElement.getSpeedLimit()) {
+                        guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.red));
+                        speedLabelTextView.setTextColor(m_activity.getResources().getColor(R.color.red));
+                    } else {
+                        guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.black));
+                        speedLabelTextView.setTextColor(m_activity.getResources().getColor(R.color.black));
+                    }
+                } else {
+                    guidanceSpeedView.setText("0");
+                }
+                if (roadElement.getSpeedLimit() >= 0) {
+                    guidanceSpeedLimitView.setVisibility(View.VISIBLE);
+                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
+                } else {
+                    guidanceSpeedLimitView.setVisibility(View.GONE);
+                }
+
                 if (isNavigating) {
                     if (formOfWay == RoadElement.FormOfWay.MOTORWAY && routeName != null) {
                         String layerId = "TWN_HWAY_DIST_MARKER";
@@ -845,6 +839,9 @@ class MapFragmentView {
 
                 }
                 lastRoadElement = roadElement;
+            } else {
+                guidanceSpeedView.setVisibility(View.INVISIBLE);
+                guidanceSpeedLimitView.setVisibility(View.INVISIBLE);
             }
 
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
@@ -883,7 +880,7 @@ class MapFragmentView {
                 } else {
                     safetyCamLinearLayout.setVisibility(View.VISIBLE);
                     safetyCamTextView.setText((int) distanceToSafetyCamera + "m");
-                    safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
+//                    safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
 //                    gpsStatusImageView.setVisibility(View.INVISIBLE);
                 }
             }
@@ -929,7 +926,6 @@ class MapFragmentView {
         public boolean onMapObjectsSelected(List<ViewObject> list) {
 //            Log.d("Test", "onMapObjectsSelected: " + list.size());
             for (ViewObject viewObject : list) {
-//                Log.d("Test", "viewObject: " + viewObject.getClass().getName());
                 if (viewObject.getBaseType() == ViewObject.Type.USER_OBJECT) {
                     if (viewObject.equals(currentPositionMapLocalModel)) {
                         isMapRotating = !isMapRotating;
@@ -1072,6 +1068,21 @@ class MapFragmentView {
         return new PointF((float) (width / 2), (float) height);
     }
 
+    private void initGuidanceEstimatedArrivalView(NavigationManager navigationManager) {
+
+        guidanceEstimatedArrivalViewPresenter = new GuidanceEstimatedArrivalViewPresenter(navigationManager);
+        guidanceEstimatedArrivalViewPresenter.addListener(new GuidanceEstimatedArrivalViewListener() {
+            @Override
+            public void onDataChanged(GuidanceEstimatedArrivalViewData guidanceEstimatedArrivalViewData) {
+                Log.d("Test", "onDataChanged");
+                guidanceEstimatedArrivalView.setEstimatedArrivalData(guidanceEstimatedArrivalViewData);
+                if (guidanceEstimatedArrivalViewData != null) {
+                    Log.d("Test", "guidanceEstimatedArrivalViewData " + guidanceEstimatedArrivalViewData.getEta());
+                }
+            }
+        });
+    }
+
     private void showTrafficWarningTextView(TextView textView, String warningString) {
         textView.setText(warningString);
         textView.setVisibility(View.VISIBLE);
@@ -1095,11 +1106,11 @@ class MapFragmentView {
 
     private void initGuidanceStreetLabelView(Context context, NavigationManager navigationManager, Route route) {
         guidanceStreetLabelView = m_activity.findViewById(R.id.guidance_street_label_view);
+        guidanceStreetLabelView.setVisibility(View.VISIBLE);
         guidanceStreetLabelPresenter = new GuidanceStreetLabelPresenter(context, navigationManager, route);
         guidanceStreetLabelPresenter.addListener(new GuidanceStreetLabelListener() {
             @Override
             public void onDataChanged(GuidanceStreetLabelData guidanceStreetLabelData) {
-//                Log.d("Test", guidanceStreetLabelData.getCurrentStreetName());
                 guidanceStreetLabelView.setCurrentStreetData(guidanceStreetLabelData);
             }
         });
@@ -1107,6 +1118,7 @@ class MapFragmentView {
 
     private void initGuidanceManeuverView(Context context, NavigationManager navigationManager, Route route) {
         guidanceManeuverView = m_activity.findViewById(R.id.guidanceManeuverView);
+        guidanceManeuverView.setVisibility(View.VISIBLE);
         guidanceManeuverPresenter = new GuidanceManeuverPresenter(context, navigationManager, route);
         guidanceManeuverPresenter.addListener(new GuidanceManeuverListener() {
             @Override
@@ -1124,6 +1136,7 @@ class MapFragmentView {
 
     private void initGuidanceNextManeuverView(Context context, NavigationManager navigationManager, Route route) {
         guidanceNextManeuverView = m_activity.findViewById(R.id.guidance_next_maneuver_view);
+        guidanceNextManeuverView.setVisibility(View.VISIBLE);
         guidanceNextManeuverPresenter = new GuidanceNextManeuverPresenter(context, navigationManager, route);
         guidanceNextManeuverPresenter.addListener(new GuidanceNextManeuverListener() {
             @Override
@@ -1154,15 +1167,11 @@ class MapFragmentView {
     private void switchGuidanceUiViews(int visibility) {
         m_activity.findViewById(R.id.guidanceManeuverView).setVisibility(visibility);
         m_activity.findViewById(R.id.guidance_next_maneuver_view).setVisibility(visibility);
-//        m_activity.findViewById(R.id.guidance_info_linear_layout).setVisibility(visibility);
-//        m_activity.findViewById(R.id.guidance_speed_limit_view).setVisibility(visibility);
-//        m_activity.findViewById(R.id.guidance_speed_view).setVisibility(visibility);
+        m_activity.findViewById(R.id.guidance_speed_limit_view).setVisibility(visibility);
+        m_activity.findViewById(R.id.guidance_speed_view).setVisibility(visibility);
         m_activity.findViewById(R.id.guidance_street_label_view).setVisibility(visibility);
 //        m_activity.findViewById(R.id.guidance_estimated_arrival_view).setVisibility(visibility);
-//        m_activity.findViewById(R.id.speed_limit_linear_layout).setVisibility(visibility);
-//        m_activity.findViewById(R.id.guidance_speed_limit_view).setVisibility(visibility);
-//        m_activity.findViewById(R.id.speed_limit_text_view).setVisibility(visibility);
-//        m_activity.findViewById(R.id.guidance_info).setVisibility(visibility);
+        m_activity.findViewById(R.id.guidance_speed_limit_view).setVisibility(visibility);
 
     }
 
@@ -1179,9 +1188,6 @@ class MapFragmentView {
             }
             if (guidanceEstimatedArrivalViewPresenter != null) {
                 guidanceEstimatedArrivalViewPresenter.pause();
-            }
-            if (guidanceSpeedPresenter != null) {
-                guidanceSpeedPresenter.pause();
             }
             if (guidanceStreetLabelPresenter != null) {
                 guidanceStreetLabelPresenter.pause();
@@ -1256,43 +1262,46 @@ class MapFragmentView {
         }
     }
 
-    private void hudMapScheme(Map map) {
+    private void customizeMapScheme(Map map) {
         /*Map Customization - Start*/
         CustomizableScheme m_colorScheme;
         String m_colorSchemeName = "colorScheme";
         if (map != null && map.getCustomizableScheme(m_colorSchemeName) == null) {
-            map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_NIGHT_GREY);
-            map.setMapScheme(Map.Scheme.CARNAV_NIGHT_GREY);
-            /*
+            map.createCustomizableScheme(m_colorSchemeName, Map.Scheme.CARNAV_DAY);
             m_colorScheme = map.getCustomizableScheme(m_colorSchemeName);
             ZoomRange range = new ZoomRange(0.0, 20.0);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_WIDTH, 20, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_WIDTH, 20, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_WIDTH, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_WIDTH, 40, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_WIDTH, 40, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_WIDTH, 30, range);
             m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_WIDTH, 20, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_WIDTH, 20, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_TUNNELCOLOR, Color.GRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_TUNNELCOLOR, Color.GRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_TUNNELCOLOR, Color.GRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_TUNNELCOLOR, Color.GRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_TUNNELCOLOR, Color.GRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
-            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_WIDTH, 10, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_TUNNELCOLOR, Color.GRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_TUNNELCOLOR, Color.GRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_TUNNELCOLOR, Color.GRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_TUNNELCOLOR, Color.GRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_TUNNELCOLOR, Color.GRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+//            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_STREETPOLYLINEATTRIBUTE_TOLL_COLOR, Color.LTGRAY, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY0_FONTSTYLE_SIZE, 30, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY1_FONTSTYLE_SIZE, 30, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY2_FONTSTYLE_SIZE, 30, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY3_FONTSTYLE_SIZE, 20, range);
+            m_colorScheme.setVariableValue(CustomizableVariables.Street.CATEGORY4_FONTSTYLE_SIZE, 20, range);
+
 
             map.setMapScheme(m_colorScheme);
             map.setLandmarksVisible(false);
             map.setExtrudedBuildingsVisible(false);
             map.setCartoMarkersVisible(false);
-            */
 
 
         } else {
@@ -1349,7 +1358,6 @@ class MapFragmentView {
         initGuidanceStreetLabelView(m_activity, m_navigationManager, m_route);
 //        initGuidanceSpeedView(m_navigationManager, m_positioningManager);
         initGuidanceManeuverView(m_activity, m_navigationManager, m_route);
-        initGuidanceNextManeuverView(m_activity, m_navigationManager, m_route);
         switchGuidanceUiViews(View.VISIBLE);
         switchGuidanceUiPresenters(true);
         m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
@@ -1364,7 +1372,6 @@ class MapFragmentView {
 
         m_navigationManager.setNaturalGuidanceMode(naturalGuidanceModes);
         new ShiftMapCenter(m_map, 0.5f, 0.8f);
-        //hudMapScheme(m_map);
         m_map.setTilt(60);
         m_navigationManager.startNavigation(m_route);
         m_positioningManager.setMapMatchingEnabled(true);
@@ -1532,7 +1539,7 @@ class MapFragmentView {
 
     private void initSupportMapFragment() {
         supportMapFragment = getMapFragment();
-        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.BOTTOM_CENTER);
+        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
         // Set path of isolated disk cache
         // Retrieve intent name from manifest
         String intentName = "";
@@ -1652,14 +1659,13 @@ class MapFragmentView {
 
                         new ShiftMapCenter(m_map, 0.5f, 0.6f);
                         m_map.setMapScheme(Map.Scheme.NORMAL_DAY);
+//                        customizeMapScheme(m_map);
                         m_map.setMapDisplayLanguage(TRADITIONAL_CHINESE);
                         m_map.setSafetySpotsVisible(true);
                         m_map.setExtrudedBuildingsVisible(false);
                         m_map.setLandmarksVisible(true);
                         m_map.setExtendedZoomLevelsEnabled(true);
 
-//                            speedLimitLinearLayout = m_activity.findViewById(R.id.speed_limit_linear_layout);
-//                            speedLimitLinearLayoutHeight = speedLimitLinearLayout.getLayoutParams().height;
                         switchGuidanceUiViews(View.GONE);
                         gpsStatusImageView = m_activity.findViewById(R.id.gps_status_image_view);
                         /* Listeners of map buttons */
@@ -1840,7 +1846,7 @@ class MapFragmentView {
                         safetyCamLinearLayout = m_activity.findViewById(R.id.safety_cam_linear_layout);
                         safetyCamImageView = m_activity.findViewById(R.id.safety_cam_image_view);
                         safetyCamTextView = m_activity.findViewById(R.id.safety_cam_text_view);
-                        safetyCamSpeedTextView = m_activity.findViewById(R.id.safety_cam_speed_text_view);
+//                        safetyCamSpeedTextView = m_activity.findViewById(R.id.safety_cam_speed_text_view);
                         distanceMarkerLinearLayout = m_activity.findViewById(R.id.distance_marker_linear_layout);
                         distanceMarkerFreeIdImageView = m_activity.findViewById(R.id.distance_marker_freeway_id);
                         distanceMarkerDistanceValue = m_activity.findViewById(R.id.distance_marker_distance_value);
@@ -1867,6 +1873,13 @@ class MapFragmentView {
                         /* init safetyCameraMapMarker */
                         safetyCameraMapMarker = new MapMarker();
                         m_map.addMapObject(safetyCameraMapMarker);
+
+                        Typeface tf = Typeface.createFromAsset(m_activity.getAssets(), "fonts/SFDigitalReadout-Medium.ttf");
+                        guidanceSpeedView = m_activity.findViewById(R.id.guidance_speed_view);
+                        guidanceSpeedView.setTypeface(tf);
+                        speedLabelTextView = m_activity.findViewById(R.id.spd_text_view);
+                        speedLabelTextView.setTypeface(tf);
+                        guidanceSpeedLimitView = m_activity.findViewById(R.id.guidance_speed_limit_view);
 
                     } else {
                         Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
@@ -2077,11 +2090,11 @@ class MapFragmentView {
                         for (PlaceLink placeLink : discoveryResultPlaceLink) {
 //                            Log.d("Test", placeLink.getTitle());
                             placesSearchResultTitle = placeLink.getTitle();
-                            placesSearchCategoryName = placeLink.getCategory().getName();
+//                            placesSearchCategoryName = placeLink.getCategory().getName();
                             GeoCoordinate placesSearchresultGeoCoordinate = placeLink.getPosition();
-                            searchResultString = placesSearchResultTitle + " / " + placesSearchCategoryName;
-                            showSelectionFocus(placesSearchresultGeoCoordinate, searchResultString);
-                            showResultSnackbar(placesSearchresultGeoCoordinate, searchResultString, view, Snackbar.LENGTH_INDEFINITE);
+//                            searchResultString = placesSearchResultTitle + " / " + placesSearchCategoryName;
+                            showSelectionFocus(placesSearchresultGeoCoordinate, placesSearchResultTitle);
+                            showResultSnackbar(placesSearchresultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_INDEFINITE);
                             searchBarLinearLayout.setVisibility(View.GONE);
                             isDragged = true;
                             map.setCenter(placesSearchresultGeoCoordinate, Map.Animation.LINEAR);
