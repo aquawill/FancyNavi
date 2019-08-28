@@ -1,8 +1,32 @@
 # HERE Android Premium SDK + UI Kit
 
-1. Double tap on map or search for places/POI to create waypoints .
-2. Create route with buttons of different vehicle types.
-3. Start navigation or guidance simulation.
+Demo Functions:
+1.	3D Mapping with safety camera display.
+2.	Custom gesture event handling.
+3.	Map object selection.
+4.	Map object dragging / event handling.
+5.	Real time traffic display and traffic event.
+6.	Reverse geocoding.
+7.	Places search.
+8.	Route calculation for different vehicle types with/without traffic.
+9.	Navigation simulation.
+10.	Natural guidance.
+11.	Lane information display.
+12.	Junction view/signpost display.
+13.	Safety camera warning.
+14.	Speed limit warning/display.
+15.	Traffic congestion warning.
+16.	Traffic sign warning (driver alert).
+17.	Traffic aware rerouting.
+18.	3D object display.
+19.	Custom location extension with SDK (freeway mileage display).
+20.	Map customization and scheme switching.
+21.	HERE SDK UI Kit.
+22.	HERE advanced network positioning (with cell/WiFi).
+23.	Switch GPS on/off.
+24.	Location logging (for road test purposes).
+
+-------------------------
 
 Search for places/POI.
 
