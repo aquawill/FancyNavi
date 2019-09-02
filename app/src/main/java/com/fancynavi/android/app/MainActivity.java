@@ -58,6 +58,7 @@ import com.here.android.mpa.customlocation2.CLE2Request;
 import com.here.android.mpa.customlocation2.CLE2Task;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapOverlay;
 import com.here.odnp.util.Log;
 
 import org.apache.commons.io.FileUtils;
@@ -71,6 +72,7 @@ import java.util.Locale;
 
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
 import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
+import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
 import static com.fancynavi.android.app.MapFragmentView.isDragged;
 import static com.fancynavi.android.app.MapFragmentView.isNavigating;
 import static com.fancynavi.android.app.MapFragmentView.isRouteOverView;
@@ -356,6 +358,11 @@ public class MainActivity extends AppCompatActivity {
                 m_naviControlButton.setVisibility(View.GONE);
                 clearButton.setVisibility(View.GONE);
                 m_navigationManager.resume();
+                if (distanceMarkerMapOverlayList.size() > 0) {
+                    for (MapOverlay o : distanceMarkerMapOverlayList) {
+                        m_map.addMapOverlay(o);
+                    }
+                }
                 supportMapFragment.setOnTouchListener(mapOnTouchListener);
             }
         } else {

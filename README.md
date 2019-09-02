@@ -52,3 +52,6 @@ Speed camera alert and traffic signs.
 
 ![](https://i.imgur.com/OFbjbiU.gif)
 
+Display of distance markers and speed limits.
+
+![](https://i.imgur.com/SiIswBQ.gif)

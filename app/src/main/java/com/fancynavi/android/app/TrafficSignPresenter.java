@@ -90,7 +90,7 @@ class TrafficSignPresenter {
                         break;
                     case 11:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
-                        signName = signName.concat("狹路。");
+                        signName = signName.concat("路寬縮減。");
                         break;
                     case 12:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);

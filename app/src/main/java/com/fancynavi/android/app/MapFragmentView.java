@@ -161,6 +161,8 @@ class MapFragmentView {
             return false;
         }
     };
+    static List<MapOverlay> distanceMarkerMapOverlayList = new ArrayList<>();
+    private CLE2ProximityRequest cle2ProximityRequest;
     static OnTouchListener mapOnTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -169,6 +171,11 @@ class MapFragmentView {
             isRouteOverView = true;
             if (laneMapOverlay != null) {
                 m_map.removeMapOverlay(laneMapOverlay);
+            }
+            if (distanceMarkerMapOverlayList.size() > 0) {
+                for (MapOverlay o : distanceMarkerMapOverlayList) {
+                    m_map.removeMapOverlay(o);
+                }
             }
             trafficWarningTextView.setVisibility(View.INVISIBLE);
             m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
@@ -183,7 +190,6 @@ class MapFragmentView {
             return false;
         }
     };
-    private CLE2ProximityRequest cle2ProximityRequest;
     private LinearLayout distanceMarkerLinearLayout;
     private ImageView distanceMarkerFreeIdImageView;
     private TextView distanceMarkerDistanceValue;
@@ -1102,7 +1108,17 @@ class MapFragmentView {
         signImageView3.setVisibility(View.GONE);
     }
 
+    private void clearDistanceMarkerMapOverlay() {
+        if (distanceMarkerMapOverlayList.size() > 0) {
+            for (MapOverlay o : distanceMarkerMapOverlayList) {
+                m_map.removeMapOverlay(o);
+            }
+        }
+    }
+
     private void cle2CorridorRequestForRoute(List<GeoCoordinate> geoCoordinateList, int radius) {
+        clearDistanceMarkerMapOverlay();
+        distanceMarkerMapOverlayList.clear();
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         List<GeoCoordinate> croppedShapePointGeoCoordinateList = new ArrayList<>();
         int distance = 0;
@@ -1126,6 +1142,20 @@ class MapFragmentView {
             public void onCompleted(CLE2Result cle2Result, String s) {
                 int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_MILEAGE");
                 Log.d("Test", "CLE2CorridorRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
+                for (CLE2Geometry cle2Geometry : cle2Result.getGeometries()) {
+                    CLE2PointGeometry cle2PointGeometry = (CLE2PointGeometry) cle2Geometry;
+                    String distanceValue = cle2PointGeometry.getAttributes().get("DISTANCE_VALUE");
+                    if (distanceValue != null && distanceValue.endsWith("0K")) {
+                        TextView distanceMarkerTextView = new TextView(m_activity);
+                        distanceMarkerTextView.setText(distanceValue);
+                        distanceMarkerTextView.setTextScaleX(0.8f);
+                        distanceMarkerTextView.setBackgroundColor(Color.argb(128, 6, 70, 39));
+                        distanceMarkerTextView.setTextColor(m_activity.getResources().getColor(R.color.white));
+                        MapOverlay distanceMarkerMapOverlay = new MapOverlay(distanceMarkerTextView, cle2PointGeometry.getPoint());
+                        m_map.addMapOverlay(distanceMarkerMapOverlay);
+                        distanceMarkerMapOverlayList.add(distanceMarkerMapOverlay);
+                    }
+                }
             }
         });
     }
@@ -1530,6 +1560,7 @@ class MapFragmentView {
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
+                        clearDistanceMarkerMapOverlay();
                         m_route = routeResults.get(0).getRoute();
                         supportMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
                         resetMapRoute(m_route);
