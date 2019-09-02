@@ -118,7 +118,7 @@
             android:paddingEnd="8dp"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/distance_marker_linear_layout" />
+            app:layout_constraintTop_toBottomOf="@id/guidance_speed_limit_view" />
 
         <ImageView
             android:id="@+id/sign_imageView_2"
@@ -180,12 +180,12 @@
             android:id="@+id/distance_marker_linear_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
+            android:elevation="2dp"
             android:orientation="vertical"
             android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/guidance_speed_limit_view">
+            app:layout_constraintTop_toBottomOf="@id/top_button_linear_layout">
 
             <ImageView
                 android:id="@+id/distance_marker_freeway_id"
@@ -193,7 +193,7 @@
                 android:layout_height="40dp"
                 android:layout_marginBottom="2dp"
                 android:alpha="0.8"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
             <TextView
                 android:id="@+id/distance_marker_distance_value"
@@ -205,7 +205,7 @@
                 android:textAlignment="center"
                 android:textColor="@color/white"
                 android:textSize="12sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout
@@ -488,7 +488,7 @@
             android:alpha="0.7"
             android:background="@drawable/speed_limit_background"
             android:elevation="2dp"
-            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/distance_marker_linear_layout"
             app:layout_constraintTop_toBottomOf="@+id/search_button" />
 
         <com.here.msdkui.guidance.GuidanceStreetLabelView

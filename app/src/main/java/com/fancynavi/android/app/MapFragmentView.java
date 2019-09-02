@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
@@ -39,6 +40,7 @@ import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
 import com.here.android.mpa.common.GeoCoordinate;
+import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.MapSettings;
@@ -48,8 +50,10 @@ import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
 import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.common.TrafficSign;
 import com.here.android.mpa.common.ViewObject;
+import com.here.android.mpa.customlocation2.CLE2CorridorRequest;
 import com.here.android.mpa.customlocation2.CLE2DataManager;
 import com.here.android.mpa.customlocation2.CLE2Geometry;
+import com.here.android.mpa.customlocation2.CLE2PointGeometry;
 import com.here.android.mpa.customlocation2.CLE2ProximityRequest;
 import com.here.android.mpa.customlocation2.CLE2Request;
 import com.here.android.mpa.customlocation2.CLE2Result;
@@ -121,6 +125,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -128,10 +133,6 @@ import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
-//import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
-//import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewListener;
-//import com.here.msdkui.guidance.GuidanceSpeedData;
-//import com.here.msdkui.guidance.GuidanceSpeedListener;
 
 class MapFragmentView {
     static boolean isDragged;
@@ -153,6 +154,7 @@ class MapFragmentView {
     static boolean isSignShowing;
     static MapLocalModel currentPositionMapLocalModel;
     static Button northUpButton;
+    static TextView trafficWarningTextView;
     private static OnTouchListener emptyMapOnTouchListener = new OnTouchListener() {
         @Override
         public boolean onTouch(View v, MotionEvent event) {
@@ -165,7 +167,10 @@ class MapFragmentView {
             m_navigationManager.pause();
             isRoadView = false;
             isRouteOverView = true;
-            m_map.removeMapOverlay(laneMapOverlay);
+            if (laneMapOverlay != null) {
+                m_map.removeMapOverlay(laneMapOverlay);
+            }
+            trafficWarningTextView.setVisibility(View.INVISIBLE);
             m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
             new ShiftMapCenter(m_map, 0.5f, 0.6f);
             m_map.setTilt(0);
@@ -199,6 +204,8 @@ class MapFragmentView {
     private MapMarker selectedFeatureMapMarker;
     private MapCircle positionAccuracyMapCircle;
     private ImageView gpsStatusImageView;
+    private GeoPolyline croppedRoute;
+    private List<GeoCoordinate> routeShapePointGeoCoordinateList;
     private ImageView signImageView1;
     private ImageView signImageView2;
     private ImageView signImageView3;
@@ -230,7 +237,6 @@ class MapFragmentView {
     private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView calculatingTextView;
-    private TextView trafficWarningTextView;
     private Route m_route;
     private MapRoute mapRoute;
     private boolean m_foregroundServiceStarted;
@@ -261,6 +267,10 @@ class MapFragmentView {
 //            if (electronicHorizonActivation != null) {
 //                electronicHorizonActivation.startElectronicHorizonUpdate();
 //            }
+//            Log.d("test", "croppedRoute.getNearestIndex(geoPosition.getCoordinate()): " + croppedRoute.getNearestIndex(geoPosition.getCoordinate()) + "/" + croppedRoute.getAllPoints().size());
+            if (croppedRoute.getNearestIndex(geoPosition.getCoordinate()) == croppedRoute.getAllPoints().size() - 1) {
+                cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
+            }
             if (lastKnownLocation != null) {
                 proceedingDistance = lastKnownLocation.distanceTo(geoPosition.getCoordinate());
                 if (lastKnownLocation.distanceTo(geoPosition.getCoordinate()) > 0) {
@@ -268,16 +278,7 @@ class MapFragmentView {
                 }
             } else {
                 lastKnownLocation = geoPosition.getCoordinate();
-                CLE2ProximityRequest cle2ProximityRequest = new CLE2ProximityRequest("TWN_HWAY_DIST_MARKER", geoPosition.getCoordinate(), 30000);
-                cle2ProximityRequest.setCachingEnabled(true);
-                cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
-                    @Override
-                    public void onCompleted(CLE2Result cle2Result, String s) {
-                        Log.d("Test", "cle2Result.getGeometries().size(): " + cle2Result.getGeometries().size());
-                        int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_DIST_MARKER");
-                        Log.d("Test", "CLE2ProximityRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
-                    }
-                });
+
             }
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
@@ -571,9 +572,12 @@ class MapFragmentView {
             textToSpeech.speak("路徑已自動避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
             resetMapRoute(routeResult.getRoute());
             Log.d("test", "traffic rerouted.");
+            m_route = routeResult.getRoute();
+            resetMapRoute(m_route);
             safetyCameraAhead = false;
             safetyCameraMapMarker.setTransparency(0);
             safetyCamLinearLayout.setVisibility(View.GONE);
+            cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
         }
 
         @Override
@@ -606,7 +610,10 @@ class MapFragmentView {
         public void onRerouteEnd(RouteResult routeResult, RoutingError routingError) {
             super.onRerouteEnd(routeResult, routingError);
             if (routingError == RoutingError.NONE) {
+                m_route = routeResult.getRoute();
+                resetMapRoute(m_route);
                 resetMapRoute(routeResult.getRoute());
+                cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
             }
         }
     };
@@ -734,74 +741,47 @@ class MapFragmentView {
                 }
 
                 if (isNavigating) {
-                    if (formOfWay == RoadElement.FormOfWay.MOTORWAY && routeName != null) {
-                        String layerId = "TWN_HWAY_DIST_MARKER";
-                        int radius = 150;
+                    if (formOfWay == RoadElement.FormOfWay.MOTORWAY && !routeName.equals("")) {
+                        String layerId = "TWN_HWAY_MILEAGE";
+                        int radius = 200;
                         cle2ProximityRequest = new CLE2ProximityRequest(layerId, geoPositionGeoCoordinateOnGround, radius);
-                        cle2ProximityRequest.setConnectivityMode(CLE2Request.CLE2ConnectivityMode.AUTO);
+                        cle2ProximityRequest.setConnectivityMode(CLE2Request.CLE2ConnectivityMode.OFFLINE);
                         cle2ProximityRequest.setCachingEnabled(true);
                         cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
                             @Override
                             public void onCompleted(CLE2Result result, String error) {
-                                Log.d("test", "cle2ProximityRequest completed: " + result.getConnectivityModeUsed());
+//                                Log.d("test", "cle2ProximityRequest completed: " + result.getConnectivityModeUsed());
                                 /*Display mileage and route number on the upper right corner*/
                                 if (error.equals(CLE2Request.CLE2Error.NONE)) {
                                     List<CLE2Geometry> geometries = result.getGeometries();
-                                    Log.d("test", "geometries " + geometries.toString());
-
+                                    List<Double> distanceList = new ArrayList<>();
                                     if (geometries.size() > 0) {
-                                        CLE2Geometry geometry = geometries.get(0);
+                                        for (CLE2Geometry cle2Geometry : geometries) {
+                                            CLE2PointGeometry cle2PointGeometry = (CLE2PointGeometry) cle2Geometry;
+                                            Double distance = cle2PointGeometry.getPoint().distanceTo(geoPositionGeoCoordinateOnGround);
+                                            java.util.Map<String, String> geometryAttributeMap = cle2PointGeometry.getAttributes();
+                                            String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
+                                            Log.d("test", distance + " : " + geometryAttributeMap.get("DISTANCE_VALUE"));
+                                            if (routeName.equals(freeWayId)) {
+                                                distanceList.add(distance);
+                                            }
+                                        }
+                                        double minimumDistance = Collections.min(distanceList);
+                                        CLE2Geometry geometry = geometries.get(distanceList.indexOf(minimumDistance));
                                         java.util.Map<String, String> geometryAttributeMap = geometry.getAttributes();
                                         String distanceValue = geometryAttributeMap.get("DISTANCE_VALUE");
+                                        Log.d("test", "selected : " + geometryAttributeMap.get("DISTANCE_VALUE"));
                                         String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
-                                        Log.d("test", routeName + " \\ " + freeWayId + " \\ " + distanceValue);
-                                        Log.d("test", "routeName.equals(freeWayId) " + (routeName.equals(freeWayId)));
                                         if (routeName.equals(freeWayId) && !isRouteOverView) {
-                                            distanceMarkerLinearLayout.setVisibility(View.VISIBLE);
-                                            switch (freeWayId) {
-                                                case "1":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_1);
-                                                    break;
-                                                case "10":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_10);
-                                                    break;
-                                                case "2":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_2);
-                                                    break;
-                                                case "2a":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_2a);
-                                                    break;
-                                                case "2甲":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_2a);
-                                                    break;
-                                                case "3":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_3);
-                                                    break;
-                                                case "3a":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_3a);
-                                                    break;
-                                                case "3甲":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_3a);
-                                                    break;
-                                                case "4":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_4);
-                                                    break;
-                                                case "5":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_5);
-                                                    break;
-                                                case "6":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_6);
-                                                    break;
-                                                case "7":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_7);
-                                                    break;
-                                                case "8":
-                                                    distanceMarkerFreeIdImageView.setBackgroundResource(R.drawable.twhw_8);
-                                                    break;
-                                                default:
-                                                    distanceMarkerLinearLayout.setVisibility(View.GONE);
+                                            Drawable routeIconDrawable = RouteIconPresenter.getRouteIconName(freeWayId, m_activity);
+//                                            Log.d("test", freeWayId + " \\ " + routeIconDrawable + " \\ " + distanceValue);
+                                            if (routeIconDrawable != null) {
+                                                distanceMarkerFreeIdImageView.setBackground(routeIconDrawable);
+                                                distanceMarkerFreeIdImageView.setVisibility(View.VISIBLE);
                                             }
                                             distanceMarkerDistanceValue.setText(distanceValue);
+                                            distanceMarkerDistanceValue.setVisibility(View.VISIBLE);
+                                            distanceMarkerLinearLayout.setVisibility(View.VISIBLE);
                                         } else {
                                             distanceMarkerLinearLayout.setVisibility(View.GONE);
                                         }
@@ -841,7 +821,7 @@ class MapFragmentView {
                             isSignShowing = false;
                             TrafficSignPresenter trafficSignPresenter = new TrafficSignPresenter();
                             trafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
-                            trafficSignPresenter.showTrafficSigns(targetTrafficSignList, m_activity);
+                            trafficSignPresenter.showTrafficSigns(targetTrafficSignList, roadElement, m_activity);
                         }
                     }
 
@@ -878,8 +858,11 @@ class MapFragmentView {
                     m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
                 }
             }
+//            Log.d("test", "safetyCameraAhead: " + safetyCameraAhead);
+
             if (safetyCameraAhead) {
                 distanceToSafetyCamera -= proceedingDistance;
+                Log.d("test", "distanceToSafetyCamera: " + distanceToSafetyCamera);
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
@@ -891,6 +874,12 @@ class MapFragmentView {
 //                    safetyCamSpeedTextView.setText(safetyCameraSpeedLimitKM + "km/h");
 //                    gpsStatusImageView.setVisibility(View.INVISIBLE);
                 }
+
+            } else {
+                safetyCameraAhead = false;
+                safetyCameraMapMarker.setTransparency(0);
+                safetyCamLinearLayout.setVisibility(View.GONE);
+//                    gpsStatusImageView.setVisibility(View.VISIBLE);
             }
 
         }
@@ -1061,6 +1050,7 @@ class MapFragmentView {
 
         }
     };
+
     MapFragmentView(AppCompatActivity activity) {
         m_activity = activity;
         initSupportMapFragment();
@@ -1110,6 +1100,34 @@ class MapFragmentView {
         signImageView1.setVisibility(View.GONE);
         signImageView2.setVisibility(View.GONE);
         signImageView3.setVisibility(View.GONE);
+    }
+
+    private void cle2CorridorRequestForRoute(List<GeoCoordinate> geoCoordinateList, int radius) {
+        CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
+        List<GeoCoordinate> croppedShapePointGeoCoordinateList = new ArrayList<>();
+        int distance = 0;
+        int shapePointIndex = 0;
+        while (shapePointIndex < geoCoordinateList.size() - 1) {
+            distance += routeShapePointGeoCoordinateList.get(shapePointIndex).distanceTo(routeShapePointGeoCoordinateList.get(shapePointIndex + 1));
+            if (distance < 10000) {
+                croppedShapePointGeoCoordinateList.add(routeShapePointGeoCoordinateList.get(shapePointIndex));
+                routeShapePointGeoCoordinateList.remove(shapePointIndex);
+            } else {
+                break;
+            }
+            shapePointIndex += 1;
+        }
+        croppedRoute = new GeoPolyline(croppedShapePointGeoCoordinateList);
+        CLE2CorridorRequest cle2CorridorRequest = new CLE2CorridorRequest("TWN_HWAY_MILEAGE", croppedShapePointGeoCoordinateList, radius);
+        cle2CorridorRequest.setConnectivityMode(CLE2Request.CLE2ConnectivityMode.AUTO);
+        cle2CorridorRequest.setCachingEnabled(true);
+        cle2CorridorRequest.execute(new CLE2Request.CLE2ResultListener() {
+            @Override
+            public void onCompleted(CLE2Result cle2Result, String s) {
+                int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_MILEAGE");
+                Log.d("Test", "CLE2CorridorRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
+            }
+        });
     }
 
     private void initGuidanceStreetLabelView(Context context, NavigationManager navigationManager, Route route) {
@@ -1398,6 +1416,9 @@ class MapFragmentView {
 
         supportMapFragment.setOnTouchListener(mapOnTouchListener);
         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
+        routeShapePointGeoCoordinateList = m_route.getRouteGeometry();
+        cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
+
     }
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {
@@ -1539,6 +1560,7 @@ class MapFragmentView {
 
     void onDestroy() {
         /* Stop the navigation when app is destroyed */
+        CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         if (m_navigationManager != null) {
             stopForegroundService();
             m_navigationManager.stop();
@@ -1888,7 +1910,6 @@ class MapFragmentView {
                         speedLabelTextView = m_activity.findViewById(R.id.spd_text_view);
                         speedLabelTextView.setTypeface(tf);
                         guidanceSpeedLimitView = m_activity.findViewById(R.id.guidance_speed_limit_view);
-
                     } else {
                         Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
                     }
@@ -1963,7 +1984,10 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         safetyCameraMapMarker.setTransparency(0);
+        trafficWarningTextView.setVisibility(View.GONE);
+        trafficWarningTextView.setText("");
         distanceMarkerLinearLayout.setVisibility(View.GONE);
         mapSchemeChanger = new MapSchemeChanger(m_map);
         if (trafficWarner != null) {

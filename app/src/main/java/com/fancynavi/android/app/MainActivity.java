@@ -84,6 +84,7 @@ import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListener;
 import static com.fancynavi.android.app.MapFragmentView.northUpButton;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.android.app.MapFragmentView.supportMapFragment;
+import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
 import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
@@ -349,6 +350,7 @@ public class MainActivity extends AppCompatActivity {
                 if (laneMapOverlay != null) {
                     m_map.addMapOverlay(laneMapOverlay);
                 }
+                trafficWarningTextView.setVisibility(View.VISIBLE);
                 junctionViewImageView.setAlpha(1f);
                 signpostImageView.setAlpha(1f);
                 m_naviControlButton.setVisibility(View.GONE);

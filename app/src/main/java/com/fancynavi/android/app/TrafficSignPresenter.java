@@ -8,6 +8,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.fancynavi.app.R;
+import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.common.TrafficSign;
 
 import java.util.List;
@@ -27,9 +28,16 @@ class TrafficSignPresenter {
         this.imageView3 = imageView3;
     }
 
-    private void showTrafficSignImageView(ImageView imageView) {
+    private void showTrafficSignImageView(ImageView imageView, RoadElement roadElement) {
         imageView.setVisibility(View.VISIBLE);
-        new CountDownTimer(3000, 1000) {
+        int showSignTimePeriod;
+        if (roadElement.getFormOfWay() == RoadElement.FormOfWay.MOTORWAY) {
+            showSignTimePeriod = 5000;
+        } else {
+            showSignTimePeriod = 3000;
+        }
+
+        new CountDownTimer(showSignTimePeriod, 1000) {
             public void onTick(long millisUntilFinished) {
             }
 
@@ -39,7 +47,7 @@ class TrafficSignPresenter {
         }.start();
     }
 
-    void showTrafficSigns(List<TrafficSign> trafficSigns, Context context) {
+    void showTrafficSigns(List<TrafficSign> trafficSigns, RoadElement roadElement, Context context) {
 
         int numberOfTrafficSigns = trafficSigns.size();
         int i = 0;
@@ -166,7 +174,7 @@ class TrafficSignPresenter {
                         break;
                 }
                 if (!isSignShowing) {
-                    this.showTrafficSignImageView(targetSignImageView);
+                    this.showTrafficSignImageView(targetSignImageView, roadElement);
                     MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.beep_short);
                     if (mediaPlayer != null) {
                         mediaPlayer.start();
