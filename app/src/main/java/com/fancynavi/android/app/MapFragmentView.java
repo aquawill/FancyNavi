@@ -102,6 +102,9 @@ import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeMode;
 import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.android.mpa.search.SearchRequest;
+import com.here.android.mpa.tce.TollCostError;
+import com.here.android.mpa.tce.TollCostRequest;
+import com.here.android.mpa.tce.TollCostResult;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalView;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewListener;
@@ -1203,6 +1206,7 @@ class MapFragmentView {
     }
 
     private void switchUiControls(int visibility) {
+        m_activity.findViewById(R.id.vehicleTypeTableLayout).setVisibility(visibility);
         northUpButton.setVisibility(visibility);
         carRouteButton.setVisibility(visibility);
         truckRouteButton.setVisibility(visibility);
@@ -1280,6 +1284,7 @@ class MapFragmentView {
         userInputWaypoints.add(mapMarker);
         mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
         m_map.addMapObject(mapMarker);
+        m_activity.findViewById(R.id.vehicleTypeTableLayout).setVisibility(View.VISIBLE);
         carRouteButton.setVisibility(View.VISIBLE);
         truckRouteButton.setVisibility(View.VISIBLE);
         scooterRouteButton.setVisibility(View.VISIBLE);
@@ -1570,7 +1575,21 @@ class MapFragmentView {
                         mapRouteBBox.expand((float) (geoBoundingBoxDimensionCalculator.getBBoxHeight() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getBBoxWidth() * 0.6));
                         m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         m_naviControlButton.setText("Start Navi");
-                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
+
+                        new TollCostRequest(m_route).execute(new TollCostRequest.Listener<TollCostResult>() {
+                            @Override
+                            public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
+                                Log.d("test", "getTransportMode: " + m_route.getRoutePlan().getRouteOptions().getTransportMode());
+                                Log.d("test", "getErrorCode: " + tollCostError.getErrorCode());
+                                Log.d("test", "getErrorMessage: " + tollCostError.getErrorMessage());
+                                Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                Log.d("test", "getTotalTollCost: " + tollCostResult.getTotalTollCost());
+
+                                Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + m_route.getLength() + "m / Cost: " + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
+                            }
+                        });
+//                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
                         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
                     } else {
