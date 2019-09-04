@@ -2129,6 +2129,7 @@ class MapFragmentView {
                     addingWaypointMapMarker(waypointMapMakerGeoCoordinate);
                     map.setCenter(waypointMapMakerGeoCoordinate, Map.Animation.LINEAR);
                     isDragged = true;
+                    switchUiControls(View.VISIBLE);
                 }
             });
             searchResultSnackbar.show();
