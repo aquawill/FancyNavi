@@ -320,144 +320,12 @@ class MapFragmentView {
                     for (LaneInformation.Direction direction : directions) {
                         laneDirectionCategory += direction.value();
                     }
-                    switch (laneDirectionCategory) {
-                        case 1:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_1);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2);
-                            isLaneDisplayed = true;
-                            break;
-                        case 3:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_3);
-                            isLaneDisplayed = true;
-                            break;
-                        case 4:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_4);
-                            isLaneDisplayed = true;
-                            break;
-                        case 5:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_5);
-                            isLaneDisplayed = true;
-                            break;
-                        case 6:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_6);
-                            isLaneDisplayed = true;
-                            break;
-                        case 9:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_9);
-                            isLaneDisplayed = true;
-                            break;
-                        case 16:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_16);
-                            isLaneDisplayed = true;
-                            break;
-                        case 17:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_17);
-                            isLaneDisplayed = true;
-                            break;
-                        case 64:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_64);
-                            isLaneDisplayed = true;
-                            break;
-                        case 65:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_65);
-                            isLaneDisplayed = true;
-                            break;
-                        case 67:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_67);
-                            isLaneDisplayed = true;
-                            break;
-                        case 68:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_68);
-                            isLaneDisplayed = true;
-                            break;
-                        case 69:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_69);
-                            isLaneDisplayed = true;
-                            break;
-                        case 80:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_80);
-                            isLaneDisplayed = true;
-                            break;
-                        case 128:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_128);
-                            isLaneDisplayed = true;
-                            break;
-                        case 129:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_129);
-                            isLaneDisplayed = true;
-                            break;
-                        case 130:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_130);
-                            isLaneDisplayed = true;
-                            break;
-                        case 131:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_131);
-                            isLaneDisplayed = true;
-                            break;
-                        case 192:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_192);
-                            isLaneDisplayed = true;
-                            break;
-                        case 256:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_256);
-                            isLaneDisplayed = true;
-                            break;
-                        case 257:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_257);
-                            isLaneDisplayed = true;
-                            break;
-                        case 512:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_512);
-                            isLaneDisplayed = true;
-                            break;
-                        case 513:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_513);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2048:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2048);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2049:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2049);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2052:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2052);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2053:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2053);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2056:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2056);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2112:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2112);
-                            isLaneDisplayed = true;
-                            break;
-                        case 2113:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_2113);
-                            isLaneDisplayed = true;
-                            break;
-                        case 4096:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_4096);
-                            isLaneDisplayed = true;
-                            break;
-                        case 8192:
-                            laneDcmImageView.setImageResource(R.drawable.ic_lane_dcm_8192);
-                            isLaneDisplayed = true;
-                            break;
-                        default:
-                            laneDcmImageView.setImageResource(R.drawable.transparent_24px);
-                            laneDcmImageView.setAlpha(0.3f);
-                    }
+
+                    Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, m_activity);
+                    laneDcmImageView.setImageDrawable(laneDcmIcon);
+                    isLaneDisplayed = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
                     laneDcmImageView.setCropToPadding(false);
+
                     if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
                         laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
                     } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
@@ -2280,6 +2148,10 @@ class MapFragmentView {
             m_naviControlButton.setVisibility(View.VISIBLE);
             clearButton.setVisibility(View.VISIBLE);
         }
+    }
+
+    class OverlayLayers {
+
     }
 
 }
