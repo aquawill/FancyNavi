@@ -41,6 +41,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import com.fancynavi.app.R;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -57,6 +59,7 @@ import com.here.android.mpa.customlocation2.CLE2OperationResult;
 import com.here.android.mpa.customlocation2.CLE2Request;
 import com.here.android.mpa.customlocation2.CLE2Task;
 import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.guidance.SafetySpotNotification;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapOverlay;
 import com.here.odnp.util.Log;
@@ -65,8 +68,10 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 
@@ -83,6 +88,7 @@ import static com.fancynavi.android.app.MapFragmentView.m_naviControlButton;
 import static com.fancynavi.android.app.MapFragmentView.m_navigationManager;
 import static com.fancynavi.android.app.MapFragmentView.m_positioningManager;
 import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListener;
+import static com.fancynavi.android.app.MapFragmentView.navigationListeners;
 import static com.fancynavi.android.app.MapFragmentView.northUpButton;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.android.app.MapFragmentView.supportMapFragment;
@@ -425,9 +431,53 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    NavigationManager.SafetySpotListener simpleSafetySpotListener = new NavigationManager.SafetySpotListener() {
+        @Override
+        public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
+            super.onSafetySpot(safetySpotNotification);
+        }
+    };
+
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+        if (isInPictureInPictureMode) {
+//            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.GONE);
+            findViewById(R.id.map_constraint_layout).setVisibility(View.GONE);
+            TextView distanceTextView = findViewById(R.id.distanceView);
+            findViewById(R.id.guidanceManeuverView).setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+            distanceTextView.setTextSize(DpConverter.convertDpToPixel(8, this));
+            m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
+            m_navigationManager.removeRealisticViewListener(navigationListeners.getRealisticViewListener());
+            m_navigationManager.removeSafetySpotListener(navigationListeners.getSafetySpotListener());
+            m_navigationManager.addSafetySpotListener(new WeakReference<>(simpleSafetySpotListener));
+            EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
+                    NavigationManager.AudioEvent.MANEUVER,
+                    NavigationManager.AudioEvent.ROUTE,
+                    NavigationManager.AudioEvent.SPEED_LIMIT,
+                    NavigationManager.AudioEvent.GPS,
+                    NavigationManager.AudioEvent.SAFETY_SPOT
+            );
+            m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
+        } else {
+//            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
+            findViewById(R.id.map_constraint_layout).setVisibility(View.VISIBLE);
+            findViewById(R.id.guidanceManeuverView).setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            TextView distanceTextView = findViewById(R.id.distanceView);
+            distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, this));
+            EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
+                    NavigationManager.AudioEvent.MANEUVER,
+                    NavigationManager.AudioEvent.ROUTE,
+                    NavigationManager.AudioEvent.SPEED_LIMIT,
+                    NavigationManager.AudioEvent.GPS
+            );
+            m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
+            m_navigationManager.removeSafetySpotListener(simpleSafetySpotListener);
+            m_navigationManager.addLaneInformationListener(new WeakReference<>(navigationListeners.getLaneinformationListener()));
+            m_navigationManager.addRealisticViewListener(new WeakReference<>(navigationListeners.getRealisticViewListener()));
+            m_navigationManager.addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
+        }
     }
 
     @Override

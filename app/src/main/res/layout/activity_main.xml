@@ -3,8 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_linear_layout"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:orientation="vertical">
 
     <android.support.constraint.ConstraintLayout
@@ -72,7 +72,9 @@
             android:layout_marginBottom="4dp"
             android:elevation="2dp"
             android:foreground="@drawable/ic_minimize_window"
-            android:visibility="visible"
+            android:scaleX="0.9"
+            android:scaleY="0.9"
+            android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -528,17 +530,16 @@
 
     <com.here.msdkui.guidance.GuidanceManeuverView
         android:id="@+id/guidanceManeuverView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="2dp"
         android:visibility="gone">
 
     </com.here.msdkui.guidance.GuidanceManeuverView>
 
-
     <com.here.msdkui.guidance.GuidanceNextManeuverView
         android:id="@+id/guidance_next_maneuver_view"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:elevation="2dp"
         android:visibility="gone" />
