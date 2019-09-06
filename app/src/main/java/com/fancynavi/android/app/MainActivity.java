@@ -426,6 +426,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
+        super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+    }
+
+    @Override
     public void onDestroy() {
         m_mapFragmentView.onDestroy();
         super.onDestroy();

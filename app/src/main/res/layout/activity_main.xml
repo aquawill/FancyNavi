@@ -61,6 +61,18 @@
             android:elevation="2dp"
             android:foreground="@drawable/ic_satellite"
             android:visibility="visible"
+            app:layout_constraintBottom_toTopOf="@id/minimize_map_button"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <Button
+            android:id="@+id/minimize_map_button"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginBottom="4dp"
+            android:elevation="2dp"
+            android:foreground="@drawable/ic_minimize_window"
+            android:visibility="visible"
             app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="parent" />
 

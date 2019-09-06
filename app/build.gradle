@@ -5,7 +5,7 @@ android {
 
     defaultConfig {
         applicationId 'com.fancynavi.android.app'
-        minSdkVersion 23
+        minSdkVersion 24
 
         targetSdkVersion 28
         versionCode 1

@@ -240,6 +240,7 @@ class MapFragmentView {
     private Button pedsRouteButton;
     private Button trafficButton;
     private Button satMapButton;
+    private Button minimizeMapButton;
     private Button searchButton;
     private EditText searchTextBar;
     private LinearLayout searchBarLinearLayout;
@@ -1719,6 +1720,16 @@ class MapFragmentView {
                                 mapSchemeChanger.satelliteMapOff();
                             }
                         });
+
+                        minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
+                        minimizeMapButton.setBackgroundResource(R.drawable.round_button_off);
+                        minimizeMapButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                m_activity.enterPictureInPictureMode();
+                            }
+                        });
+
                         searchButton = m_activity.findViewById(R.id.search_button);
                         searchTextBar = m_activity.findViewById(R.id.search_input_text);
                         searchBarLinearLayout = m_activity.findViewById(R.id.search_bar_linear_layout);
