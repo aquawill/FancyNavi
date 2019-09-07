@@ -17,6 +17,7 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
+            android:resizeableActivity="true"
             android:supportsPictureInPicture="true">
 
 

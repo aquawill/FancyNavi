@@ -22,6 +22,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -39,9 +40,11 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.fancynavi.app.R;
@@ -108,10 +111,7 @@ public class MainActivity extends AppCompatActivity {
     SensorManager mySensorManager;
     View mapFragmentView;
     Bundle mViewBundle = new Bundle();
-
     ArrayList<Float> azimuthArrayList = new ArrayList<>();
-
-
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
         float[] mGravity;
         float[] mGeomagnetic;
@@ -187,9 +187,16 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     };
+    NavigationManager.SafetySpotListener simpleSafetySpotListener = new NavigationManager.SafetySpotListener() {
+        @Override
+        public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
+            super.onSafetySpot(safetySpotNotification);
+        }
+    };
+    private Configuration configuration;
+    private DisplayMetrics metrics;
     private MapFragmentView m_mapFragmentView;
     private LocationRequest mLocationRequest;
-
     private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
     private long FASTEST_INTERVAL = 2000; /* 2 sec */
 
@@ -213,6 +220,9 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        configuration = getResources().getConfiguration();
+        metrics = getResources().getDisplayMetrics();
+
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int i) {
@@ -224,7 +234,6 @@ public class MainActivity extends AppCompatActivity {
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getSupportActionBar().hide();
-
         mapFragmentView = findViewById(R.id.mapFragmentView);
         setContentView(R.layout.activity_main);
         hideGuidanceView();
@@ -346,7 +355,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
     @Override
     public void onBackPressed() {
         if (!MapFragmentView.isRoadView) {
@@ -431,22 +439,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    NavigationManager.SafetySpotListener simpleSafetySpotListener = new NavigationManager.SafetySpotListener() {
-        @Override
-        public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
-            super.onSafetySpot(safetySpotNotification);
-        }
-    };
-
     @Override
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
 
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
+
         if (isInPictureInPictureMode) {
-//            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.GONE);
+            getBaseContext().getResources().updateConfiguration(configuration, metrics);
+            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.GONE);
             findViewById(R.id.map_constraint_layout).setVisibility(View.GONE);
+            findViewById(R.id.guidance_maneuver_panel_layout).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
             TextView distanceTextView = findViewById(R.id.distanceView);
-            findViewById(R.id.guidanceManeuverView).setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
             distanceTextView.setTextSize(DpConverter.convertDpToPixel(8, this));
             m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
             m_navigationManager.removeRealisticViewListener(navigationListeners.getRealisticViewListener());
@@ -461,9 +464,9 @@ public class MainActivity extends AppCompatActivity {
             );
             m_navigationManager.setEnabledAudioEvents(audioEventEnumSet);
         } else {
-//            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
+            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
             findViewById(R.id.map_constraint_layout).setVisibility(View.VISIBLE);
-            findViewById(R.id.guidanceManeuverView).setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            findViewById(R.id.guidance_maneuver_panel_layout).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             TextView distanceTextView = findViewById(R.id.distanceView);
             distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, this));
             EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
@@ -483,6 +486,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         m_mapFragmentView.onDestroy();
+        Log.d("test", "onDestroy");
         super.onDestroy();
     }
+
 }

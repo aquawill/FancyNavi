@@ -284,9 +284,12 @@ class MapFragmentView {
 //                electronicHorizonActivation.startElectronicHorizonUpdate();
 //            }
 //            Log.d("test", "croppedRoute.getNearestIndex(geoPosition.getCoordinate()): " + croppedRoute.getNearestIndex(geoPosition.getCoordinate()) + "/" + croppedRoute.getAllPoints().size());
-            if (croppedRoute.getNearestIndex(geoPosition.getCoordinate()) == croppedRoute.getAllPoints().size() - 1) {
-                cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
+            if (routeShapePointGeoCoordinateList.size() > 1) {
+                if (croppedRoute.getNearestIndex(geoPosition.getCoordinate()) == croppedRoute.getAllPoints().size() - 1) {
+                    cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
+                }
             }
+
             if (lastKnownLocation != null) {
                 proceedingDistance = lastKnownLocation.distanceTo(geoPosition.getCoordinate());
                 if (lastKnownLocation.distanceTo(geoPosition.getCoordinate()) > 0) {
@@ -374,23 +377,28 @@ class MapFragmentView {
 
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
-            m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
-            minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
-            minimizeMapButton.setVisibility(View.GONE);
-            distanceMarkerLinearLayout.setVisibility(View.GONE);
-            mapSchemeChanger.navigationMapOff();
-            isNavigating = false;
-            isRoadView = false;
-            isRouteOverView = true;
-            junctionViewImageView.setVisibility(View.GONE);
-            signpostImageView.setVisibility(View.GONE);
-            m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
-            new ShiftMapCenter(m_map, 0.5f, 0.6f);
-            m_map.setTilt(0);
-            m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
-            m_naviControlButton.setVisibility(View.VISIBLE);
-            clearButton.setVisibility(View.VISIBLE);
-            stopForegroundService();
+            if (!m_activity.isInPictureInPictureMode()) {
+                m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
+                minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
+                minimizeMapButton.setVisibility(View.GONE);
+                distanceMarkerLinearLayout.setVisibility(View.GONE);
+                mapSchemeChanger.navigationMapOff();
+                isNavigating = false;
+                isRoadView = false;
+                isRouteOverView = true;
+                junctionViewImageView.setVisibility(View.GONE);
+                signpostImageView.setVisibility(View.GONE);
+                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+                new ShiftMapCenter(m_map, 0.5f, 0.6f);
+                m_map.setTilt(0);
+                m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
+                m_naviControlButton.setVisibility(View.VISIBLE);
+                clearButton.setVisibility(View.VISIBLE);
+                stopForegroundService();
+            } else {
+                m_activity.finish();
+            }
+
         }
 
         @Override
@@ -1013,31 +1021,33 @@ class MapFragmentView {
             }
             shapePointIndex += 1;
         }
-        croppedRoute = new GeoPolyline(croppedShapePointGeoCoordinateList);
-        CLE2CorridorRequest cle2CorridorRequest = new CLE2CorridorRequest("TWN_HWAY_MILEAGE", croppedShapePointGeoCoordinateList, radius);
-        cle2CorridorRequest.setConnectivityMode(CLE2Request.CLE2ConnectivityMode.AUTO);
-        cle2CorridorRequest.setCachingEnabled(true);
-        cle2CorridorRequest.execute(new CLE2Request.CLE2ResultListener() {
-            @Override
-            public void onCompleted(CLE2Result cle2Result, String s) {
-                int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_MILEAGE");
-                Log.d("Test", "CLE2CorridorRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
-                for (CLE2Geometry cle2Geometry : cle2Result.getGeometries()) {
-                    CLE2PointGeometry cle2PointGeometry = (CLE2PointGeometry) cle2Geometry;
-                    String distanceValue = cle2PointGeometry.getAttributes().get("DISTANCE_VALUE");
-                    if (distanceValue != null && distanceValue.endsWith("0K")) {
-                        TextView distanceMarkerTextView = new TextView(m_activity);
-                        distanceMarkerTextView.setText(distanceValue);
-                        distanceMarkerTextView.setTextScaleX(0.8f);
-                        distanceMarkerTextView.setBackgroundColor(Color.argb(128, 6, 70, 39));
-                        distanceMarkerTextView.setTextColor(m_activity.getResources().getColor(R.color.white));
-                        MapOverlay distanceMarkerMapOverlay = new MapOverlay(distanceMarkerTextView, cle2PointGeometry.getPoint());
-                        m_map.addMapOverlay(distanceMarkerMapOverlay);
-                        distanceMarkerMapOverlayList.add(distanceMarkerMapOverlay);
+        if (croppedShapePointGeoCoordinateList.size() > 1) {
+            croppedRoute = new GeoPolyline(croppedShapePointGeoCoordinateList);
+            CLE2CorridorRequest cle2CorridorRequest = new CLE2CorridorRequest("TWN_HWAY_MILEAGE", croppedShapePointGeoCoordinateList, radius);
+            cle2CorridorRequest.setConnectivityMode(CLE2Request.CLE2ConnectivityMode.AUTO);
+            cle2CorridorRequest.setCachingEnabled(true);
+            cle2CorridorRequest.execute(new CLE2Request.CLE2ResultListener() {
+                @Override
+                public void onCompleted(CLE2Result cle2Result, String s) {
+                    int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_MILEAGE");
+                    Log.d("Test", "CLE2CorridorRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
+                    for (CLE2Geometry cle2Geometry : cle2Result.getGeometries()) {
+                        CLE2PointGeometry cle2PointGeometry = (CLE2PointGeometry) cle2Geometry;
+                        String distanceValue = cle2PointGeometry.getAttributes().get("DISTANCE_VALUE");
+                        if (distanceValue != null && distanceValue.endsWith("0K")) {
+                            TextView distanceMarkerTextView = new TextView(m_activity);
+                            distanceMarkerTextView.setText(distanceValue);
+                            distanceMarkerTextView.setTextScaleX(0.8f);
+                            distanceMarkerTextView.setBackgroundColor(Color.argb(128, 6, 70, 39));
+                            distanceMarkerTextView.setTextColor(m_activity.getResources().getColor(R.color.white));
+                            MapOverlay distanceMarkerMapOverlay = new MapOverlay(distanceMarkerTextView, cle2PointGeometry.getPoint());
+                            m_map.addMapOverlay(distanceMarkerMapOverlay);
+                            distanceMarkerMapOverlayList.add(distanceMarkerMapOverlay);
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
     }
 
     private void initGuidanceStreetLabelView(Context context, NavigationManager navigationManager, Route route) {

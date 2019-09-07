@@ -55,3 +55,8 @@ Speed camera alert and traffic signs.
 Display of distance markers and speed limits.
 
 ![](https://i.imgur.com/SiIswBQ.gif)
+
+Display maneuver guidance info with PIP mode.
+
+![](https://i.imgur.com/ha0QuS1.gif)
+

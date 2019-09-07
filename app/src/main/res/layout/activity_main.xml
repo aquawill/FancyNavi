@@ -7,6 +7,22 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
+    <com.here.msdkui.guidance.GuidanceManeuverView
+        android:id="@+id/guidanceManeuverView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="2dp"
+        android:visibility="gone">
+
+    </com.here.msdkui.guidance.GuidanceManeuverView>
+
+    <com.here.msdkui.guidance.GuidanceNextManeuverView
+        android:id="@+id/guidance_next_maneuver_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="2dp"
+        android:visibility="gone" />
+
     <android.support.constraint.ConstraintLayout
         android:id="@+id/map_constraint_layout"
         android:layout_width="match_parent"
@@ -527,22 +543,6 @@
             tools:layout_editor_absoluteX="25dp" />
 
     </android.support.constraint.ConstraintLayout>
-
-    <com.here.msdkui.guidance.GuidanceManeuverView
-        android:id="@+id/guidanceManeuverView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="2dp"
-        android:visibility="gone">
-
-    </com.here.msdkui.guidance.GuidanceManeuverView>
-
-    <com.here.msdkui.guidance.GuidanceNextManeuverView
-        android:id="@+id/guidance_next_maneuver_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="2dp"
-        android:visibility="gone" />
 
 
 </LinearLayout>
