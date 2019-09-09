@@ -25,6 +25,8 @@ Demo Functions:
 22.	HERE advanced network positioning (with cell/WiFi).
 23.	Switch GPS on/off.
 24.	Location logging (for road test purposes).
+25. Toll Cost calculation for Car/Truck.
+26. Display guidance maneuver information with PIP mode.
 
 -------------------------
 

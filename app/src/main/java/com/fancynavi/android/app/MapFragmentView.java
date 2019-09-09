@@ -1478,21 +1478,32 @@ class MapFragmentView {
                         mapRouteBBox.expand((float) (geoBoundingBoxDimensionCalculator.getBBoxHeight() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getBBoxWidth() * 0.6));
                         m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         m_naviControlButton.setText("Start Navi");
+                        String routeLength;
+                        if (m_route.getLength() > 999) {
+                            routeLength = m_route.getLength() / 1000 + "." + m_route.getLength() % 1000 + " km";
+                        } else {
+                            routeLength = m_route.getLength() + " m";
+                        }
 
-                        new TollCostRequest(m_route).execute(new TollCostRequest.Listener<TollCostResult>() {
-                            @Override
-                            public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
-                                Log.d("test", "getTransportMode: " + m_route.getRoutePlan().getRouteOptions().getTransportMode());
-                                Log.d("test", "getErrorCode: " + tollCostError.getErrorCode());
-                                Log.d("test", "getErrorMessage: " + tollCostError.getErrorMessage());
-                                Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                Log.d("test", "getTotalTollCost: " + tollCostResult.getTotalTollCost());
-
-                                Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + m_route.getLength() + "m / Cost: " + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
-                            }
-                        });
-//                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + m_route.getLength() + "m", Snackbar.LENGTH_LONG).show();
+                        switch (m_route.getRoutePlan().getRouteOptions().getTransportMode()) {
+                            case CAR:
+                            case TRUCK:
+                                new TollCostRequest(m_route).execute(new TollCostRequest.Listener<TollCostResult>() {
+                                    @Override
+                                    public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
+                                        Log.d("test", "getTransportMode: " + m_route.getRoutePlan().getRouteOptions().getTransportMode());
+                                        Log.d("test", "getErrorCode: " + tollCostError.getErrorCode());
+                                        Log.d("test", "getErrorMessage: " + tollCostError.getErrorMessage());
+                                        Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                        Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                        Log.d("test", "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
+                                        Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / Cost: " + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
+                                    }
+                                });
+                                break;
+                            default:
+                                Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                        }
                         supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
                     } else {
