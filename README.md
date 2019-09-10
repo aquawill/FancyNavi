@@ -16,17 +16,18 @@ Demo Functions:
 13.	Safety camera warning.
 14.	Speed limit warning/display.
 15.	Traffic congestion warning.
-16.	Traffic sign warning (driver alert).
+16.	Traffic sign warning and display (driver alert).
 17.	Traffic aware rerouting.
-18.	3D object display.
+18.	3D object display as position indicator.
 19.	Custom location extension with SDK (freeway mileage display).
 20.	Map customization and scheme switching.
-21.	HERE SDK UI Kit.
+21.	HERE SDK UI Kit (GuidanceManeuverView/GuidanceNextManeuverView).
 22.	HERE advanced network positioning (with cell/WiFi).
 23.	Switch GPS on/off.
 24.	Location logging (for road test purposes).
 25. Toll Cost calculation for Car/Truck.
-26. Display guidance maneuver information with PIP mode.
+26. Display guidance maneuver information with PIP mode (Android N).
+27. Support Multi Window mode (Android N).
 
 -------------------------
 
@@ -62,3 +63,6 @@ Display maneuver guidance info with PIP mode.
 
 ![](https://i.imgur.com/ha0QuS1.gif)
 
+Support MultiWindow Mode.
+
+![](https://i.imgur.com/ysqDmWe.gif)

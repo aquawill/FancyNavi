@@ -16,7 +16,6 @@ import com.here.android.mpa.routing.RouteWaypoint;
 import java.util.ArrayList;
 
 import static com.fancynavi.android.app.MapFragmentView.currentGeoPosition;
-import static com.fancynavi.android.app.MapFragmentView.m_map;
 
 class HereRouter {
     private AppCompatActivity m_activity;
@@ -63,7 +62,7 @@ class HereRouter {
             GeoCoordinate mapMarkerGeocoordinate = mapMarker.getCoordinate();
             mapMarkerGeocoordinate.setAltitude(0);
             waypoints.add(mapMarkerGeocoordinate);
-            m_map.removeMapObject(mapMarker);
+            DataHolder.getMap().removeMapObject(mapMarker);
         }
 
         inputWaypointIcons.clear();
