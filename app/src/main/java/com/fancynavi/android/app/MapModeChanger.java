@@ -82,6 +82,7 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.sign_imageView_3).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.GONE);
+        DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(0);
         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
         DataHolder.getSupportMapFragment().setOnTouchListener(emptyMapOnTouchListener);
@@ -104,6 +105,7 @@ class MapModeChanger {
             DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
             DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
         }
+        DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(1);
         if (isNavigating) {
             new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);

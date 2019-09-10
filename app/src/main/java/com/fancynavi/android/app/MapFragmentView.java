@@ -2025,8 +2025,11 @@ class MapFragmentView {
         m_activity.findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);
         m_activity.findViewById(R.id.signpostImageView).setVisibility(View.INVISIBLE);
         if (!m_activity.isInMultiWindowMode()) {
-            DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
-            DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
+            zoomInButton.setVisibility(View.VISIBLE);
+            zoomOutButton.setVisibility(View.VISIBLE);
+        } else {
+            zoomInButton.setVisibility(View.GONE);
+            zoomOutButton.setVisibility(View.GONE);
         }
         m_naviControlButton.setVisibility(View.GONE);
         clearButton.setVisibility(View.GONE);
@@ -2081,8 +2084,6 @@ class MapFragmentView {
         northUpButton.callOnClick();
         supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
         switchUiControls(View.GONE);
-        zoomInButton.setVisibility(View.VISIBLE);
-        zoomOutButton.setVisibility(View.VISIBLE);
         northUpButton.setVisibility(View.VISIBLE);
 
         EnumSet<Map.LayerCategory> poiLayers = EnumSet.of(
