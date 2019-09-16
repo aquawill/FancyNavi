@@ -2,8 +2,6 @@ package com.fancynavi.android.app;
 
 import android.content.Context;
 
-import com.fancynavi.app.R;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.FloatBuffer;

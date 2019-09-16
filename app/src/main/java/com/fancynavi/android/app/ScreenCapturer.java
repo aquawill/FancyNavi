@@ -5,8 +5,6 @@ import android.os.Environment;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 
-import com.fancynavi.app.R;
-
 import java.io.File;
 import java.io.FileOutputStream;
 

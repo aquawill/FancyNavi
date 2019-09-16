@@ -38,7 +38,6 @@ import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.fancynavi.app.R;
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;

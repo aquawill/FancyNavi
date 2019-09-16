@@ -3,7 +3,6 @@ package com.fancynavi.android.app;
 import android.graphics.drawable.Drawable;
 import android.support.v7.app.AppCompatActivity;
 
-import com.fancynavi.app.R;
 
 public class LaneDirectionCategoryPresenter {
     static boolean isLaneDirectionCategoryShowing;

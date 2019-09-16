@@ -27,8 +27,6 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
-import com.fancynavi.app.R;
-
 
 public class ForegroundService extends Service {
 
@@ -56,13 +54,13 @@ public class ForegroundService extends Service {
                     PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
             Notification notification =
-                new NotificationCompat.Builder(this.getApplicationContext(), CHANNEL)
-                    .setContentTitle("Guidance")
-                    .setContentText("Guidance in progress ...")
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentIntent(pendingIntent)
-                    .setLocalOnly(true)
-                    .build();
+                    new NotificationCompat.Builder(this.getApplicationContext(), CHANNEL)
+                            .setContentTitle("Guidance")
+                            .setContentText("Guidance in progress ...")
+                            .setSmallIcon(R.mipmap.ic_launcher)
+                            .setContentIntent(pendingIntent)
+                            .setLocalOnly(true)
+                            .build();
 
             startForeground(FOREGROUND_SERVICE_ID, notification);
         } else if (intent.getAction().equals(STOP_ACTION)) {

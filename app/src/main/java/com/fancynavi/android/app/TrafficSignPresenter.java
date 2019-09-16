@@ -7,7 +7,6 @@ import android.speech.tts.TextToSpeech;
 import android.view.View;
 import android.widget.ImageView;
 
-import com.fancynavi.app.R;
 import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.common.TrafficSign;
 

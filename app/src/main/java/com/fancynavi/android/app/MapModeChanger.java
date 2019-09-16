@@ -2,7 +2,6 @@ package com.fancynavi.android.app;
 
 import android.view.View;
 
-import com.fancynavi.app.R;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.SafetySpotNotification;
 

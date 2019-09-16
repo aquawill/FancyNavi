@@ -7,7 +7,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import com.fancynavi.app.R;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoicePackage;
@@ -27,7 +26,7 @@ class VoiceActivation {
     private String desiredLangCode;
     private long desiredVoiceId;
 
-    public VoiceActivation(AppCompatActivity activity) {
+    VoiceActivation(AppCompatActivity activity) {
         this.activity = activity;
     }
 
