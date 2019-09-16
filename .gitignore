@@ -2,7 +2,6 @@
 build/generated/
 build/intermediates/
 build/tmp/
-build/outputs/logs/
 !app/libs/README.md
 .idea/
 *.iml
