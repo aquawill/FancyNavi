@@ -1598,6 +1598,9 @@ class MapFragmentView {
 
                         mapSchemeChanger = new MapSchemeChanger(m_map);
 
+                        CustomRasterTileOverlay customRasterTileOverlay = new CustomRasterTileOverlay();
+                        m_map.addRasterTileSource(customRasterTileOverlay);
+
                         isNavigating = false;
                         GeoCoordinate defaultMapCenter = new GeoCoordinate(25.038137, 121.513936);
                         m_map.setCenter(defaultMapCenter, Map.Animation.NONE);
