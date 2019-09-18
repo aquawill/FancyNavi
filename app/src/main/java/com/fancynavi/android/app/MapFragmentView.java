@@ -152,6 +152,18 @@ class MapFragmentView {
     };
     static Button m_naviControlButton;
     static Button clearButton;
+    static GeoBoundingBox mapRouteBBox;
+    static ImageView junctionViewImageView;
+    static ImageView signpostImageView;
+    static boolean isRoadView = false;
+    static boolean isSatMap = false;
+    static boolean isRouteOverView;
+    static boolean isNavigating;
+    static boolean isSignShowing;
+    static MapLocalModel currentPositionMapLocalModel;
+    static Button northUpButton;
+    static TextView trafficWarningTextView;
+    static List<MapOverlay> distanceMarkerMapOverlayList = new ArrayList<>();
     static OnTouchListener mapOnTouchListenerForNavigation = new OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
@@ -159,23 +171,49 @@ class MapFragmentView {
             return false;
         }
     };
-    static GeoBoundingBox mapRouteBBox;
+    static NavigationListeners navigationListeners;
     private Map m_map;
-    static ImageView junctionViewImageView;
-    static ImageView signpostImageView;
-    static boolean isRoadView = false;
-    static boolean isSatMap = false;
     private NavigationManager m_navigationManager;
-    static boolean isRouteOverView;
-    static boolean isNavigating;
-    static boolean isSignShowing;
-    static MapLocalModel currentPositionMapLocalModel;
-    static Button northUpButton;
-    static TextView trafficWarningTextView;
     private PositioningManager m_positioningManager;
-    static List<MapOverlay> distanceMarkerMapOverlayList = new ArrayList<>();
     private CLE2ProximityRequest cle2ProximityRequest;
     private SupportMapFragment supportMapFragment;
+    private LinearLayout distanceMarkerLinearLayout;
+    private ImageView distanceMarkerFreeIdImageView;
+    private TextView distanceMarkerDistanceValue;
+    private TrafficWarner trafficWarner;
+    private boolean isPositionLogging = false;
+    private MapSchemeChanger mapSchemeChanger;
+    private LinearLayout laneDcmLinearLayout;
+    private LinearLayout safetyCamLinearLayout;
+    private LinearLayout laneInfoLinearLayoutOverlay;
+    private double distanceToSafetyCamera;
+    private HereRouter hereRouter;
+    private List<TrafficSign> lastTrafficSignList = new ArrayList<>();
+    private RoadElement lastRoadElement;
+    private String signName;
+    private ElectronicHorizonActivation electronicHorizonActivation;
+    private Snackbar searchResultSnackbar;
+    private String searchResultString;
+    private MapMarker selectedFeatureMapMarker;
+    private MapCircle positionAccuracyMapCircle;
+    private ImageView gpsStatusImageView;
+    private GeoPolyline croppedRoute;
+    private List<GeoCoordinate> routeShapePointGeoCoordinateList;
+    private ImageView signImageView1;
+    private ImageView signImageView2;
+    private ImageView signImageView3;
+    private Switch gpsSwitch;
+    private boolean safetyCameraAhead;
+    private GeoCoordinate safetyCameraLocation;
+    private double safetyCameraSpeedLimit;
+    private int safetyCameraSpeedLimitKM;
+    private ImageView safetyCamImageView;
+    private TextView safetyCamTextView;
+    private TextView safetyCamSpeedTextView;
+    private MapMarker safetyCameraMapMarker;
+    private int speedLimitLinearLayoutHeight;
+    private View speedLimitLinearLayout;
+    private AppCompatActivity m_activity;
     private NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
 
         @Override
@@ -236,44 +274,6 @@ class MapFragmentView {
             }
         }
     };
-    static NavigationListeners navigationListeners;
-    private LinearLayout distanceMarkerLinearLayout;
-    private ImageView distanceMarkerFreeIdImageView;
-    private TextView distanceMarkerDistanceValue;
-    private TrafficWarner trafficWarner;
-    private boolean isPositionLogging = false;
-    private MapSchemeChanger mapSchemeChanger;
-    private LinearLayout laneDcmLinearLayout;
-    private LinearLayout safetyCamLinearLayout;
-    private LinearLayout laneInfoLinearLayoutOverlay;
-    private double distanceToSafetyCamera;
-    private HereRouter hereRouter;
-    private List<TrafficSign> lastTrafficSignList = new ArrayList<>();
-    private RoadElement lastRoadElement;
-    private String signName;
-    private ElectronicHorizonActivation electronicHorizonActivation;
-    private Snackbar searchResultSnackbar;
-    private String searchResultString;
-    private MapMarker selectedFeatureMapMarker;
-    private MapCircle positionAccuracyMapCircle;
-    private ImageView gpsStatusImageView;
-    private GeoPolyline croppedRoute;
-    private List<GeoCoordinate> routeShapePointGeoCoordinateList;
-    private ImageView signImageView1;
-    private ImageView signImageView2;
-    private ImageView signImageView3;
-    private Switch gpsSwitch;
-    private boolean safetyCameraAhead;
-    private GeoCoordinate safetyCameraLocation;
-    private double safetyCameraSpeedLimit;
-    private int safetyCameraSpeedLimitKM;
-    private ImageView safetyCamImageView;
-    private TextView safetyCamTextView;
-    private TextView safetyCamSpeedTextView;
-    private MapMarker safetyCameraMapMarker;
-    private int speedLimitLinearLayoutHeight;
-    private View speedLimitLinearLayout;
-    private AppCompatActivity m_activity;
     private VoiceActivation voiceActivation;
     private Button zoomInButton;
     private Button zoomOutButton;
@@ -398,12 +398,6 @@ class MapFragmentView {
         public void onCountryInfo(String s, String s1) {
         }
     };
-
-    MapFragmentView(AppCompatActivity activity) {
-        DataHolder.setActivity(activity);
-        m_activity = DataHolder.getActivity();
-        initSupportMapFragment();
-    }
     /* Navigation Listeners */
     private TrafficWarner.Listener trafficWarnerListener = new TrafficWarner.Listener() {
         @Override
@@ -933,6 +927,12 @@ class MapFragmentView {
 
         }
     };
+
+    MapFragmentView(AppCompatActivity activity) {
+        DataHolder.setActivity(activity);
+        m_activity = DataHolder.getActivity();
+        initSupportMapFragment();
+    }
 
     private static void intoRouteOverView() {
         if (DataHolder.getNavigationManager() != null) {
