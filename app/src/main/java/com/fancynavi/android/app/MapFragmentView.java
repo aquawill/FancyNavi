@@ -1968,7 +1968,7 @@ class MapFragmentView {
                 mapSchemeChanger.navigationMapOn();
                 m_naviControlButton.setVisibility(View.GONE);
                 clearButton.setVisibility(View.GONE);
-                Log.e("Error: ", error.toString());
+                Log.e("Error: ", "NavigationManager.Error: " + error);
                 startForegroundService();
             }
         });
@@ -1985,6 +1985,7 @@ class MapFragmentView {
                 trafficWarner.init();
                 trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
                 mapSchemeChanger.navigationMapOn();
+                Log.e("Error: ", "NavigationManager.Error: " + error);
 //                ElectronicHorizonActivation electronicHorizonActivation = new ElectronicHorizonActivation();
 //                electronicHorizonActivation.setRoute(m_route);
                 m_naviControlButton.setVisibility(View.GONE);

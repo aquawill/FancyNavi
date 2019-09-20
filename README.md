@@ -28,6 +28,7 @@ Demo Functions:
 25. Toll Cost calculation for Car/Truck.
 26. Display guidance maneuver information with PIP mode (Android N).
 27. Support Multi Window mode (Android N).
+28. Display custom raster tile overlay (Taipei City).
 
 -------------------------
 
