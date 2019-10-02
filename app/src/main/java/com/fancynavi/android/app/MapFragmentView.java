@@ -442,19 +442,28 @@ class MapFragmentView {
             }
         }
     };
+
     private NavigationManager.TrafficRerouteListener trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
-            textToSpeech.speak("路徑已自動避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
-            resetMapRoute(routeResult.getRoute());
-            Log.d("test", "traffic rerouted.");
-            m_route = routeResult.getRoute();
-            resetMapRoute(m_route);
-            safetyCameraAhead = false;
-            safetyCameraMapMarker.setTransparency(0);
-            safetyCamLinearLayout.setVisibility(View.GONE);
-            cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
+            textToSpeech.speak("發現避開壅塞路徑，是否使用？", TextToSpeech.QUEUE_FLUSH, null);
+            Snackbar trafficReRoutedSnackBar = Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Found a better route, follow?", Snackbar.LENGTH_LONG);
+            trafficReRoutedSnackBar.setAction("Yes", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    textToSpeech.speak("路徑已避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                    resetMapRoute(routeResult.getRoute());
+                    Log.d("test", "traffic rerouted.");
+                    m_route = routeResult.getRoute();
+                    resetMapRoute(m_route);
+                    safetyCameraAhead = false;
+                    safetyCameraMapMarker.setTransparency(0);
+                    safetyCamLinearLayout.setVisibility(View.GONE);
+                    cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
+                }
+            });
+            trafficReRoutedSnackBar.show();
         }
 
         @Override

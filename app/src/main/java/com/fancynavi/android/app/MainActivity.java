@@ -239,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
         if (accelerometerSensor != null) {
             mySensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        Snackbar purgeCacheSnackBar = Snackbar.make(this.findViewById(R.id.mapFragmentView), "Refresh Map Cache?", Snackbar.LENGTH_LONG);
+        Snackbar purgeCacheSnackBar = Snackbar.make(this.findViewById(R.id.mapFragmentView), "HERE SDK Ver: " + com.here.android.mpa.common.Version.getSdkVersion() + " | Clear Map Cache?", Snackbar.LENGTH_LONG);
         purgeCacheSnackBar.setAction("Yes", new View.OnClickListener() {
             @Override
             public void onClick(View v) {
