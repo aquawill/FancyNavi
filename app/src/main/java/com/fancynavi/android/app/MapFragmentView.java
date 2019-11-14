@@ -1643,13 +1643,14 @@ class MapFragmentView {
                                                 String adminAreaName = address.getAdminArea();
                                                 if (countryName != null && adminAreaName != null) {
                                                     Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
-                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
-                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
-                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
-                                                            }
-                                                        }
-                                                    } else if (countryName.equals("China") || countryName.equals("中国")) {
+//                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
+//                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+//                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
+//                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+//                                                            }
+//                                                        }
+//                                                    }
+                                                    if (countryName.equals("China") || countryName.equals("中国")) {
                                                         if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
                                                             if (!customRasterTileOverlay.getTileUrl().equals("https://b.tile.openstreetmap.org/%s/%s/%s.png")) {
                                                                 customRasterTileOverlay.setTileUrl("https://b.tile.openstreetmap.org/%s/%s/%s.png");
