@@ -4,21 +4,30 @@ import com.here.android.mpa.mapping.MapOverlayType;
 import com.here.android.mpa.mapping.UrlMapRasterTileSourceBase;
 
 public class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
-    private final static String TILE_URL = "https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png";
+
+    private String tileUrl;
 
     CustomRasterTileOverlay() {
         setCachingEnabled(true);
-        hideAtZoomRange(0, 14);
+        hideAtZoomRange(0, 8);
         setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
         setTransparency(Transparency.ON);
         setTileSize(256);
+    }
+
+    String getTileUrl() {
+        return tileUrl;
+    }
+
+    void setTileUrl(String tileUrl) {
+        this.tileUrl = tileUrl;
     }
 
     @Override
     public String getUrl(int x, int y, int z) {
         String url = null;
         try {
-            url = String.format(TILE_URL, z, x, y);
+            url = String.format(tileUrl, z, x, y);
         } catch (Exception ex) {
             ex.printStackTrace();
         }

@@ -12,6 +12,8 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -133,6 +135,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
@@ -1608,8 +1611,9 @@ class MapFragmentView {
                         mapSchemeChanger = new MapSchemeChanger(m_map);
 
                         CustomRasterTileOverlay customRasterTileOverlay = new CustomRasterTileOverlay();
+                        customRasterTileOverlay.setTileUrl("");
                         m_map.addRasterTileSource(customRasterTileOverlay);
-
+                        Geocoder geocoder = new Geocoder(m_activity, Locale.ENGLISH);
                         isNavigating = false;
                         GeoCoordinate defaultMapCenter = new GeoCoordinate(25.038137, 121.513936);
                         m_map.setCenter(defaultMapCenter, Map.Animation.NONE);
@@ -1619,7 +1623,6 @@ class MapFragmentView {
                         m_map.addTransformListener(new Map.OnTransformListener() {
                             @Override
                             public void onMapTransformStart() {
-
                             }
 
                             @Override
@@ -1629,6 +1632,44 @@ class MapFragmentView {
                                     positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
                                 }
                                 northUpButton.setRotation(mapState.getOrientation() * -1);
+
+                                GeoCoordinate mapCenterGeoCoordinate = m_map.getCenter();
+                                try {
+                                    List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+                                    if (addresses.size() > 0) {
+                                        for (Address address : addresses) {
+                                            String countryName = address.getCountryName();
+                                            String adminAreaName = address.getAdminArea();
+                                            if (countryName != null && adminAreaName != null) {
+                                                Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
+                                                if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
+                                                    if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+                                                        if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
+                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                        }
+                                                    }
+                                                } else if (countryName.equals("China")) {
+                                                    if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
+                                                        if (!customRasterTileOverlay.getTileUrl().equals("https://b.tile.openstreetmap.org/%s/%s/%s.png")) {
+                                                            customRasterTileOverlay.setTileUrl("https://b.tile.openstreetmap.org/%s/%s/%s.png");
+                                                        }
+                                                    }
+                                                } else {
+                                                    customRasterTileOverlay.setTileUrl("");
+                                                }
+                                            } else {
+                                                customRasterTileOverlay.setTileUrl("");
+                                            }
+                                        }
+                                    }
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                                if (mapState.getZoomLevel() >= 15) {
+
+
+                                }
+
                             }
                         });
 
@@ -1716,7 +1757,7 @@ class MapFragmentView {
                         m_map.setSafetySpotsVisible(true);
                         m_map.setExtrudedBuildingsVisible(false);
                         m_map.setLandmarksVisible(true);
-                        m_map.setExtendedZoomLevelsEnabled(true);
+                        m_map.setExtendedZoomLevelsEnabled(false);
 
                         switchGuidanceUiViews(View.GONE);
                         gpsStatusImageView = m_activity.findViewById(R.id.gps_status_image_view);
