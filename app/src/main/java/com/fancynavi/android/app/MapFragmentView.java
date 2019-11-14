@@ -1627,49 +1627,47 @@ class MapFragmentView {
 
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
+                                Log.d("test", "getZoomLevel():" + mapState.getZoomLevel());
                                 if (isNavigating || m_map.getZoomLevel() < 17) {
                                     positionAccuracyMapCircle.setLineWidth(0);
                                     positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
                                 }
                                 northUpButton.setRotation(mapState.getOrientation() * -1);
-
-                                GeoCoordinate mapCenterGeoCoordinate = m_map.getCenter();
-                                try {
-                                    List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
-                                    if (addresses.size() > 0) {
-                                        for (Address address : addresses) {
-                                            String countryName = address.getCountryName();
-                                            String adminAreaName = address.getAdminArea();
-                                            if (countryName != null && adminAreaName != null) {
-                                                Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
-                                                if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
-                                                    if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-                                                        if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
-                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                if (mapState.getZoomLevel() > 8) {
+                                    GeoCoordinate mapCenterGeoCoordinate = m_map.getCenter();
+                                    try {
+                                        List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+                                        if (addresses.size() > 0) {
+                                            for (Address address : addresses) {
+                                                String countryName = address.getCountryName();
+                                                String adminAreaName = address.getAdminArea();
+                                                if (countryName != null && adminAreaName != null) {
+                                                    Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
+                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
+                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
+                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                            }
                                                         }
-                                                    }
-                                                } else if (countryName.equals("China")) {
-                                                    if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
-                                                        if (!customRasterTileOverlay.getTileUrl().equals("https://b.tile.openstreetmap.org/%s/%s/%s.png")) {
-                                                            customRasterTileOverlay.setTileUrl("https://b.tile.openstreetmap.org/%s/%s/%s.png");
+                                                    } else if (countryName.equals("China") || countryName.equals("中国")) {
+                                                        if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
+                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://b.tile.openstreetmap.org/%s/%s/%s.png")) {
+                                                                customRasterTileOverlay.setTileUrl("https://b.tile.openstreetmap.org/%s/%s/%s.png");
+                                                            }
                                                         }
+                                                    } else {
+                                                        customRasterTileOverlay.setTileUrl("");
                                                     }
                                                 } else {
                                                     customRasterTileOverlay.setTileUrl("");
                                                 }
-                                            } else {
-                                                customRasterTileOverlay.setTileUrl("");
                                             }
                                         }
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
                                     }
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                                    Log.d("test", customRasterTileOverlay.getTileUrl());
                                 }
-                                if (mapState.getZoomLevel() >= 15) {
-
-
-                                }
-
                             }
                         });
 
