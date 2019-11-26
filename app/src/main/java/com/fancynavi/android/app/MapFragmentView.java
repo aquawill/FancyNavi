@@ -1652,8 +1652,10 @@ class MapFragmentView {
 //                                                    }
                                                     if (countryName.equals("China") || countryName.equals("中国")) {
                                                         if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
-                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://b.tile.openstreetmap.org/%s/%s/%s.png")) {
-                                                                customRasterTileOverlay.setTileUrl("https://b.tile.openstreetmap.org/%s/%s/%s.png");
+                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://%s.tile.openstreetmap.org/%s/%s/%s.png")) {
+                                                                String[] subDomainsArray = {"a", "b", "c"};
+                                                                customRasterTileOverlay.setSubDomains(subDomainsArray);
+                                                                customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
                                                             }
                                                         }
                                                     } else {

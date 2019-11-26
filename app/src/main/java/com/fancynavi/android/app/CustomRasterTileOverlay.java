@@ -5,6 +5,7 @@ import com.here.android.mpa.mapping.UrlMapRasterTileSourceBase;
 
 public class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
 
+    private String[] subDomains;
     private String tileUrl;
 
     CustomRasterTileOverlay() {
@@ -13,6 +14,14 @@ public class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
         setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
         setTransparency(Transparency.ON);
         setTileSize(256);
+    }
+
+    public String[] getSubDomains() {
+        return subDomains;
+    }
+
+    public void setSubDomains(String[] subDomains) {
+        this.subDomains = subDomains;
     }
 
     String getTileUrl() {
@@ -26,10 +35,19 @@ public class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
     @Override
     public String getUrl(int x, int y, int z) {
         String url = null;
-        try {
-            url = String.format(tileUrl, z, x, y);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+        if (subDomains != null) {
+            String s = subDomains[(x + y) % subDomains.length];
+            try {
+                url = String.format(tileUrl, s, z, x, y);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        } else {
+            try {
+                url = String.format(tileUrl, z, x, y);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
         return url;
     }
