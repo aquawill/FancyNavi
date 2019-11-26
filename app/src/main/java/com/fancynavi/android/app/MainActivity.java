@@ -149,19 +149,12 @@ public class MainActivity extends AppCompatActivity {
                     float[] orientation = new float[3];
                     SensorManager.getOrientation(R, orientation);
                     azimuth = (float) Math.toDegrees(orientation[0]);
-                    if (azimuthArrayList.size() > 255) {
+                    if (azimuthArrayList.size() > 1) {
                         azimuthArrayList.remove(0);
                     }
                     azimuthArrayList.add(azimuth);
                     if (currentPositionMapLocalModel != null && !isNavigating) {
-                        float rotatingAngle = 0f;
-                        float total = 0f;
-                        if (azimuthArrayList.size() > 0) {
-                            for (float v : azimuthArrayList) {
-                                total += v;
-                            }
-                            rotatingAngle = new BigDecimal(total / azimuthArrayList.size()).setScale(1, BigDecimal.ROUND_HALF_UP).floatValue();
-                        }
+                        float rotatingAngle = new BigDecimal(azimuth).setScale(1, BigDecimal.ROUND_HALF_UP).floatValue();
                         currentPositionMapLocalModel.setYaw(rotatingAngle);
                         if (!isMapRotating) {
                             if (!isDragged) {

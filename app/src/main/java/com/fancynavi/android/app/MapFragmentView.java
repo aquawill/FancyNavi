@@ -1669,7 +1669,6 @@ class MapFragmentView {
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-                                    Log.d("test", customRasterTileOverlay.getTileUrl());
                                 }
                             }
                         });
