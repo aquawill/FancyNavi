@@ -554,6 +554,33 @@ class MapFragmentView {
         public void onGlobalLayout() {
         }
     };
+
+    private NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
+        @Override
+        public void onManeuverEvent() {
+            super.onManeuverEvent();
+//            Log.d("test", "onManeuverEvent");
+//            String nextRoadName = m_navigationManager.getNextManeuver().getNextRoadName();
+//            int turn = m_navigationManager.getNextManeuver().getTurn().value();
+//            Long distance = m_navigationManager.getNextManeuverDistance();
+//            NotificationChannel notificationChannel = new NotificationChannel(
+//                    "heresdk",
+//                    "HERE_SDK_TEST",
+//                    NotificationManager.IMPORTANCE_HIGH);
+//            NotificationManager notificationManager = (NotificationManager) m_activity.getSystemService(NOTIFICATION_SERVICE);
+//            notificationManager.createNotificationChannel(notificationChannel);
+//            Notification.Builder builder = new Notification.Builder(m_activity);
+//            builder.setSmallIcon(R.mipmap.ic_launcher)
+//                    .setLargeIcon(VectorDrawableConverter.getBitmapFromVectorDrawable(m_activity,   , 128, 128))
+//                    .setTicker("")
+//                    .setContentTitle(nextRoadName)
+//                    .setContentText(distance.toString())
+//                    .setChannelId("heresdk");
+//            notificationManager.cancel(133);
+//            notificationManager.notify(133, builder.build());
+        }
+    };
+
     private NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
         @Override
         public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
@@ -1627,22 +1654,22 @@ class MapFragmentView {
 
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
-                                Log.d("test", "getZoomLevel():" + mapState.getZoomLevel());
                                 if (isNavigating || m_map.getZoomLevel() < 17) {
                                     positionAccuracyMapCircle.setLineWidth(0);
                                     positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
                                 }
                                 northUpButton.setRotation(mapState.getOrientation() * -1);
-                                if (mapState.getZoomLevel() > 8) {
-                                    GeoCoordinate mapCenterGeoCoordinate = m_map.getCenter();
-                                    try {
-                                        List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
-                                        if (addresses.size() > 0) {
-                                            for (Address address : addresses) {
-                                                String countryName = address.getCountryName();
-                                                String adminAreaName = address.getAdminArea();
-                                                if (countryName != null && adminAreaName != null) {
-                                                    Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
+                                if (!isNavigating) {
+                                    if (mapState.getZoomLevel() > 8) {
+                                        GeoCoordinate mapCenterGeoCoordinate = m_map.getCenter();
+                                        try {
+                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+                                            if (addresses.size() > 0) {
+                                                for (Address address : addresses) {
+                                                    String countryName = address.getCountryName();
+                                                    String adminAreaName = address.getAdminArea();
+                                                    if (countryName != null && adminAreaName != null) {
+                                                        Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
 //                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
 //                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
 //                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
@@ -1650,24 +1677,25 @@ class MapFragmentView {
 //                                                            }
 //                                                        }
 //                                                    }
-                                                    if (countryName.equals("China") || countryName.equals("中国")) {
-                                                        if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
-                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://%s.tile.openstreetmap.org/%s/%s/%s.png")) {
-                                                                String[] subDomainsArray = {"a", "b", "c"};
-                                                                customRasterTileOverlay.setSubDomains(subDomainsArray);
-                                                                customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
+                                                        if (countryName.equals("China") || countryName.equals("中国")) {
+                                                            if (mapState.getZoomLevel() >= 8 && mapState.getZoomLevel() <= 22) {
+                                                                if (!customRasterTileOverlay.getTileUrl().equals("https://%s.tile.openstreetmap.org/%s/%s/%s.png")) {
+                                                                    String[] subDomainsArray = {"a", "b", "c"};
+                                                                    customRasterTileOverlay.setSubDomains(subDomainsArray);
+                                                                    customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
+                                                                }
                                                             }
+                                                        } else {
+                                                            customRasterTileOverlay.setTileUrl("");
                                                         }
                                                     } else {
                                                         customRasterTileOverlay.setTileUrl("");
                                                     }
-                                                } else {
-                                                    customRasterTileOverlay.setTileUrl("");
                                                 }
                                             }
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
                                         }
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
                                     }
                                 }
                             }
@@ -2172,6 +2200,7 @@ class MapFragmentView {
         navigationListeners.setRerouteListener(rerouteListener);
         navigationListeners.setTrafficRerouteListener(trafficRerouteListener);
         navigationListeners.setSafetySpotListener(safetySpotListener);
+        navigationListeners.setManeuverEventListener(maneuverEventListener);
 
         m_navigationManager.addNavigationManagerEventListener(new WeakReference<>(navigationListeners.getNavigationManagerEventListener()));
         m_navigationManager.addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
@@ -2184,6 +2213,7 @@ class MapFragmentView {
         }
         m_navigationManager.addRerouteListener(new WeakReference<>(navigationListeners.getRerouteListener()));
         m_navigationManager.addTrafficRerouteListener(new WeakReference<>(navigationListeners.getTrafficRerouteListener()));
+        m_navigationManager.addManeuverEventListener(new WeakReference<>(navigationListeners.getManeuverEventListener()));
     }
 
     class SearchResultHandler {

@@ -10,6 +10,15 @@ class NavigationListeners {
     private NavigationManager.RerouteListener rerouteListener;
     private NavigationManager.TrafficRerouteListener trafficRerouteListener;
     private NavigationManager.SafetySpotListener safetySpotListener;
+    private NavigationManager.ManeuverEventListener maneuverEventListener;
+
+    NavigationManager.ManeuverEventListener getManeuverEventListener() {
+        return maneuverEventListener;
+    }
+
+    void setManeuverEventListener(NavigationManager.ManeuverEventListener maneuverEventListener) {
+        this.maneuverEventListener = maneuverEventListener;
+    }
 
     NavigationManager.LaneInformationListener getLaneinformationListener() {
         return laneinformationListener;

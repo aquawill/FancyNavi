@@ -259,6 +259,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         purgeCacheSnackBar.show();
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Notify();
+    }
+
+    public void Notify() {
+
     }
 
     protected void startLocationUpdates() {
