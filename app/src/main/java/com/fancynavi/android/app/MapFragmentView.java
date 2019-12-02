@@ -1,6 +1,7 @@
 package com.fancynavi.android.app;
 
 import android.app.AlertDialog;
+import android.app.KeyguardManager;
 import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -79,6 +80,7 @@ import com.here.android.mpa.mapping.MapCircle;
 import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
+import com.here.android.mpa.mapping.MapOffScreenRenderer;
 import com.here.android.mpa.mapping.MapOverlay;
 import com.here.android.mpa.mapping.MapRoute;
 import com.here.android.mpa.mapping.MapState;
@@ -138,6 +140,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
+import static com.fancynavi.android.app.MainActivity.isVisible;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
 import static java.util.Locale.TRADITIONAL_CHINESE;
 
@@ -175,6 +178,8 @@ class MapFragmentView {
         }
     };
     static NavigationListeners navigationListeners;
+    static boolean isInvisible = false;
+    private KeyguardManager keyguardManager;
     private Map m_map;
     private NavigationManager m_navigationManager;
     private PositioningManager m_positioningManager;
@@ -184,6 +189,7 @@ class MapFragmentView {
     private ImageView distanceMarkerFreeIdImageView;
     private TextView distanceMarkerDistanceValue;
     private TrafficWarner trafficWarner;
+    private MapOffScreenRenderer mapOffScreenRenderer;
     private boolean isPositionLogging = false;
     private MapSchemeChanger mapSchemeChanger;
     private LinearLayout laneDcmLinearLayout;
@@ -345,6 +351,8 @@ class MapFragmentView {
             geoPositionGeoCoordinate.setAltitude(1);
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
             currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
+
+
         }
 
     };
@@ -360,7 +368,13 @@ class MapFragmentView {
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
             if (!m_activity.isInPictureInPictureMode()) {
-                m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
+                if (navigationListeners.getLaneinformationListener() != null) {
+                    m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
+                }
+                if (DataHolder.getMapOffScreenRenderer() != null) {
+                    DataHolder.getMapOffScreenRenderer().stop();
+                    DataHolder.setMapOffScreenRenderer(null);
+                }
                 minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
                 minimizeMapButton.setVisibility(View.GONE);
                 distanceMarkerLinearLayout.setVisibility(View.GONE);
@@ -384,7 +398,6 @@ class MapFragmentView {
             } else {
                 m_activity.finish();
             }
-
         }
 
         @Override
@@ -559,25 +572,11 @@ class MapFragmentView {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
-//            Log.d("test", "onManeuverEvent");
-//            String nextRoadName = m_navigationManager.getNextManeuver().getNextRoadName();
-//            int turn = m_navigationManager.getNextManeuver().getTurn().value();
-//            Long distance = m_navigationManager.getNextManeuverDistance();
-//            NotificationChannel notificationChannel = new NotificationChannel(
-//                    "heresdk",
-//                    "HERE_SDK_TEST",
-//                    NotificationManager.IMPORTANCE_HIGH);
-//            NotificationManager notificationManager = (NotificationManager) m_activity.getSystemService(NOTIFICATION_SERVICE);
-//            notificationManager.createNotificationChannel(notificationChannel);
-//            Notification.Builder builder = new Notification.Builder(m_activity);
-//            builder.setSmallIcon(R.mipmap.ic_launcher)
-//                    .setLargeIcon(VectorDrawableConverter.getBitmapFromVectorDrawable(m_activity,   , 128, 128))
-//                    .setTicker("")
-//                    .setContentTitle(nextRoadName)
-//                    .setContentText(distance.toString())
-//                    .setChannelId("heresdk");
-//            notificationManager.cancel(133);
-//            notificationManager.notify(133, builder.build());
+            Log.d("test", "onManeuverEvent");
+            Log.d("test", "isVisible: " + isVisible);
+            if (!isVisible) {
+                new NavigationNotificationPusher();
+            }
         }
     };
 
@@ -616,6 +615,18 @@ class MapFragmentView {
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
             geoPositionGeoCoordinateOnGround.setAltitude(0);
+
+            currentGeoPosition = geoPosition;
+
+            if (!isRouteOverView && !isDragged && !isNavigating) {
+                m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
+            }
+            PointF mapTransformCenter = m_map.getTransformCenter();
+            if (keyguardManager.inKeyguardRestrictedInputMode()) {
+                m_activity.setVisible(false);
+            } else {
+                m_activity.setVisible(true);
+            }
 
             if (!isNavigating && m_map.getZoomLevel() >= 17) {
                 positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
@@ -766,15 +777,6 @@ class MapFragmentView {
                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_not_fixed_white_24dp);
                 gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.yellow));
             }
-
-            currentGeoPosition = geoPosition;
-
-            if (!isRouteOverView) {
-                if (!isDragged) {
-                    m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
-                }
-            }
-//            Log.d("test", "safetyCameraAhead: " + safetyCameraAhead);
 
             if (safetyCameraAhead) {
                 distanceToSafetyCamera -= proceedingDistance;
@@ -970,6 +972,7 @@ class MapFragmentView {
     MapFragmentView(AppCompatActivity activity) {
         DataHolder.setActivity(activity);
         m_activity = DataHolder.getActivity();
+        keyguardManager = (KeyguardManager) m_activity.getSystemService(Context.KEYGUARD_SERVICE);
         initSupportMapFragment();
     }
 
@@ -1124,8 +1127,6 @@ class MapFragmentView {
             @Override
             public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
                 guidanceManeuverView.setManeuverData(guidanceManeuverData);
-                if (guidanceManeuverData != null) {
-                }
             }
 
             @Override
@@ -1346,6 +1347,12 @@ class MapFragmentView {
 
     private void intoNavigationMode() {
         initJunctionView();
+
+        mapOffScreenRenderer = new MapOffScreenRenderer(m_activity);
+        mapOffScreenRenderer.setSize(1080, 540);
+        mapOffScreenRenderer.setMap(m_map);
+        DataHolder.setMapOffScreenRenderer(mapOffScreenRenderer);
+//        mapOffScreenRenderer.start();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
@@ -2010,6 +2017,10 @@ class MapFragmentView {
                         TextView distanceTextView = m_activity.findViewById(R.id.distanceView);
                         distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, m_activity));
 
+                        mapOffScreenRenderer = new MapOffScreenRenderer(m_activity);
+                        mapOffScreenRenderer.setMap(m_map);
+                        mapOffScreenRenderer.setSize(500, 300);
+
                     } else {
                         Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
                     }
@@ -2098,7 +2109,8 @@ class MapFragmentView {
         }
         isMapRotating = false;
         isNavigating = false;
-        m_navigationManager = null;
+        m_navigationManager.stop();
+//        m_navigationManager = null;
         switchGuidanceUiViews(View.GONE);
         searchButton.setVisibility(View.VISIBLE);
 //        gpsStatusImageView.setVisibility(View.VISIBLE);

@@ -99,6 +99,7 @@ public class MainActivity extends AppCompatActivity {
     static boolean isMapRotating = false;
     static float lightSensorValue;
     static float azimuth = 0f;
+    static boolean isVisible = true;
     static TextToSpeech textToSpeech;
     SensorManager mySensorManager;
     View mapFragmentView;
@@ -265,11 +266,20 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Notify();
+        Log.d("test", "onPause");
+        isVisible = false;
     }
 
-    public void Notify() {
-
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d("test", "onResume");
+        isVisible = true;
+        if (isNavigating) {
+            intoGuidanceMode();
+        } else {
+            isDragged = false;
+        }
     }
 
     protected void startLocationUpdates() {
@@ -377,7 +387,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (!MapFragmentView.isRoadView) {
+        if (!MapFragmentView.isRoadView && isNavigating) {
             intoGuidanceMode();
         } else {
             isDragged = false;

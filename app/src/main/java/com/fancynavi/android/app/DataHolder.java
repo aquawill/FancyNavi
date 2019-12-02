@@ -5,6 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapOffScreenRenderer;
 import com.here.android.mpa.mapping.SupportMapFragment;
 
 class DataHolder {
@@ -13,6 +14,15 @@ class DataHolder {
     private static NavigationManager navigationManager;
     private static PositioningManager positioningManager;
     private static SupportMapFragment supportMapFragment;
+    private static MapOffScreenRenderer mapOffScreenRenderer;
+
+    static MapOffScreenRenderer getMapOffScreenRenderer() {
+        return mapOffScreenRenderer;
+    }
+
+    static void setMapOffScreenRenderer(MapOffScreenRenderer mapOffScreenRenderer) {
+        DataHolder.mapOffScreenRenderer = mapOffScreenRenderer;
+    }
 
     static AppCompatActivity getActivity() {
         return activity;
