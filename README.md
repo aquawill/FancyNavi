@@ -29,6 +29,7 @@ Demo Functions:
 26. Display guidance maneuver information with PIP mode (Android N).
 27. Support Multi Window mode (Android N).
 28. Overlay OSM tiles for China.
+29. Show notification with snapshot of the next maneuver while app is on the background.
 
 -------------------------
 
