@@ -1,7 +1,5 @@
 .gradle/
-build/generated/
-build/intermediates/
-build/tmp/
+build/
 !app/libs/README.md
 .idea/
 *.iml
