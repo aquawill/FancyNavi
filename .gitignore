@@ -1,5 +1,5 @@
 .gradle/
-build/
+app/build/
 !app/libs/README.md
 .idea/
 *.iml
