@@ -37,34 +37,47 @@ Search for places/POI.
 
 ![](https://i.imgur.com/d8uHfMu.gif)
 
+
 Route calculation.
 
 ![](https://i.imgur.com/pzjsKsm.gif)
+
 
 Draggable waypoints.
 
 ![](https://i.imgur.com/rFOLoRl.gif)
 
+
 Routes for different vehicle types.
 
 ![](https://i.imgur.com/KeKqgmh.gif)
+
 
 Junction view, lane info and speed camera alert.
 
 ![](https://i.imgur.com/tCSkgj6.gif)
 
+
 Speed camera alert and traffic signs.
 
 ![](https://i.imgur.com/OFbjbiU.gif)
+
 
 Display of distance markers and speed limits.
 
 ![](https://i.imgur.com/SiIswBQ.gif)
 
+
 Display maneuver guidance info with PIP mode.
 
 ![](https://i.imgur.com/ha0QuS1.gif)
 
+
 Support MultiWindow Mode.
 
 ![](https://i.imgur.com/ysqDmWe.gif)
+
+
+Notification with map image
+
+![](https://i.imgur.com/Bz2ljIm.gif)
