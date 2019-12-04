@@ -4,6 +4,8 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.graphics.drawable.Icon;
 import android.util.Log;
 
 import com.here.android.mpa.common.OnScreenCaptureListener;
@@ -17,7 +19,7 @@ import static com.fancynavi.android.app.DataHolder.FOREGROUND_SERVICE_ID;
 import static com.fancynavi.android.app.DataHolder.TAG;
 
 class NavigationNotificationPusher {
-    NavigationNotificationPusher() {
+    NavigationNotificationPusher(int maneuverIconId) {
 
         MapOffScreenRenderer mapOffScreenRenderer = new MapOffScreenRenderer(DataHolder.getActivity());
         mapOffScreenRenderer.setSize(1080, 640);
@@ -59,11 +61,10 @@ class NavigationNotificationPusher {
                 Log.d(TAG, "onScreenCaptured");
                 Notification notification =
                         new Notification.Builder(DataHolder.getActivity().getApplicationContext(), CHANNEL)
-                                .setContentTitle("Guidance")
-                                .setContentText("Guidance in progress ...")
                                 .setSmallIcon(R.mipmap.ic_launcher)
-                                .setLargeIcon(bitmap)
+                                .setLargeIcon(Icon.createWithResource(DataHolder.getActivity(), maneuverIconId))
                                 .setStyle(new Notification.BigPictureStyle().bigPicture(bitmap))
+                                .setColor(Color.argb(1, 0, 0, 0))
                                 .setContentTitle(distanceString)
                                 .setContentText(localizedNameOfTurn + "進入" + nextRoadName)
                                 .setContentIntent(pendingIntent)

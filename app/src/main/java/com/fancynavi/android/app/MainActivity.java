@@ -270,18 +270,6 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
         Log.d(TAG, "onPause");
         isVisible = false;
-//        if (DataHolder.getMapOffScreenRenderer() != null) {
-//            DataHolder.getMapOffScreenRenderer().start();
-//        }
-//        if (navigationListeners != null) {
-//            if (navigationListeners.getManeuverEventListener() != null && DataHolder.getNavigationManager() != null) {
-//                DataHolder.getNavigationManager().addManeuverEventListener(new WeakReference<>(navigationListeners.getManeuverEventListener()));
-//
-//            }
-//        }
-//        if (DataHolder.getMapOffScreenRenderer() != null) {
-//            DataHolder.getMapOffScreenRenderer().start();
-//        }
     }
 
     @Override
@@ -289,14 +277,6 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
         Log.d(TAG, "onResume");
         isVisible = true;
-//        if (navigationListeners != null) {
-//            if (navigationListeners.getManeuverEventListener() != null && DataHolder.getNavigationManager() != null) {
-//                DataHolder.getNavigationManager().removeManeuverEventListener(navigationListeners.getManeuverEventListener());
-//            }
-//            if (DataHolder.getMapOffScreenRenderer() != null) {
-//                DataHolder.getMapOffScreenRenderer().stop();
-//            }
-//        }
         if (isNavigating) {
             intoGuidanceMode();
         } else {

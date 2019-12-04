@@ -184,6 +184,7 @@ class MapFragmentView {
         }
     };
     static NavigationListeners navigationListeners;
+    private int maneuverIconId;
     private KeyguardManager keyguardManager;
     private Map m_map;
     private NavigationManager m_navigationManager;
@@ -580,7 +581,7 @@ class MapFragmentView {
             Log.d(TAG, "onManeuverEvent");
             Log.d(TAG, "isVisible: " + isVisible);
             if (!isVisible) {
-                new NavigationNotificationPusher();
+                new NavigationNotificationPusher(maneuverIconId);
             }
         }
     };
@@ -626,7 +627,7 @@ class MapFragmentView {
             if (!isRouteOverView && !isDragged && !isNavigating) {
                 m_map.setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
             }
-            PointF mapTransformCenter = m_map.getTransformCenter();
+
             if (keyguardManager.inKeyguardRestrictedInputMode()) {
                 m_activity.setVisible(false);
             } else {
@@ -1132,7 +1133,8 @@ class MapFragmentView {
             @Override
             public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
                 guidanceManeuverView.setManeuverData(guidanceManeuverData);
-//                Log.d(TAG, "guidanceManeuverData.getIconId():" + guidanceManeuverData.getIconId());
+                Log.d(TAG, "guidanceManeuverData.getIconId():" + guidanceManeuverData.getIconId());
+                maneuverIconId = guidanceManeuverData.getIconId();
             }
 
             @Override
