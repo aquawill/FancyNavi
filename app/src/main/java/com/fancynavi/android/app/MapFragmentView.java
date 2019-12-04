@@ -2,6 +2,8 @@ package com.fancynavi.android.app;
 
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -139,6 +141,10 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 
+import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.fancynavi.android.app.DataHolder.CHANNEL;
+import static com.fancynavi.android.app.DataHolder.CHANNEL_NAME;
+import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
@@ -178,7 +184,6 @@ class MapFragmentView {
         }
     };
     static NavigationListeners navigationListeners;
-    static boolean isInvisible = false;
     private KeyguardManager keyguardManager;
     private Map m_map;
     private NavigationManager m_navigationManager;
@@ -331,7 +336,7 @@ class MapFragmentView {
 //            if (electronicHorizonActivation != null) {
 //                electronicHorizonActivation.startElectronicHorizonUpdate();
 //            }
-//            Log.d("test", "croppedRoute.getNearestIndex(geoPosition.getCoordinate()): " + croppedRoute.getNearestIndex(geoPosition.getCoordinate()) + "/" + croppedRoute.getAllPoints().size());
+//            Log.d(TAG, "croppedRoute.getNearestIndex(geoPosition.getCoordinate()): " + croppedRoute.getNearestIndex(geoPosition.getCoordinate()) + "/" + croppedRoute.getAllPoints().size());
             if (routeShapePointGeoCoordinateList.size() > 1) {
                 if (croppedRoute.getNearestIndex(geoPosition.getCoordinate()) == croppedRoute.getAllPoints().size() - 1) {
                     cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
@@ -371,10 +376,10 @@ class MapFragmentView {
                 if (navigationListeners.getLaneinformationListener() != null) {
                     m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
                 }
-                if (DataHolder.getMapOffScreenRenderer() != null) {
-                    DataHolder.getMapOffScreenRenderer().stop();
-                    DataHolder.setMapOffScreenRenderer(null);
-                }
+//                if (DataHolder.getMapOffScreenRenderer() != null) {
+//                    DataHolder.getMapOffScreenRenderer().stop();
+//                    DataHolder.setMapOffScreenRenderer(null);
+//                }
                 minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
                 minimizeMapButton.setVisibility(View.GONE);
                 distanceMarkerLinearLayout.setVisibility(View.GONE);
@@ -402,7 +407,7 @@ class MapFragmentView {
 
         @Override
         public void onMapUpdateModeChanged(NavigationManager.MapUpdateMode mapUpdateMode) {
-//            Log.d("Test", "mapUpdateMode is: " + mapUpdateMode);
+//            Log.d(TAG, "mapUpdateMode is: " + mapUpdateMode);
         }
 
         @Override
@@ -470,7 +475,7 @@ class MapFragmentView {
                 public void onClick(View v) {
                     textToSpeech.speak("路徑已避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
                     resetMapRoute(routeResult.getRoute());
-                    Log.d("test", "traffic rerouted.");
+                    Log.d(TAG, "traffic rerouted.");
                     m_route = routeResult.getRoute();
                     resetMapRoute(m_route);
                     safetyCameraAhead = false;
@@ -572,8 +577,8 @@ class MapFragmentView {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
-            Log.d("test", "onManeuverEvent");
-            Log.d("test", "isVisible: " + isVisible);
+            Log.d(TAG, "onManeuverEvent");
+            Log.d(TAG, "isVisible: " + isVisible);
             if (!isVisible) {
                 new NavigationNotificationPusher();
             }
@@ -677,7 +682,7 @@ class MapFragmentView {
                         cle2ProximityRequest.execute(new CLE2Request.CLE2ResultListener() {
                             @Override
                             public void onCompleted(CLE2Result result, String error) {
-//                                Log.d("test", "cle2ProximityRequest completed: " + result.getConnectivityModeUsed());
+//                                Log.d(TAG, "cle2ProximityRequest completed: " + result.getConnectivityModeUsed());
                                 /*Display mileage and route number on the upper right corner*/
                                 if (error.equals(CLE2Request.CLE2Error.NONE)) {
                                     List<CLE2Geometry> geometries = result.getGeometries();
@@ -688,7 +693,7 @@ class MapFragmentView {
                                             Double distance = cle2PointGeometry.getPoint().distanceTo(geoPositionGeoCoordinateOnGround);
                                             java.util.Map<String, String> geometryAttributeMap = cle2PointGeometry.getAttributes();
                                             String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
-                                            Log.d("test", distance + " : " + geometryAttributeMap.get("DISTANCE_VALUE"));
+                                            Log.d(TAG, distance + " : " + geometryAttributeMap.get("DISTANCE_VALUE"));
                                             if (routeName.equals(freeWayId)) {
                                                 distanceList.add(distance);
                                             }
@@ -697,11 +702,11 @@ class MapFragmentView {
                                         CLE2Geometry geometry = geometries.get(distanceList.indexOf(minimumDistance));
                                         java.util.Map<String, String> geometryAttributeMap = geometry.getAttributes();
                                         String distanceValue = geometryAttributeMap.get("DISTANCE_VALUE");
-                                        Log.d("test", "selected : " + geometryAttributeMap.get("DISTANCE_VALUE"));
+                                        Log.d(TAG, "selected : " + geometryAttributeMap.get("DISTANCE_VALUE"));
                                         String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
                                         if (routeName.equals(freeWayId) && !isRouteOverView) {
                                             Drawable routeIconDrawable = RouteIconPresenter.getRouteIconName(freeWayId, m_activity);
-//                                            Log.d("test", freeWayId + " \\ " + routeIconDrawable + " \\ " + distanceValue);
+//                                            Log.d(TAG, freeWayId + " \\ " + routeIconDrawable + " \\ " + distanceValue);
                                             if (routeIconDrawable != null) {
                                                 distanceMarkerFreeIdImageView.setBackground(routeIconDrawable);
                                                 distanceMarkerFreeIdImageView.setVisibility(View.VISIBLE);
@@ -717,7 +722,7 @@ class MapFragmentView {
                                     }
                                 } else {
                                     distanceMarkerLinearLayout.setVisibility(View.GONE);
-                                    Log.d("test", "CLE2ResultError: " + error);
+                                    Log.d(TAG, "CLE2ResultError: " + error);
                                 }
                             }
                         });
@@ -780,7 +785,7 @@ class MapFragmentView {
 
             if (safetyCameraAhead) {
                 distanceToSafetyCamera -= proceedingDistance;
-                Log.d("test", "distanceToSafetyCamera: " + distanceToSafetyCamera);
+                Log.d(TAG, "distanceToSafetyCamera: " + distanceToSafetyCamera);
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
@@ -804,8 +809,8 @@ class MapFragmentView {
 
         @Override
         public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
-            Log.d("test", "locationMethod: " + locationMethod.toString());
-            Log.d("test", "locationStatus: " + locationStatus.toString());
+            Log.d(TAG, "locationMethod: " + locationMethod.toString());
+            Log.d(TAG, "locationStatus: " + locationStatus.toString());
             if (locationStatus.equals(PositioningManager.LocationStatus.OUT_OF_SERVICE) || locationStatus.equals(PositioningManager.LocationStatus.TEMPORARILY_UNAVAILABLE)) {
                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_off_white_24dp);
                 gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.red));
@@ -839,7 +844,7 @@ class MapFragmentView {
 
         @Override
         public boolean onMapObjectsSelected(List<ViewObject> list) {
-//            Log.d("Test", "onMapObjectsSelected: " + list.size());
+//            Log.d(TAG, "onMapObjectsSelected: " + list.size());
             for (ViewObject viewObject : list) {
                 if (viewObject.getBaseType() == ViewObject.Type.USER_OBJECT) {
                     if (viewObject.equals(currentPositionMapLocalModel)) {
@@ -954,7 +959,7 @@ class MapFragmentView {
             RouteOptions.TransportMode transportMode = routePlan.getRouteOptions().getTransportMode();
             routePlan.removeAllWaypoints();
             for (MapMarker waypointMapMarker : wayPointIcons) {
-//                Log.d("test", "mapMarkerIndex: " + waypointMapMarker.getTitle() + " getCoordinate: " + mapMarker.getCoordinate());
+//                Log.d(TAG, "mapMarkerIndex: " + waypointMapMarker.getTitle() + " getCoordinate: " + mapMarker.getCoordinate());
                 routePlan.addWaypoint(new RouteWaypoint(waypointMapMarker.getCoordinate()));
                 waypointList.add(waypointMapMarker.getCoordinate());
             }
@@ -1018,10 +1023,10 @@ class MapFragmentView {
         guidanceEstimatedArrivalViewPresenter.addListener(new GuidanceEstimatedArrivalViewListener() {
             @Override
             public void onDataChanged(GuidanceEstimatedArrivalViewData guidanceEstimatedArrivalViewData) {
-                Log.d("Test", "onDataChanged");
+                Log.d(TAG, "onDataChanged");
                 guidanceEstimatedArrivalView.setEstimatedArrivalData(guidanceEstimatedArrivalViewData);
                 if (guidanceEstimatedArrivalViewData != null) {
-                    Log.d("Test", "guidanceEstimatedArrivalViewData " + guidanceEstimatedArrivalViewData.getEta());
+                    Log.d(TAG, "guidanceEstimatedArrivalViewData " + guidanceEstimatedArrivalViewData.getEta());
                 }
             }
         });
@@ -1064,7 +1069,7 @@ class MapFragmentView {
         int distance = 0;
         int shapePointIndex = 0;
         while (shapePointIndex < geoCoordinateList.size() - 1) {
-//            Log.d("test", routeShapePointGeoCoordinateList.size() + " / " + shapePointIndex);
+//            Log.d(TAG, routeShapePointGeoCoordinateList.size() + " / " + shapePointIndex);
             if (shapePointIndex < routeShapePointGeoCoordinateList.size()) {
                 distance += routeShapePointGeoCoordinateList.get(shapePointIndex).distanceTo(routeShapePointGeoCoordinateList.get(shapePointIndex + 1));
                 if (distance < 10000) {
@@ -1087,7 +1092,7 @@ class MapFragmentView {
                 @Override
                 public void onCompleted(CLE2Result cle2Result, String s) {
                     int numberOfStoredGeometries = CLE2DataManager.getInstance().getNumberOfStoredGeometries("TWN_HWAY_MILEAGE");
-                    Log.d("Test", "CLE2CorridorRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
+                    Log.d(TAG, "CLE2CorridorRequest numberOfStoredGeometries: " + numberOfStoredGeometries);
                     for (CLE2Geometry cle2Geometry : cle2Result.getGeometries()) {
                         CLE2PointGeometry cle2PointGeometry = (CLE2PointGeometry) cle2Geometry;
                         String distanceValue = cle2PointGeometry.getAttributes().get("DISTANCE_VALUE");
@@ -1127,6 +1132,7 @@ class MapFragmentView {
             @Override
             public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
                 guidanceManeuverView.setManeuverData(guidanceManeuverData);
+//                Log.d(TAG, "guidanceManeuverData.getIconId():" + guidanceManeuverData.getIconId());
             }
 
             @Override
@@ -1351,7 +1357,8 @@ class MapFragmentView {
         mapOffScreenRenderer = new MapOffScreenRenderer(m_activity);
         mapOffScreenRenderer.setSize(1080, 540);
         mapOffScreenRenderer.setMap(m_map);
-        DataHolder.setMapOffScreenRenderer(mapOffScreenRenderer);
+//        mapOffScreenRenderer.setBlockingRendering(true);
+//        DataHolder.setMapOffScreenRenderer(mapOffScreenRenderer);
 //        mapOffScreenRenderer.start();
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -1508,7 +1515,7 @@ class MapFragmentView {
             m.setAnchorPoint(getMapMarkerAnchorPoint(m));
             m_map.addMapObject(m);
         }
-//        Log.d("Test", "wayPointIcons: " + wayPointIcons.size());
+//        Log.d(TAG, "wayPointIcons: " + wayPointIcons.size());
 
 
         if (m_map.isTrafficInfoVisible()) {
@@ -1519,7 +1526,7 @@ class MapFragmentView {
 
         progressBar = m_activity.findViewById(R.id.progressBar);
         calculatingTextView = m_activity.findViewById(R.id.calculatingTextView);
-//        Log.d("Test", "Route Calculation Started.");
+//        Log.d(TAG, "Route Calculation Started.");
         coreRouter.calculateRoute(hereRouter.getRoutePlan(), new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
             public void onProgress(int i) {
@@ -1535,8 +1542,8 @@ class MapFragmentView {
 
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
-//                Log.d("Test", "Route Calculation Ended.");
-//                Log.d("Test", routingError.toString());
+//                Log.d(TAG, "Route Calculation Ended.");
+//                Log.d(TAG, routingError.toString());
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         isRouteOverView = true;
@@ -1564,12 +1571,12 @@ class MapFragmentView {
                                     @Override
                                     public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
                                         if (tollCostError.getErrorCode() == TollCostError.ErrorCode.SUCCESS) {
-                                            Log.d("test", "getTransportMode: " + m_route.getRoutePlan().getRouteOptions().getTransportMode());
-                                            Log.d("test", "getErrorCode: " + tollCostError.getErrorCode());
-                                            Log.d("test", "getErrorMessage: " + tollCostError.getErrorMessage());
-                                            Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                            Log.d("test", "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                            Log.d("test", "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
+                                            Log.d(TAG, "getTransportMode: " + m_route.getRoutePlan().getRouteOptions().getTransportMode());
+                                            Log.d(TAG, "getErrorCode: " + tollCostError.getErrorCode());
+                                            Log.d(TAG, "getErrorMessage: " + tollCostError.getErrorMessage());
+                                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                            Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
                                             Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / Cost: " + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
                                         } else {
                                             Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "Route of " + m_route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
@@ -1641,8 +1648,12 @@ class MapFragmentView {
                         MapScaleView mapScaleView = m_activity.findViewById(R.id.map_scale_view);
                         mapScaleView.setMap(m_map);
                         mapScaleView.setColor(R.color.black);
-
+                        m_map.setFadingAnimations(false);
                         mapSchemeChanger = new MapSchemeChanger(m_map);
+
+                        DataHolder.setNotificationChannel(new NotificationChannel(CHANNEL, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH));
+                        DataHolder.setNotificationManager((NotificationManager) m_activity.getSystemService(NOTIFICATION_SERVICE));
+                        DataHolder.getNotificationManager().createNotificationChannel(DataHolder.getNotificationChannel());
 
                         CustomRasterTileOverlay customRasterTileOverlay = new CustomRasterTileOverlay();
                         customRasterTileOverlay.setTileUrl("");
@@ -1676,7 +1687,7 @@ class MapFragmentView {
                                                     String countryName = address.getCountryName();
                                                     String adminAreaName = address.getAdminArea();
                                                     if (countryName != null && adminAreaName != null) {
-                                                        Log.d("test", "countryName: " + countryName + " adminAreaName: " + adminAreaName);
+                                                        Log.d(TAG, "countryName: " + countryName + " adminAreaName: " + adminAreaName);
 //                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
 //                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
 //                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
@@ -1708,7 +1719,7 @@ class MapFragmentView {
                             }
                         });
 
-                        m_map.addSchemeChangedListener(s -> Log.d("test", "onMapSchemeChanged: " + s));
+                        m_map.addSchemeChangedListener(s -> Log.d(TAG, "onMapSchemeChanged: " + s));
 
                         supportMapFragment.addOnMapRenderListener(new OnMapRenderListener() {
                             @Override
@@ -1735,7 +1746,7 @@ class MapFragmentView {
                                         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);
                                     }
                                 }
-//                                Log.d("test", "isRouteOverView " + isRouteOverView);
+//                                Log.d(TAG, "isRouteOverView " + isRouteOverView);
 
                                 if (isRouteOverView) {
                                     m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
@@ -2017,10 +2028,6 @@ class MapFragmentView {
                         TextView distanceTextView = m_activity.findViewById(R.id.distanceView);
                         distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, m_activity));
 
-                        mapOffScreenRenderer = new MapOffScreenRenderer(m_activity);
-                        mapOffScreenRenderer.setMap(m_map);
-                        mapOffScreenRenderer.setSize(500, 300);
-
                     } else {
                         Snackbar.make(m_activity.findViewById(R.id.mapFragmentView), "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
                     }
@@ -2109,7 +2116,9 @@ class MapFragmentView {
         }
         isMapRotating = false;
         isNavigating = false;
-        m_navigationManager.stop();
+        if (m_navigationManager != null) {
+            m_navigationManager.stop();
+        }
 //        m_navigationManager = null;
         switchGuidanceUiViews(View.GONE);
         searchButton.setVisibility(View.VISIBLE);
@@ -2250,7 +2259,7 @@ class MapFragmentView {
                     if (discoveryResultPage.getPlaceLinks().size() > 0) {
                         List<PlaceLink> discoveryResultPlaceLink = discoveryResultPage.getPlaceLinks();
                         for (PlaceLink placeLink : discoveryResultPlaceLink) {
-//                            Log.d("Test", placeLink.getTitle());
+//                            Log.d(TAG, placeLink.getTitle());
                             placesSearchResultTitle = placeLink.getTitle();
 //                            placesSearchCategoryName = placeLink.getCategory().getName();
                             GeoCoordinate placesSearchresultGeoCoordinate = placeLink.getPosition();
@@ -2283,7 +2292,7 @@ class MapFragmentView {
             }
             List<ViewObject> selectedMapObjects = m_map.getSelectedObjectsNearby(pointF);
             if (selectedMapObjects.size() > 0) {
-//                Log.d("test", selectedMapObjects.get(0).getClass().getName());
+//                Log.d(TAG, selectedMapObjects.get(0).getClass().getName());
                 switch (selectedMapObjects.get(0).getClass().getName()) {
                     case "com.here.android.mpa.mapping.MapCartoMarker":
                         MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);

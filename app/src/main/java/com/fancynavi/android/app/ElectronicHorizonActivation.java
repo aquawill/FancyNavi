@@ -19,6 +19,8 @@ import com.here.android.mpa.routing.Route;
 
 import java.util.List;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+
 public class ElectronicHorizonActivation {
 
     ElectronicHorizon electronicHorizon;
@@ -30,7 +32,7 @@ public class ElectronicHorizonActivation {
             @Override
             public void onNewPosition(Position position) {
                 LinkRange linkRange = position.getPathTree().getLinks();
-                Log.d("test", "linkRange.getSize() : " + linkRange.getSize());
+                Log.d(TAG, "linkRange.getSize() : " + linkRange.getSize());
                 for (Link link : linkRange) {
                     getTrafficSigns(link);
 
@@ -90,9 +92,9 @@ public class ElectronicHorizonActivation {
                 for (TrafficSign trafficSign : trafficSignList) {
                     int trafficSignType = trafficSign.type;
                     TrafficSign.Direction trafficSignDirection = trafficSign.direction;
-                    Log.d("Test", "linkDirection: " + linkDirection);
-                    Log.d("Test", "trafficSignType: " + trafficSignType);
-                    Log.d("Test", "trafficSignDirection: " + trafficSignDirection);
+                    Log.d(TAG, "linkDirection: " + linkDirection);
+                    Log.d(TAG, "trafficSignType: " + trafficSignType);
+                    Log.d(TAG, "trafficSignDirection: " + trafficSignDirection);
                 }
             }
         } catch (DataNotReadyException dataNotReadyException) {

@@ -27,15 +27,15 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 
+import static com.fancynavi.android.app.DataHolder.CHANNEL;
+import static com.fancynavi.android.app.DataHolder.CHANNEL_NAME;
+import static com.fancynavi.android.app.DataHolder.FOREGROUND_SERVICE_ID;
+
 
 public class ForegroundService extends Service {
 
-    public static int FOREGROUND_SERVICE_ID = 101;
-
     public static String START_ACTION = "com.here.app.tcs.fs.action.start";
     public static String STOP_ACTION = "com.here.app.tcs.fs.action.stop";
-
-    private static String CHANNEL = "default";
 
     @Override
     public void onCreate() {
@@ -77,7 +77,7 @@ public class ForegroundService extends Service {
         }
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel channel = new NotificationChannel(CHANNEL, "Foreground channel",
+        NotificationChannel channel = new NotificationChannel(CHANNEL, CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_DEFAULT);
         channel.setDescription("Channel for foreground service");
         notificationManager.createNotificationChannel(channel);

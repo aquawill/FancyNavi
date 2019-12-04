@@ -74,6 +74,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
 import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
 import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
@@ -95,7 +96,8 @@ import static com.google.android.gms.location.LocationServices.getFusedLocationP
  */
 
 public class MainActivity extends AppCompatActivity {
-    private final static int REQUEST_CODE_ASK_PERMISSIONS = 1;
+    private static final int REQUEST_CODE_ASK_PERMISSIONS = 1;
+
     static boolean isMapRotating = false;
     static float lightSensorValue;
     static float azimuth = 0f;
@@ -118,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
 
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 lightSensorValue = event.values[0];
-                Log.d("test", String.valueOf(lightSensorValue));
+                Log.d(TAG, String.valueOf(lightSensorValue));
             }
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 mGravity = event.values;
@@ -240,9 +242,9 @@ public class MainActivity extends AppCompatActivity {
                 CLE2DataManager.getInstance().newPurgeLocalStorageTask().start(new CLE2Task.Callback<CLE2OperationResult>() {
                     @Override
                     public void onTaskFinished(CLE2OperationResult cle2OperationResult, CLE2Request.CLE2Error cle2Error) {
-                        Log.d("Test", "getAffectedLayerIds: " + cle2OperationResult.getAffectedLayerIds());
-                        Log.d("Test", "getAffectedItemCount: " + cle2OperationResult.getAffectedItemCount());
-                        Log.d("Test", "getErrorCode: " + cle2Error.getErrorCode());
+                        Log.d(TAG, "getAffectedLayerIds: " + cle2OperationResult.getAffectedLayerIds());
+                        Log.d(TAG, "getAffectedItemCount: " + cle2OperationResult.getAffectedItemCount());
+                        Log.d(TAG, "getErrorCode: " + cle2Error.getErrorCode());
                     }
                 });
                 File dir = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps");
@@ -266,15 +268,35 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        Log.d("test", "onPause");
+        Log.d(TAG, "onPause");
         isVisible = false;
+//        if (DataHolder.getMapOffScreenRenderer() != null) {
+//            DataHolder.getMapOffScreenRenderer().start();
+//        }
+//        if (navigationListeners != null) {
+//            if (navigationListeners.getManeuverEventListener() != null && DataHolder.getNavigationManager() != null) {
+//                DataHolder.getNavigationManager().addManeuverEventListener(new WeakReference<>(navigationListeners.getManeuverEventListener()));
+//
+//            }
+//        }
+//        if (DataHolder.getMapOffScreenRenderer() != null) {
+//            DataHolder.getMapOffScreenRenderer().start();
+//        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("test", "onResume");
+        Log.d(TAG, "onResume");
         isVisible = true;
+//        if (navigationListeners != null) {
+//            if (navigationListeners.getManeuverEventListener() != null && DataHolder.getNavigationManager() != null) {
+//                DataHolder.getNavigationManager().removeManeuverEventListener(navigationListeners.getManeuverEventListener());
+//            }
+//            if (DataHolder.getMapOffScreenRenderer() != null) {
+//                DataHolder.getMapOffScreenRenderer().stop();
+//            }
+//        }
         if (isNavigating) {
             intoGuidanceMode();
         } else {
@@ -505,7 +527,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         m_mapFragmentView.onDestroy();
-        Log.d("test", "onDestroy");
+        Log.d(TAG, "onDestroy");
         super.onDestroy();
     }
 

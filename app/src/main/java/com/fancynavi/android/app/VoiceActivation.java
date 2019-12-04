@@ -14,6 +14,8 @@ import com.here.android.mpa.guidance.VoiceSkin;
 
 import java.util.List;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+
 /**
  * Created by aquawill on 2019-05-01.
  */
@@ -61,7 +63,7 @@ class VoiceActivation {
     }
 
     private void downloadVoice(Context context, final long voiceSkinId) {
-        Log.d("Test", "Downloading voice skin ID: " + voiceSkinId);
+        Log.d(TAG, "Downloading voice skin ID: " + voiceSkinId);
 //        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Downloading voice skin ID: " + voiceSkinId, Snackbar.LENGTH_SHORT).show();
 
         voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
@@ -75,7 +77,7 @@ class VoiceActivation {
                     //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
-                    Log.d("Test", "Voice skin " + voiceSkinId + " downloaded and activated.");
+                    Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated.");
                 }
             }
         });
@@ -89,10 +91,10 @@ class VoiceActivation {
             public void onDownloadDone(VoiceCatalog.Error error) {
 
                 if (error != VoiceCatalog.Error.NONE) {
-                    Log.d("Test", "Failed to download catalog.");
+                    Log.d(TAG, "Failed to download catalog.");
                 } else {
                     List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
-//                    Log.d("Test", "# of available voicePackages: " + voicePackages.size());
+//                    Log.d(TAG, "# of available voicePackages: " + voicePackages.size());
                     for (VoicePackage lang : voicePackages) {
                         if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
                             if (lang.isTts()) {
@@ -100,20 +102,20 @@ class VoiceActivation {
                                 break;
                             }
                         }
-//                        Log.d("Test", "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+//                        Log.d(TAG, "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                     }
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
 //                    localInstalledSkins.clear();
-                    Log.d("Test", "# of local skins: " + localInstalledSkins.size());
+                    Log.d(TAG, "# of local skins: " + localInstalledSkins.size());
                     String languageName = "";
                     for (VoiceSkin voice : localInstalledSkins) {
-                        Log.d("Test", "ID: " + voice.getId() + " Language: " + voice.getLanguage());
+                        Log.d(TAG, "ID: " + voice.getId() + " Language: " + voice.getLanguage());
                         languageName = voice.getLanguage();
                         if (voice.getId() == desiredVoiceId) {
                             localVoiceSkinExisted[0] = true;
                         }
                     }
-                    Log.d("Test", "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
+                    Log.d(TAG, "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
