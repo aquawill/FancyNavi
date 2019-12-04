@@ -22,8 +22,6 @@ class NavigationNotificationPusher {
         MapOffScreenRenderer mapOffScreenRenderer = new MapOffScreenRenderer(DataHolder.getActivity());
         mapOffScreenRenderer.setSize(1080, 640);
         mapOffScreenRenderer.setMap(DataHolder.getMap());
-//        mapOffScreenRenderer.setBlockingRendering(true);
-//        DataHolder.setMapOffScreenRenderer(mapOffScreenRenderer);
 
         Intent notificationIntent = new Intent(DataHolder.getActivity(), MainActivity.class);
         notificationIntent.setAction(Intent.ACTION_MAIN);
