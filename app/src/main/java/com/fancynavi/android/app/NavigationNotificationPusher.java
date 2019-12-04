@@ -30,24 +30,14 @@ class NavigationNotificationPusher {
 
         PendingIntent pendingIntent = PendingIntent.getActivity(DataHolder.getActivity(), 0, notificationIntent, 0);
 
-        Maneuver nextManeuver = DataHolder.getNavigationManager().getNextManeuver();
         DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+        Maneuver nextManeuver = DataHolder.getNavigationManager().getNextManeuver();
         DataHolder.getMap().setOrientation(nextManeuver.getMapOrientation());
         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
         DataHolder.getMap().setTilt(0);
         DataHolder.getMap().setCenter(nextManeuver.getCoordinate(), Map.Animation.NONE);
         DataHolder.getMap().setZoomLevel(18);
-        String nextRoadName = DataHolder.getNavigationManager().getNextManeuver().getNextRoadName();
-        Maneuver.Turn turn = DataHolder.getNavigationManager().getNextManeuver().getTurn();
-        TurnPresenter turnPresenter = new TurnPresenter(turn);
-        String localizedNameOfTurn = turnPresenter.getTurnLocalizedName();
-        long distance = DataHolder.getNavigationManager().getNextManeuverDistance();
-        String distanceString;
-        if (distance >= 1000) {
-            distanceString = distance / 1000 + "." + distance % 1000 + "公里";
-        } else {
-            distanceString = distance + "公尺";
-        }
+
         mapOffScreenRenderer.start();
         try {
             Thread.sleep(200);
@@ -58,6 +48,17 @@ class NavigationNotificationPusher {
             @Override
             public void onScreenCaptured(Bitmap bitmap) {
                 Log.d(TAG, "onScreenCaptured");
+                String nextRoadName = DataHolder.getNavigationManager().getNextManeuver().getNextRoadName();
+                Maneuver.Turn turn = DataHolder.getNavigationManager().getNextManeuver().getTurn();
+                TurnPresenter turnPresenter = new TurnPresenter(turn);
+                String localizedNameOfTurn = turnPresenter.getTurnLocalizedName();
+                long distance = DataHolder.getNavigationManager().getNextManeuverDistance();
+                String distanceString;
+                if (distance >= 1000) {
+                    distanceString = distance / 1000 + "." + distance % 1000 + "公里";
+                } else {
+                    distanceString = distance + "公尺";
+                }
                 Notification notification =
                         new Notification.Builder(DataHolder.getActivity().getApplicationContext(), CHANNEL)
                                 .setSmallIcon(R.mipmap.ic_navigator_round)

@@ -508,6 +508,10 @@ public class MainActivity extends AppCompatActivity {
     public void onDestroy() {
         m_mapFragmentView.onDestroy();
         Log.d(TAG, "onDestroy");
+        if (textToSpeech != null) {
+            textToSpeech.stop();
+            textToSpeech.shutdown();
+        }
         super.onDestroy();
     }
 
