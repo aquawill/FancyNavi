@@ -78,6 +78,7 @@ public class ForegroundService extends Service {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         NotificationChannel notificationChannel = new NotificationChannel(CHANNEL, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
         notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+        notificationChannel.enableVibration(true);
         DataHolder.setNotificationChannel(notificationChannel);
         DataHolder.setNotificationManager(notificationManager);
         DataHolder.getNotificationManager().createNotificationChannel(DataHolder.getNotificationChannel());

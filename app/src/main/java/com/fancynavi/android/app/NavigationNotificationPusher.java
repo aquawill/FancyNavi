@@ -60,15 +60,15 @@ class NavigationNotificationPusher {
                 Log.d(TAG, "onScreenCaptured");
                 Notification notification =
                         new Notification.Builder(DataHolder.getActivity().getApplicationContext(), CHANNEL)
-                                .setContentTitle("Guidance")
-                                .setContentText("Guidance in progress ...")
                                 .setSmallIcon(R.mipmap.ic_navigator_round)
                                 .setLargeIcon(Icon.createWithResource(DataHolder.getActivity(), maneuverIconId))
                                 .setStyle(new Notification.BigPictureStyle().bigPicture(bitmap))
                                 .setContentTitle(distanceString)
                                 .setContentText(localizedNameOfTurn + "進入" + nextRoadName)
                                 .setContentIntent(pendingIntent)
-                                .setLocalOnly(true)
+                                .setAutoCancel(true)
+                                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                                .setTicker(localizedNameOfTurn + "進入" + nextRoadName)
                                 .build();
                 DataHolder.getNotificationManager().cancel(FOREGROUND_SERVICE_ID);
                 DataHolder.getNotificationManager().notify(FOREGROUND_SERVICE_ID, notification);

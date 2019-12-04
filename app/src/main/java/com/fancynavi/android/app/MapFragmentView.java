@@ -279,7 +279,11 @@ class MapFragmentView {
                 });
                 laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
                 if (!isRouteOverView && isLaneDisplayed) {
-                    m_map.addMapOverlay(laneInformationMapOverlay);
+                    try {
+                        m_map.addMapOverlay(laneInformationMapOverlay);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
