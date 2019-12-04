@@ -75,12 +75,12 @@ public class ForegroundService extends Service {
         if (Build.VERSION.SDK_INT < 26) {
             return;
         }
-        NotificationManager notificationManager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        NotificationChannel channel = new NotificationChannel(CHANNEL, CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_DEFAULT);
-        channel.setDescription("Channel for foreground service");
-        notificationManager.createNotificationChannel(channel);
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        NotificationChannel notificationChannel = new NotificationChannel(CHANNEL, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+        notificationChannel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+        DataHolder.setNotificationChannel(notificationChannel);
+        DataHolder.setNotificationManager(notificationManager);
+        DataHolder.getNotificationManager().createNotificationChannel(DataHolder.getNotificationChannel());
     }
 
     @Override

@@ -2,8 +2,6 @@ package com.fancynavi.android.app;
 
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.app.PictureInPictureParams;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -141,9 +139,6 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 
-import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.fancynavi.android.app.DataHolder.CHANNEL;
-import static com.fancynavi.android.app.DataHolder.CHANNEL_NAME;
 import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
@@ -1133,7 +1128,6 @@ class MapFragmentView {
             @Override
             public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
                 guidanceManeuverView.setManeuverData(guidanceManeuverData);
-                Log.d(TAG, "guidanceManeuverData.getIconId():" + guidanceManeuverData.getIconId());
                 maneuverIconId = guidanceManeuverData.getIconId();
             }
 
@@ -1652,10 +1646,6 @@ class MapFragmentView {
                         mapScaleView.setColor(R.color.black);
                         m_map.setFadingAnimations(false);
                         mapSchemeChanger = new MapSchemeChanger(m_map);
-
-                        DataHolder.setNotificationChannel(new NotificationChannel(CHANNEL, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH));
-                        DataHolder.setNotificationManager((NotificationManager) m_activity.getSystemService(NOTIFICATION_SERVICE));
-                        DataHolder.getNotificationManager().createNotificationChannel(DataHolder.getNotificationChannel());
 
                         CustomRasterTileOverlay customRasterTileOverlay = new CustomRasterTileOverlay();
                         customRasterTileOverlay.setTileUrl("");

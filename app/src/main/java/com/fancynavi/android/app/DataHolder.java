@@ -11,7 +11,7 @@ import com.here.android.mpa.mapping.SupportMapFragment;
 
 class DataHolder {
     static final String TAG = "HERE_SDK_TEST";
-    static int FOREGROUND_SERVICE_ID = 101;
+    static int FOREGROUND_SERVICE_ID = 9527;
     static String CHANNEL = "heresdk";
     static String CHANNEL_NAME = "HRERSDKTEST";
     private static Map map;

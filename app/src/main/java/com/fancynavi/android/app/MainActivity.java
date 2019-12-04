@@ -179,8 +179,8 @@ public class MainActivity extends AppCompatActivity {
     private DisplayMetrics metrics;
     private MapFragmentView m_mapFragmentView;
     private LocationRequest mLocationRequest;
-    private long UPDATE_INTERVAL = 10 * 1000;  /* 10 secs */
-    private long FASTEST_INTERVAL = 2000; /* 2 sec */
+    private long UPDATE_INTERVAL = 5 * 1000;
+    private long FASTEST_INTERVAL = 1000;
 
     public void hideGuidanceView() {
         View guidanceView = findViewById(R.id.guidanceManeuverView);

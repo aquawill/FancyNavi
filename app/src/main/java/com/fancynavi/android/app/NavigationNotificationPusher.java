@@ -4,7 +4,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.drawable.Icon;
 import android.util.Log;
 
@@ -61,10 +60,11 @@ class NavigationNotificationPusher {
                 Log.d(TAG, "onScreenCaptured");
                 Notification notification =
                         new Notification.Builder(DataHolder.getActivity().getApplicationContext(), CHANNEL)
-                                .setSmallIcon(R.mipmap.ic_launcher)
+                                .setContentTitle("Guidance")
+                                .setContentText("Guidance in progress ...")
+                                .setSmallIcon(R.mipmap.ic_navigator_round)
                                 .setLargeIcon(Icon.createWithResource(DataHolder.getActivity(), maneuverIconId))
                                 .setStyle(new Notification.BigPictureStyle().bigPicture(bitmap))
-                                .setColor(Color.argb(1, 0, 0, 0))
                                 .setContentTitle(distanceString)
                                 .setContentText(localizedNameOfTurn + "進入" + nextRoadName)
                                 .setContentIntent(pendingIntent)
