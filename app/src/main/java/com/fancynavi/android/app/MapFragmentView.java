@@ -164,9 +164,9 @@ class MapFragmentView {
     static ImageView signpostImageView;
     static boolean isRoadView = false;
     static boolean isSatMap = false;
-    static boolean isRouteOverView;
-    static boolean isNavigating;
-    static boolean isSignShowing;
+    static boolean isRouteOverView = false;
+    static boolean isNavigating = false;
+    static boolean isSignShowing = false;
     static MapLocalModel currentPositionMapLocalModel;
     static Button northUpButton;
     static TextView trafficWarningTextView;
@@ -179,6 +179,7 @@ class MapFragmentView {
         }
     };
     static NavigationListeners navigationListeners;
+    boolean isLaneDisplayed = false;
     private int maneuverIconId;
     private KeyguardManager keyguardManager;
     private Map m_map;
@@ -229,7 +230,7 @@ class MapFragmentView {
         @Override
         public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
             super.onLaneInformation(list, roadElement);
-            boolean isLaneDisplayed = false;
+            isLaneDisplayed = false;
             if (laneInformationMapOverlay != null) {
                 m_map.removeMapOverlay(laneInformationMapOverlay);
             }
@@ -278,6 +279,7 @@ class MapFragmentView {
                     }
                 });
                 laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+
                 if (!isRouteOverView && isLaneDisplayed) {
                     try {
                         m_map.addMapOverlay(laneInformationMapOverlay);
@@ -356,8 +358,6 @@ class MapFragmentView {
             geoPositionGeoCoordinate.setAltitude(1);
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
             currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
-
-
         }
 
     };
@@ -372,37 +372,34 @@ class MapFragmentView {
 
         @Override
         public void onEnded(NavigationManager.NavigationMode navigationMode) {
-            if (!m_activity.isInPictureInPictureMode()) {
-                if (navigationListeners.getLaneinformationListener() != null) {
-                    m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
-                }
-//                if (DataHolder.getMapOffScreenRenderer() != null) {
-//                    DataHolder.getMapOffScreenRenderer().stop();
-//                    DataHolder.setMapOffScreenRenderer(null);
+//            if (!m_activity.isInPictureInPictureMode()) {
+//                if (navigationListeners.getLaneinformationListener() != null) {
+//                    m_navigationManager.removeLaneInformationListener(navigationListeners.getLaneinformationListener());
 //                }
-                minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
-                minimizeMapButton.setVisibility(View.GONE);
-                distanceMarkerLinearLayout.setVisibility(View.GONE);
-                mapSchemeChanger.navigationMapOff();
-                isNavigating = false;
-                isRoadView = false;
-                isRouteOverView = true;
-                junctionViewImageView.setVisibility(View.GONE);
-                signpostImageView.setVisibility(View.GONE);
-                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
-                if (m_activity.isInMultiWindowMode()) {
-                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
-                } else {
-                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
-                }
-                m_map.setTilt(0);
-                m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
-                m_naviControlButton.setVisibility(View.VISIBLE);
-                clearButton.setVisibility(View.VISIBLE);
-                stopForegroundService();
-            } else {
-                m_activity.finish();
-            }
+//
+//                minimizeMapButton = m_activity.findViewById(R.id.minimize_map_button);
+//                minimizeMapButton.setVisibility(View.GONE);
+//                distanceMarkerLinearLayout.setVisibility(View.GONE);
+//                mapSchemeChanger.navigationMapOff();
+//                isNavigating = false;
+//                isRoadView = false;
+//                isRouteOverView = true;
+//                junctionViewImageView.setVisibility(View.GONE);
+//                signpostImageView.setVisibility(View.GONE);
+//                m_navigationManager.setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+//                if (m_activity.isInMultiWindowMode()) {
+//                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+//                } else {
+//                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+//                }
+//                m_map.setTilt(0);
+//                m_map.zoomTo(mapRouteBBox, Map.Animation.LINEAR, 0f);
+//                m_naviControlButton.setVisibility(View.VISIBLE);
+//                clearButton.setVisibility(View.VISIBLE);
+            stopForegroundService();
+//            } else {
+            m_activity.finish();
+//            }
         }
 
         @Override
@@ -1683,7 +1680,7 @@ class MapFragmentView {
                                                     String countryName = address.getCountryName();
                                                     String adminAreaName = address.getAdminArea();
                                                     if (countryName != null && adminAreaName != null) {
-                                                        Log.d(TAG, "countryName: " + countryName + " adminAreaName: " + adminAreaName);
+//                                                        Log.d(TAG, "countryName: " + countryName + " adminAreaName: " + adminAreaName);
 //                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
 //                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
 //                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
@@ -1806,6 +1803,8 @@ class MapFragmentView {
                         /* Listeners of map buttons */
                         northUpButton = m_activity.findViewById(R.id.north_up);
                         northUpButton.setOnClickListener(v -> {
+                            Log.d(TAG, "isRouteOverView: " + isRouteOverView);
+                            Log.d(TAG, "isLaneDisplayed: " + isLaneDisplayed);
                             if (searchResultSnackbar != null) {
                                 searchResultSnackbar.dismiss();
                             }

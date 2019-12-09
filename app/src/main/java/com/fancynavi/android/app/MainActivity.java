@@ -512,6 +512,8 @@ public class MainActivity extends AppCompatActivity {
             textToSpeech.stop();
             textToSpeech.shutdown();
         }
+        isNavigating = false;
+        isRouteOverView = false;
         super.onDestroy();
     }
 

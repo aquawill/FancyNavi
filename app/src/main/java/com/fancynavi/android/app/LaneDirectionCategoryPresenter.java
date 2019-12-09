@@ -5,7 +5,7 @@ import android.support.v7.app.AppCompatActivity;
 
 
 public class LaneDirectionCategoryPresenter {
-    static boolean isLaneDirectionCategoryShowing;
+    static boolean isLaneDirectionCategoryShowing = false;
 
     static boolean isLaneDirectionCategoryShowing() {
         return isLaneDirectionCategoryShowing;
