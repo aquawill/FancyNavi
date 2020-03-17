@@ -15,6 +15,7 @@ import com.here.android.mpa.routing.RouteWaypoint;
 import java.util.ArrayList;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.getPositioningManager;
 import static com.fancynavi.android.app.MapFragmentView.currentGeoPosition;
 
 class HereRouter {
@@ -69,7 +70,14 @@ class HereRouter {
         routePlan = new RoutePlan();
 
         if (waypoints.size() == 1) {
-            GeoCoordinate currentGeoPositionCoordinate = currentGeoPosition.getCoordinate();
+
+            GeoCoordinate currentGeoPositionCoordinate;
+            if (currentGeoPosition == null) {
+                currentGeoPositionCoordinate = getPositioningManager().getLastKnownPosition().getCoordinate();
+            } else {
+                currentGeoPositionCoordinate = currentGeoPosition.getCoordinate();
+            }
+
             currentGeoPositionCoordinate.setAltitude(0);
             waypoints.add(0, currentGeoPositionCoordinate);
         } else if (waypoints.isEmpty()) {
@@ -79,28 +87,31 @@ class HereRouter {
 
         for (int i = 0; i < waypoints.size(); i++) {
             GeoCoordinate coord = waypoints.get(i);
-            RouteWaypoint waypoint = new RouteWaypoint(coord);
+            RouteWaypoint routeWaypoint = new RouteWaypoint(coord);
             MapMarker waypointMapMarker = new MapMarker();
             waypointMapMarker.setDraggable(true);
             waypointMapMarker.setTitle(String.valueOf(i));
 
             Image icon = new Image();
             if (i != 0 && i != waypoints.size() - 1) {
-                waypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
-                waypointMapMarker.setCoordinate(waypoint.getOriginalPosition());
+                routeWaypoint.setWaypointType(RouteWaypoint.Type.VIA_WAYPOINT);
+                waypointMapMarker.setCoordinate(routeWaypoint.getOriginalPosition());
             } else {
                 if (i == 0) {
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_orig));
-                    waypointMapMarker.setCoordinate(waypoint.getOriginalPosition());
+                    waypointMapMarker.setCoordinate(routeWaypoint.getOriginalPosition());
                     waypointMapMarker.setIcon(icon);
                 } else if (i == waypoints.size() - 1) {
+                    if (routeOptions.getTransportMode() == RouteOptions.TransportMode.SCOOTER) {
+                        routeWaypoint.setFuzzyMatchingRadius(30);
+                    }
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_dest));
-                    waypointMapMarker.setCoordinate(waypoint.getOriginalPosition());
+                    waypointMapMarker.setCoordinate(routeWaypoint.getOriginalPosition());
                     waypointMapMarker.setIcon(icon);
                 }
             }
             outputWaypointIcons.add(waypointMapMarker);
-            routePlan.addWaypoint(waypoint);
+            routePlan.addWaypoint(routeWaypoint);
             routePlan.setRouteOptions(routeOptions);
         }
     }
