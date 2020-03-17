@@ -782,7 +782,6 @@ class MapFragmentView {
     private OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-            Log.d(TAG, "locationMethod: " + locationMethod.toString());
             currentGeoPosition = geoPosition;
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
@@ -1877,6 +1876,7 @@ class MapFragmentView {
                                     m_navigationManager.startTracking();
                                 } else {
                                     m_positioningManager = new PositioningManagerActivator(PositioningManager.LocationMethod.NETWORK, true).getPositioningManager();
+                                    m_navigationManager.stop();
                                 }
                                 DataHolder.setPositioningManager(m_positioningManager);
                                 m_positioningManager.addListener(new WeakReference<>(positionChangedListener));
@@ -2175,7 +2175,7 @@ class MapFragmentView {
                 isNavigating = true;
                 hideTrafficSigns();
                 isSignShowing = false;
-                m_naviControlButton.setText("Stop Navi");
+                m_naviControlButton.setText("restart");
                 intoNavigationMode();
                 isRouteOverView = false;
                 NavigationManager.Error error = m_navigationManager.simulate(m_route, simulationSpeedMs);
@@ -2231,6 +2231,9 @@ class MapFragmentView {
         isNavigating = false;
         if (m_navigationManager != null) {
             m_navigationManager.stop();
+            if (gpsSwitch.isActivated()) {
+                m_navigationManager.startTracking();
+            }
         }
 //        m_navigationManager = null;
         switchGuidanceUiViews(View.GONE);
