@@ -418,6 +418,7 @@ class MapFragmentView {
                 String routeName = roadElement.getRouteName();
                 if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 300) {
                     guidanceSpeedView.setVisibility(View.VISIBLE);
+                    speedLabelTextView.setVisibility(View.VISIBLE);
                     guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
                     if (geoPosition.getSpeed() > roadElement.getSpeedLimit()) {
                         guidanceSpeedView.setTextColor(m_activity.getResources().getColor(R.color.red));
@@ -432,14 +433,14 @@ class MapFragmentView {
                         }
 
                     }
-                } else {
-                    guidanceSpeedView.setText("0");
                 }
                 if (roadElement.getSpeedLimit() >= 0) {
                     guidanceSpeedLimitView.setVisibility(View.VISIBLE);
+                    speedLabelTextView.setVisibility(View.VISIBLE);
                     guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
                 } else {
                     guidanceSpeedLimitView.setVisibility(View.GONE);
+                    speedLabelTextView.setVisibility(View.GONE);
                 }
 
                 if (isNavigating) {
@@ -797,6 +798,8 @@ class MapFragmentView {
             }
 
             if (locationMethod.equals(PositioningManager.LocationMethod.GPS)) {
+                guidanceSpeedView.setVisibility(View.VISIBLE);
+                speedLabelTextView.setVisibility(View.VISIBLE);
                 positionIndicator.setVisible(false);
                 currentPositionMapLocalModel.setVisible(true);
                 if (!isNavigating && m_map.getZoomLevel() >= 17) {
@@ -807,6 +810,8 @@ class MapFragmentView {
                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_fixed_white_24dp);
                 gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.green));
             } else if (locationMethod.equals(PositioningManager.LocationMethod.NETWORK)) {
+                guidanceSpeedView.setVisibility(View.GONE);
+                speedLabelTextView.setVisibility(View.GONE);
                 positionIndicator.setVisible(true);
                 currentPositionMapLocalModel.setVisible(false);
                 if (!isNavigating && m_map.getZoomLevel() >= 17) {
@@ -826,9 +831,9 @@ class MapFragmentView {
             if (locationStatus.equals(PositioningManager.LocationStatus.OUT_OF_SERVICE) || locationStatus.equals(PositioningManager.LocationStatus.TEMPORARILY_UNAVAILABLE)) {
                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_off_white_24dp);
                 gpsStatusImageView.setImageTintList(m_activity.getResources().getColorStateList(R.color.red));
+                guidanceSpeedView.setVisibility(View.GONE);
+                speedLabelTextView.setVisibility(View.GONE);
 //                gpsSwitch.setEnabled(false);
-            } else {
-//                gpsSwitch.setEnabled(true);
             }
         }
     };
@@ -2120,8 +2125,10 @@ class MapFragmentView {
                         Typeface tf = Typeface.createFromAsset(m_activity.getAssets(), "fonts/SFDigitalReadout-Medium.ttf");
                         guidanceSpeedView = m_activity.findViewById(R.id.guidance_speed_view);
                         guidanceSpeedView.setTypeface(tf);
+                        guidanceSpeedView.setVisibility(View.GONE);
                         speedLabelTextView = m_activity.findViewById(R.id.spd_text_view);
                         speedLabelTextView.setTypeface(tf);
+                        speedLabelTextView.setVisibility(View.GONE);
                         guidanceSpeedLimitView = m_activity.findViewById(R.id.guidance_speed_limit_view);
 
                         TextView distanceTextView = m_activity.findViewById(R.id.distanceView);
