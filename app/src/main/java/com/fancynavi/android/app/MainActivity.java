@@ -84,8 +84,8 @@ import static com.fancynavi.android.app.MapFragmentView.isPipMode;
 import static com.fancynavi.android.app.MapFragmentView.isRouteOverView;
 import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
 import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
-import static com.fancynavi.android.app.MapFragmentView.m_naviControlButton;
 import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListenerForNavigation;
+import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
 import static com.fancynavi.android.app.MapFragmentView.northUpButton;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
@@ -104,7 +104,6 @@ public class MainActivity extends AppCompatActivity {
     static boolean isVisible = true;
     static TextToSpeech textToSpeech;
     SensorManager mySensorManager;
-    View mapFragmentView;
     Bundle mViewBundle = new Bundle();
     ArrayList<Float> azimuthArrayList = new ArrayList<>();
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
@@ -177,8 +176,8 @@ public class MainActivity extends AppCompatActivity {
     };
     private Configuration configuration;
     private DisplayMetrics metrics;
-    private MapFragmentView m_mapFragmentView;
-    private LocationRequest mLocationRequest;
+    private MapFragmentView mapFragmentView;
+    private LocationRequest locationRequest;
     private long UPDATE_INTERVAL = 5 * 1000;
     private long FASTEST_INTERVAL = 1000;
 
@@ -216,7 +215,6 @@ public class MainActivity extends AppCompatActivity {
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getSupportActionBar().hide();
-        mapFragmentView = findViewById(R.id.mapFragmentView);
         setContentView(R.layout.activity_main);
         hideGuidanceView();
         hideJunctionView();
@@ -287,14 +285,14 @@ public class MainActivity extends AppCompatActivity {
     protected void startLocationUpdates() {
 
         // Create the location request to start receiving updates
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(UPDATE_INTERVAL);
-        mLocationRequest.setFastestInterval(FASTEST_INTERVAL);
+        locationRequest = new LocationRequest();
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        locationRequest.setInterval(UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(FASTEST_INTERVAL);
 
         // Create LocationSettingsRequest object using location request
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
+        builder.addLocationRequest(locationRequest);
         LocationSettingsRequest locationSettingsRequest = builder.build();
 
         // Check whether location settings are satisfied
@@ -307,7 +305,7 @@ public class MainActivity extends AppCompatActivity {
             checkPermissions();
             return;
         }
-        getFusedLocationProviderClient(this).requestLocationUpdates(mLocationRequest, new LocationCallback() {
+        getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, new LocationCallback() {
                     @Override
                     public void onLocationResult(LocationResult locationResult) {
                         // do work here
@@ -375,7 +373,7 @@ public class MainActivity extends AppCompatActivity {
             trafficWarningTextView.setVisibility(View.VISIBLE);
             junctionViewImageView.setAlpha(1f);
             signpostImageView.setAlpha(1f);
-            m_naviControlButton.setVisibility(View.GONE);
+            navigationControlButton.setVisibility(View.GONE);
             clearButton.setVisibility(View.GONE);
             DataHolder.getNavigationManager().resume();
             if (distanceMarkerMapOverlayList.size() > 0) {
@@ -431,9 +429,9 @@ public class MainActivity extends AppCompatActivity {
                          */
                         if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
                                 permissions[index])) {
-                            Snackbar.make(mapFragmentView, "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(findViewById(R.id.mapFragmentView), "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
                         } else {
-                            Snackbar.make(mapFragmentView, "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(findViewById(R.id.mapFragmentView), "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
 
                         }
                     }
@@ -443,7 +441,7 @@ public class MainActivity extends AppCompatActivity {
                  * All permission requests are being handled.Create map fragment view.Please note
                  * the HERE SDK requires all permissions defined above to operate properly.
                  */
-                m_mapFragmentView = new MapFragmentView(this);
+                mapFragmentView = new MapFragmentView(this);
                 break;
             }
             default:
@@ -506,7 +504,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
-        m_mapFragmentView.onDestroy();
+        mapFragmentView.onDestroy();
         Log.d(TAG, "onDestroy");
         if (textToSpeech != null) {
             textToSpeech.stop();
