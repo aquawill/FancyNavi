@@ -886,13 +886,13 @@ class MapFragmentView {
 
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
-            searchBarLinearLayout.setVisibility(View.GONE);
-            touchToAddWaypoint(pointF);
-            switchUiControls(View.VISIBLE);
-            InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-            inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
-            m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
-            return true;
+//            searchBarLinearLayout.setVisibility(View.GONE);
+//            touchToAddWaypoint(pointF);
+//            switchUiControls(View.VISIBLE);
+//            InputMethodManager inputMethodManager = (InputMethodManager) m_activity.getSystemService(Context.INPUT_METHOD_SERVICE);
+//            inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
+//            m_map.setCenter(pointF, Map.Animation.LINEAR, m_map.getZoomLevel(), m_map.getOrientation(), m_map.getTilt());
+            return false;
         }
 
         @Override
@@ -1358,6 +1358,7 @@ class MapFragmentView {
         currentPositionMapLocalModel.setTexture(image); //an Image object
         currentPositionMapLocalModel.setScale(6.0f);
         currentPositionMapLocalModel.setDynamicScalingEnabled(true);
+        currentPositionMapLocalModel.setZIndex(1000);
         m_map.addMapObject(currentPositionMapLocalModel);
     }
 
