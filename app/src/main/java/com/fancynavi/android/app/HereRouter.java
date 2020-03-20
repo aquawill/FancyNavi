@@ -1,10 +1,11 @@
 package com.fancynavi.android.app;
 
 import android.content.Context;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.mapping.MapMarker;

@@ -2,7 +2,8 @@ package com.fancynavi.android.app;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;

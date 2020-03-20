@@ -1,7 +1,8 @@
 package com.fancynavi.android.app;
 
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.Nullable;
 
 import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;

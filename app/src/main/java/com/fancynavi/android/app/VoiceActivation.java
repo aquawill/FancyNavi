@@ -3,10 +3,11 @@ package com.fancynavi.android.app;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoicePackage;

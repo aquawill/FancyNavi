@@ -1,7 +1,8 @@
 package com.fancynavi.android.app;
 
 import android.graphics.drawable.Drawable;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.appcompat.app.AppCompatActivity;
 
 
 class RouteIconPresenter {

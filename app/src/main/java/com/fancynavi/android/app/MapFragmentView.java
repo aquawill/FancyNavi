@@ -20,9 +20,6 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
-import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.util.Rational;
 import android.view.KeyEvent;
@@ -41,6 +38,10 @@ import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.material.snackbar.Snackbar;
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -410,19 +411,19 @@ class MapFragmentView {
                 RoadElement.FormOfWay formOfWay = roadElement.getFormOfWay();
                 String routeName = roadElement.getRouteName();
 
-                    if (geoPosition.getSpeed() > roadElement.getSpeedLimit()) {
-                        guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
-                        speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
+                if (geoPosition.getSpeed() > roadElement.getSpeedLimit()) {
+                    guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
+                    speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
+                } else {
+                    if (DataHolder.getMap().getMapScheme().contains("hybrid") || DataHolder.getMap().getMapScheme().contains("night")) {
+                        guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.white));
+                        speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.white));
                     } else {
-                        if (DataHolder.getMap().getMapScheme().contains("hybrid") || DataHolder.getMap().getMapScheme().contains("night")) {
-                            guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.white));
-                            speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.white));
-                        } else {
-                            guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.black));
-                            speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.black));
-                        }
-
+                        guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.black));
+                        speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.black));
                     }
+
+                }
 
                 if (roadElement.getSpeedLimit() >= 0) {
                     guidanceSpeedLimitView.setVisibility(View.VISIBLE);
@@ -637,7 +638,6 @@ class MapFragmentView {
                     resetMapRoute(routeResult.getRoute());
                     Log.d(TAG, "traffic rerouted.");
                     route = routeResult.getRoute();
-                    resetMapRoute(route);
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
                     safetyCamLinearLayout.setVisibility(View.GONE);
@@ -649,11 +649,13 @@ class MapFragmentView {
 
         @Override
         public void onTrafficRerouteFailed(TrafficNotification trafficNotification) {
+            Log.d(TAG, "onTrafficRerouteFailed");
             super.onTrafficRerouteFailed(trafficNotification);
         }
 
         @Override
         public void onTrafficRerouteBegin(TrafficNotification trafficNotification) {
+            Log.d(TAG, "onTrafficRerouteBegin");
             super.onTrafficRerouteBegin(trafficNotification);
         }
 
@@ -666,6 +668,7 @@ class MapFragmentView {
     private NavigationManager.RerouteListener rerouteListener = new NavigationManager.RerouteListener() {
         @Override
         public void onRerouteBegin() {
+            Log.d(TAG, "onRerouteBegin");
             super.onRerouteBegin();
             safetyCameraAhead = false;
             safetyCameraMapMarker.setTransparency(0);
@@ -677,8 +680,7 @@ class MapFragmentView {
         public void onRerouteEnd(RouteResult routeResult, RoutingError routingError) {
             super.onRerouteEnd(routeResult, routingError);
             if (routingError == RoutingError.NONE) {
-                route = routeResult.getRoute();
-                resetMapRoute(route);
+                Log.d(TAG, "onRerouteEnd");
                 resetMapRoute(routeResult.getRoute());
                 cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
             }
@@ -1845,7 +1847,7 @@ class MapFragmentView {
                         DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
                         DataHolder.getMap().setMapDisplayLanguage(TRADITIONAL_CHINESE);
                         DataHolder.getMap().setSafetySpotsVisible(true);
-                        DataHolder.getMap().setExtrudedBuildingsVisible(false);
+                        DataHolder.getMap().setExtrudedBuildingsVisible(true);
                         DataHolder.getMap().setLandmarksVisible(true);
                         DataHolder.getMap().setExtendedZoomLevelsEnabled(false);
 
@@ -2435,10 +2437,6 @@ class MapFragmentView {
             navigationControlButton.setVisibility(View.VISIBLE);
             clearButton.setVisibility(View.VISIBLE);
         }
-    }
-
-    class OverlayLayers {
-
     }
 
 }

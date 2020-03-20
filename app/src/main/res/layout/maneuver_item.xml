@@ -15,12 +15,12 @@
   ~ limitations under the License.
   -->
 
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     style="?attr/maneuverDescriptionItem">
 
-    <android.support.constraint.Guideline
+    <androidx.constraintlayout.widget.Guideline
         android:id="@+id/vertical_guideline"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -61,4 +61,4 @@
         app:layout_constraintBaseline_toBaselineOf="@+id/maneuver_address_view"
         app:layout_constraintLeft_toRightOf="@id/vertical_guideline"
         app:layout_constraintRight_toRightOf="parent" />
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
