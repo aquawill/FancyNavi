@@ -110,6 +110,7 @@ import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeRequest;
 import com.here.android.mpa.search.SearchRequest;
 import com.here.android.mpa.tce.TollCostError;
+import com.here.android.mpa.tce.TollCostOptions;
 import com.here.android.mpa.tce.TollCostRequest;
 import com.here.android.mpa.tce.TollCostResult;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalView;
@@ -1412,7 +1413,7 @@ class MapFragmentView {
                 NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
         );
         DataHolder.getNavigationManager().setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
-        DataHolder.getNavigationManager().setRouteRequestInterval(180);
+        DataHolder.getNavigationManager().setRouteRequestInterval(60);
         DataHolder.getNavigationManager().setDistanceWithUTurnToTriggerStopoverReached(100);
 
         DataHolder.getNavigationManager().setNaturalGuidanceMode(naturalGuidanceModes);
@@ -1600,7 +1601,9 @@ class MapFragmentView {
                         switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
                             case CAR:
                             case TRUCK:
-                                new TollCostRequest(route).execute(new TollCostRequest.Listener<TollCostResult>() {
+                                TollCostOptions tollCostOptions = new TollCostOptions();
+                                tollCostOptions.setCurrency("TWD");
+                                new TollCostRequest(route, tollCostOptions).execute(new TollCostRequest.Listener<TollCostResult>() {
                                     @Override
                                     public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
                                         if (tollCostError.getErrorCode() == TollCostError.ErrorCode.SUCCESS) {
@@ -1608,6 +1611,7 @@ class MapFragmentView {
                                             Log.d(TAG, "getErrorCode: " + tollCostError.getErrorCode());
                                             Log.d(TAG, "getErrorMessage: " + tollCostError.getErrorMessage());
                                             Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTotalTollCost());
                                             Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
                                             Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
                                             Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Route of " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / Cost: " + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
