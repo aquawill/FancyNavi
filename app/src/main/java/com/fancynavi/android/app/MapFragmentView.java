@@ -397,13 +397,6 @@ class MapFragmentView {
                 DataHolder.getActivity().setVisible(true);
             }
 
-            if (!isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
-                positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinateOnGround);
-                float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
-                if (radius > 0) {
-                    positionAccuracyMapCircle.setRadius(radius);
-                }
-            }
 
             if (DataHolder.getPositioningManager().getRoadElement() != null) {
                 RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
@@ -781,7 +774,16 @@ class MapFragmentView {
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
-//            currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
+            if (isNavigating) {
+                currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
+            }
+            if (!isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
+                positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinate);
+                float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
+                if (radius > 0) {
+                    positionAccuracyMapCircle.setRadius(radius);
+                }
+            }
             if (isNavigating) {
                 if (endGuidanceDirectionalGeoPolyline != null) {
                     endGuidanceDirectionalGeoPolyline.clear();
