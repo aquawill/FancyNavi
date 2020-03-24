@@ -98,7 +98,6 @@ import static com.google.android.gms.location.LocationServices.getFusedLocationP
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_ASK_PERMISSIONS = 1;
-
     static boolean isMapRotating = false;
     static float lightSensorValue;
     static float azimuth = 0f;
@@ -106,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
     static TextToSpeech textToSpeech;
     SensorManager mySensorManager;
     Bundle mViewBundle = new Bundle();
-    ArrayList<Float> azimuthArrayList = new ArrayList<>();
+    List<Float> azimuthArrayList = new ArrayList<>();
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
         float[] mGravity;
         float[] mGeomagnetic;
@@ -117,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-
+            Log.d(TAG, "onSensorChanged");
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 lightSensorValue = event.values[0];
                 Log.d(TAG, String.valueOf(lightSensorValue));
@@ -152,12 +151,13 @@ public class MainActivity extends AppCompatActivity {
                     float[] orientation = new float[3];
                     SensorManager.getOrientation(R, orientation);
                     azimuth = (float) Math.toDegrees(orientation[0]);
-                    if (azimuthArrayList.size() > 1) {
+                    if (azimuthArrayList.size() > 64) {
                         azimuthArrayList.remove(0);
                     }
                     azimuthArrayList.add(azimuth);
+                    float averagedAzimuth = getAverageFromFloatArrayList(azimuthArrayList);
                     if (currentPositionMapLocalModel != null && !isNavigating) {
-                        float rotatingAngle = new BigDecimal(azimuth).setScale(1, BigDecimal.ROUND_HALF_UP).floatValue();
+                        float rotatingAngle = new BigDecimal(averagedAzimuth).setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();
                         currentPositionMapLocalModel.setYaw(rotatingAngle);
                         if (!isMapRotating) {
                             if (!isDragged) {
@@ -166,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         } else {
                             northUpButton.setRotation(rotatingAngle * -1);
-                            DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getPosition().getCoordinate(), Map.Animation.NONE);
+                            DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getPosition().getCoordinate(), Map.Animation.LINEAR);
                             DataHolder.getMap().setOrientation(rotatingAngle);
                             isDragged = false;
                         }
@@ -281,6 +281,14 @@ public class MainActivity extends AppCompatActivity {
         } else {
             isDragged = false;
         }
+    }
+
+    private float getAverageFromFloatArrayList(List<Float> list) {
+        float sum = 0;
+        for (float e : list) {
+            sum += e;
+        }
+        return sum / list.size();
     }
 
     protected void startLocationUpdates() {

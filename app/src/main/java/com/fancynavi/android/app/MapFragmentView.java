@@ -13,7 +13,6 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
-import android.location.Address;
 import android.location.Geocoder;
 import android.os.Build;
 import android.os.Bundle;
@@ -389,7 +388,7 @@ class MapFragmentView {
             geoPositionGeoCoordinateOnGround.setAltitude(0);
 
             if (!isRouteOverView && !isDragged && !isNavigating) {
-                DataHolder.getMap().setCenter(geoPosition.getCoordinate(), Map.Animation.NONE);
+                DataHolder.getMap().setCenter(geoPosition.getCoordinate(), Map.Animation.LINEAR);
             }
 
             if (keyguardManager.inKeyguardRestrictedInputMode()) {
@@ -1413,7 +1412,7 @@ class MapFragmentView {
                 NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
         );
         DataHolder.getNavigationManager().setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
-        DataHolder.getNavigationManager().setRouteRequestInterval(60);
+        DataHolder.getNavigationManager().setRouteRequestInterval(180);
         DataHolder.getNavigationManager().setDistanceWithUTurnToTriggerStopoverReached(100);
 
         DataHolder.getNavigationManager().setNaturalGuidanceMode(naturalGuidanceModes);
@@ -1702,60 +1701,60 @@ class MapFragmentView {
 
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
-                                if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
-                                    positionAccuracyMapCircle.setLineWidth(0);
-                                    positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
-                                }
-                                northUpButton.setRotation(mapState.getOrientation() * -1);
-                                if (!isNavigating) {
-                                    if (mapState.getZoomLevel() > 8) {
-                                        GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
-                                        try {
-                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
-                                            if (addresses.size() > 0) {
-                                                for (Address address : addresses) {
-                                                    String countryName = address.getCountryName();
-                                                    String adminAreaName = address.getAdminArea();
-                                                    if (countryName != null && adminAreaName != null) {
-//                                                        Log.d(TAG, "countryName: " + countryName + " adminAreaName: " + adminAreaName);
-//                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
-//                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-//                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
-//                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+//                                if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
+//                                    positionAccuracyMapCircle.setLineWidth(0);
+//                                    positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
+//                                }
+//                                northUpButton.setRotation(mapState.getOrientation() * -1);
+//                                if (!isNavigating) {
+//                                    if (mapState.getZoomLevel() > 8) {
+//                                        GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
+//                                        try {
+//                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+//                                            if (addresses.size() > 0) {
+//                                                for (Address address : addresses) {
+//                                                    String countryName = address.getCountryName();
+//                                                    String adminAreaName = address.getAdminArea();
+//                                                    if (countryName != null && adminAreaName != null) {
+////                                                        Log.d(TAG, "countryName: " + countryName + " adminAreaName: " + adminAreaName);
+////                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
+////                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+////                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
+////                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+////                                                            }
+////                                                        }
+////                                                    }
+//                                                        if (countryName.equals("China") || countryName.equals("中国")) {
+//                                                            if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
+//                                                                if (customRasterTileOverlay == null) {
+//                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
+//                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
+//                                                                        String[] subDomainsArray = {"a", "b", "c"};
+//                                                                        customRasterTileOverlay.setSubDomains(subDomainsArray);
+//                                                                        customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
+//                                                                    }
+//                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+//                                                                }
+//                                                            }
+//                                                        } else {
+//                                                            if (customRasterTileOverlay != null) {
+//                                                                DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
+//                                                                customRasterTileOverlay = null;
 //                                                            }
 //                                                        }
+//                                                    } else {
+//                                                        if (customRasterTileOverlay != null) {
+//                                                            DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
+//                                                            customRasterTileOverlay = null;
+//                                                        }
 //                                                    }
-                                                        if (countryName.equals("China") || countryName.equals("中国")) {
-                                                            if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
-                                                                if (customRasterTileOverlay == null) {
-                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
-                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
-                                                                        String[] subDomainsArray = {"a", "b", "c"};
-                                                                        customRasterTileOverlay.setSubDomains(subDomainsArray);
-                                                                        customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
-                                                                    }
-                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-                                                                }
-                                                            }
-                                                        } else {
-                                                            if (customRasterTileOverlay != null) {
-                                                                DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
-                                                                customRasterTileOverlay = null;
-                                                            }
-                                                        }
-                                                    } else {
-                                                        if (customRasterTileOverlay != null) {
-                                                            DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
-                                                            customRasterTileOverlay = null;
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
+//                                                }
+//                                            }
+//                                        } catch (IOException e) {
+//                                            e.printStackTrace();
+//                                        }
+//                                    }
+//                                }
                             }
                         });
 
@@ -1860,8 +1859,6 @@ class MapFragmentView {
                         /* Listeners of map buttons */
                         northUpButton = DataHolder.getActivity().findViewById(R.id.north_up);
                         northUpButton.setOnClickListener(v -> {
-                            Log.d(TAG, "isRouteOverView: " + isRouteOverView);
-                            Log.d(TAG, "isLaneDisplayed: " + isLaneDisplaying);
                             if (searchResultSnackbar != null) {
                                 searchResultSnackbar.dismiss();
                             }
