@@ -781,7 +781,7 @@ class MapFragmentView {
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
-            currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
+//            currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
             if (isNavigating) {
                 if (endGuidanceDirectionalGeoPolyline != null) {
                     endGuidanceDirectionalGeoPolyline.clear();

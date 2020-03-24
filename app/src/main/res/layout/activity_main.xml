@@ -476,6 +476,7 @@
             android:shadowColor="@color/white"
             android:shadowRadius="16"
             android:text="SPEED"
+            android:visibility="invisible"
             android:textAlignment="center"
             android:textSize="16sp"
             app:layout_constraintBottom_toTopOf="@id/guidance_speed_view"
