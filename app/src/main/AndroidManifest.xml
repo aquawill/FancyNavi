@@ -71,10 +71,11 @@ Developers should always provide custom values for each of {YOUR_LABEL_NAME} and
 
         <service
             android:name="com.here.android.mpa.service.MapService"
-            android:exported="false"
-            android:label="AndroidSdkTest">
+            android:label="HereMapService"
+            android:process="global.Here.Map.Service.v3">
             <intent-filter>
-                <action android:name="AndroidSdkTest" />
+                <!--Note, action name should not be changed.-->
+                <action android:name="com.here.android.mpa.service.MapService.v3" />
             </intent-filter>
         </service>
         <!-- HERE advanced positioning. -->

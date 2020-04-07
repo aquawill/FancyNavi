@@ -13,6 +13,7 @@ import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
+import android.location.Address;
 import android.location.Geocoder;
 import android.os.Build;
 import android.os.Bundle;
@@ -521,7 +522,7 @@ class MapFragmentView {
 
             if (safetyCameraAhead) {
                 distanceToSafetyCamera -= proceedingDistance;
-                Log.d(TAG, "distanceToSafetyCamera: " + distanceToSafetyCamera);
+//                Log.d(TAG, "distanceToSafetyCamera: " + distanceToSafetyCamera);
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
@@ -1669,8 +1670,9 @@ class MapFragmentView {
         }
 
 
-        boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot, intentName);
+        boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot);
         if (!success) {
+            Log.d(TAG, "Setting the isolated disk cache was not successful.");
             // Setting the isolated disk cache was not successful, please check if the path is valid and
             // ensure that it does not match the default location
             // (getExternalStorageDirectory()/.here-maps).
@@ -1680,6 +1682,9 @@ class MapFragmentView {
                 @Override
                 public void onEngineInitializationCompleted(Error error) {
                     if (error == Error.NONE) {
+
+                        new OfflineMapDownloader();
+
                         coreRouter = new CoreRouter();
                         DataHolder.setMap(supportMapFragment.getMap());
                         navigationListeners = new NavigationListeners();
@@ -1703,60 +1708,62 @@ class MapFragmentView {
 
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
-//                                if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
-//                                    positionAccuracyMapCircle.setLineWidth(0);
-//                                    positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
-//                                }
-//                                northUpButton.setRotation(mapState.getOrientation() * -1);
-//                                if (!isNavigating) {
-//                                    if (mapState.getZoomLevel() > 8) {
-//                                        GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
-//                                        try {
-//                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
-//                                            if (addresses.size() > 0) {
-//                                                for (Address address : addresses) {
-//                                                    String countryName = address.getCountryName();
-//                                                    String adminAreaName = address.getAdminArea();
-//                                                    if (countryName != null && adminAreaName != null) {
-////                                                        Log.d(TAG, "countryName: " + countryName + " adminAreaName: " + adminAreaName);
-////                                                    if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
-////                                                        if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-////                                                            if (!customRasterTileOverlay.getTileUrl().equals("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png")) {
-////                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
-////                                                            }
-////                                                        }
-////                                                    }
-//                                                        if (countryName.equals("China") || countryName.equals("中国")) {
-//                                                            if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
-//                                                                if (customRasterTileOverlay == null) {
-//                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
-//                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
-//                                                                        String[] subDomainsArray = {"a", "b", "c"};
-//                                                                        customRasterTileOverlay.setSubDomains(subDomainsArray);
-//                                                                        customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
-//                                                                    }
-//                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-//                                                                }
-//                                                            }
-//                                                        } else {
-//                                                            if (customRasterTileOverlay != null) {
-//                                                                DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
-//                                                                customRasterTileOverlay = null;
-//                                                            }
-//                                                        }
-//                                                    } else {
-//                                                        if (customRasterTileOverlay != null) {
-//                                                            DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
-//                                                            customRasterTileOverlay = null;
-//                                                        }
-//                                                    }
-//                                                }
-//                                            }
-//                                        } catch (IOException e) {
-//                                            e.printStackTrace();
-//                                        }
-//                                    }
-//                                }
+                                if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
+                                    positionAccuracyMapCircle.setLineWidth(0);
+                                    positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
+                                }
+                                northUpButton.setRotation(mapState.getOrientation() * -1);
+                                if (!isNavigating) {
+                                    if (mapState.getZoomLevel() > 8) {
+                                        GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
+                                        try {
+                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+                                            if (addresses.size() > 0) {
+                                                for (Address address : addresses) {
+                                                    String countryName = address.getCountryName();
+                                                    String adminAreaName = address.getAdminArea();
+                                                    if (countryName != null && adminAreaName != null) {
+                                                        if (countryName.equals("China") || countryName.equals("中国")) {
+                                                            if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
+                                                                if (customRasterTileOverlay == null) {
+                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
+                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
+                                                                        String[] subDomainsArray = {"a", "b", "c"};
+                                                                        customRasterTileOverlay.setSubDomains(subDomainsArray);
+                                                                        customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
+                                                                    }
+                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+                                                                }
+                                                            }
+                                                        } else if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
+                                                            if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+                                                                if (customRasterTileOverlay == null) {
+                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
+                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
+                                                                        customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                                    }
+                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+                                                                }
+                                                            }
+                                                        } else {
+                                                            if (customRasterTileOverlay != null) {
+                                                                DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
+                                                                customRasterTileOverlay = null;
+                                                            }
+                                                        }
+                                                    } else {
+                                                        if (customRasterTileOverlay != null) {
+                                                            DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
+                                                            customRasterTileOverlay = null;
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                }
                             }
                         });
 
