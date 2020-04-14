@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
     SensorManager mySensorManager;
     Bundle mViewBundle = new Bundle();
     List<Float> azimuthArrayList = new ArrayList<>();
+    private boolean isDarkMode = false;
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
         float[] mGravity;
         float[] mGeomagnetic;
@@ -130,18 +131,23 @@ public class MainActivity extends AppCompatActivity {
             if (!Build.FINGERPRINT.contains("generic")) {
                 if (DataHolder.getMap() != null) {
                     if (lightSensorValue < 30) {
-                        setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
-                        new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).darkenMap();
-                        ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);
-                        findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_dark);
+                        if (!isDarkMode) {
+                            setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
+                            new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).darkenMap();
+                            ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);
+                            findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_dark);
+                            isDarkMode = true;
+                        }
                     } else {
-                        setTheme(R.style.MSDKUIDarkTheme);
-                        new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).lightenMap();
-                        ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.BLACK);
-                        findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_bright);
+                        if (isDarkMode) {
+                            setTheme(R.style.MSDKUIDarkTheme);
+                            new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).lightenMap();
+                            ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.BLACK);
+                            findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_bright);
+                            isDarkMode = false;
+                        }
                     }
                 }
-
             }
             if (mGravity != null && mGeomagnetic != null) {
                 float[] R = new float[9];
