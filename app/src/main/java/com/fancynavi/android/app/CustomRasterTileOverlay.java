@@ -9,7 +9,7 @@ public class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
     private String tileUrl;
 
     CustomRasterTileOverlay() {
-        setCachingEnabled(true);
+        setCachingEnabled(false);
         hideAtZoomRange(0, 8);
         setOverlayType(MapOverlayType.FOREGROUND_OVERLAY);
         setTransparency(Transparency.ON);

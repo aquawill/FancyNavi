@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!Build.FINGERPRINT.contains("generic")) {
                 if (DataHolder.getMap() != null) {
-                    if (lightSensorValue < 50) {
+                    if (lightSensorValue < 30) {
                         setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
                         new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).darkenMap();
                         ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);

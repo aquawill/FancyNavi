@@ -1737,12 +1737,14 @@ class MapFragmentView {
                                                             }
                                                         } else if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
                                                             if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+
                                                                 if (customRasterTileOverlay == null) {
                                                                     customRasterTileOverlay = new CustomRasterTileOverlay();
                                                                     if (customRasterTileOverlay.getTileUrl() == null) {
                                                                         customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
                                                                     }
                                                                     DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+
                                                                 }
                                                             }
                                                         } else {
@@ -1750,12 +1752,14 @@ class MapFragmentView {
                                                                 DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
                                                                 customRasterTileOverlay = null;
                                                             }
+
                                                         }
                                                     } else {
                                                         if (customRasterTileOverlay != null) {
                                                             DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
                                                             customRasterTileOverlay = null;
                                                         }
+
                                                     }
                                                 }
                                             }
