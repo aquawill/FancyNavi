@@ -3,13 +3,13 @@ package com.fancynavi.android.app;
 import android.os.Build;
 import android.util.Log;
 
-import com.here.android.mpa.common.LocationDataSourceGoogleServices;
+import com.here.android.mpa.common.LocationDataSourceHERE;
 import com.here.android.mpa.common.PositioningManager;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
 
 class PositioningManagerActivator {
-    PositioningManager positioningManager;
+    private PositioningManager positioningManager;
 
     PositioningManagerActivator(PositioningManager.LocationMethod locationMethod, boolean activateHereAdvancedPositioning) {
         /* PositioningManager init */
@@ -18,8 +18,8 @@ class PositioningManagerActivator {
         /* Advanced positioning */
         if (activateHereAdvancedPositioning) {
             if (!Build.FINGERPRINT.contains("generic") && !Build.FINGERPRINT.contains("vbox")) {
-                LocationDataSourceGoogleServices locationDataSource;
-                locationDataSource = LocationDataSourceGoogleServices.getInstance();
+                LocationDataSourceHERE locationDataSource;
+                locationDataSource = LocationDataSourceHERE.getInstance();
                 positioningManager.setDataSource(locationDataSource);
                 positioningManager.enableProbeDataCollection(true);
             }
