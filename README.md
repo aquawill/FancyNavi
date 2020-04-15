@@ -1,6 +1,6 @@
 # HERE Android Premium SDK + UI Kit
 
-Demo Functions:
+## Demo Functions:
 1.	3D Mapping with safety camera display.
 2.	Custom gesture event handling.
 3.	Map object selection.
@@ -31,7 +31,13 @@ Demo Functions:
 28. Overlay OSM tiles for China.
 29. Show notification with snapshot of the next maneuver while app is on the background.
 
--------------------------
+
+## Dependencies:
+1. HERE SDK for Android (Premium Edition) V3.x - https://bit.ly/2RFSM5X
+2. heremaps / msdkui-android - https://github.com/heremaps/msdkui-android
+3. javagl / Obj - https://github.com/javagl/Obj
+
+-------------
 
 Search for places/POI.
 
