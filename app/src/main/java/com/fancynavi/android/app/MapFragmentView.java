@@ -78,6 +78,7 @@ import com.here.android.mpa.mapping.LocationInfo;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapCartoMarker;
 import com.here.android.mpa.mapping.MapCircle;
+import com.here.android.mpa.mapping.MapContainer;
 import com.here.android.mpa.mapping.MapGesture;
 import com.here.android.mpa.mapping.MapLocalModel;
 import com.here.android.mpa.mapping.MapMarker;
@@ -175,6 +176,8 @@ class MapFragmentView {
             return false;
         }
     };
+    private GeoJsonTileLoader geoJsonTileLoader;
+    private MapContainer geoJsonTileMapContainer;
     private boolean isSatelliteMap = false;
     private boolean isLaneDisplaying = false;
     private int maneuverIconId;
@@ -287,6 +290,7 @@ class MapFragmentView {
         }
     };
     private VoiceActivation voiceActivation;
+    private boolean activateHereAdvancedPositioning;
     private Button zoomInButton;
     private Button zoomOutButton;
     private Button carRouteButton;
@@ -796,6 +800,7 @@ class MapFragmentView {
 
             if (locationMethod.equals(PositioningManager.LocationMethod.GPS)) {
                 guidanceSpeedView.setVisibility(View.VISIBLE);
+                guidanceSpeedLimitView.setVisibility(View.VISIBLE);
                 speedLabelTextView.setVisibility(View.VISIBLE);
                 positionIndicator.setVisible(false);
                 currentPositionMapLocalModel.setVisible(true);
@@ -809,6 +814,7 @@ class MapFragmentView {
                 gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.green));
             } else if (locationMethod.equals(PositioningManager.LocationMethod.NETWORK)) {
                 guidanceSpeedView.setVisibility(View.GONE);
+                guidanceSpeedLimitView.setVisibility(View.GONE);
                 speedLabelTextView.setVisibility(View.GONE);
                 positionIndicator.setVisible(true);
                 currentPositionMapLocalModel.setVisible(false);
@@ -1669,7 +1675,7 @@ class MapFragmentView {
 //            Log.e(this.getClass().toString(), "Failed to find intent name, NameNotFound: " + e.getMessage());
         }
 
-
+        Log.d(TAG, "intentName:" + intentName);
         boolean success = MapSettings.setIsolatedDiskCacheRootPath(diskCacheRoot);
         if (!success) {
             Log.d(TAG, "Setting the isolated disk cache was not successful.");
@@ -1708,6 +1714,13 @@ class MapFragmentView {
 
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
+//                                if (mapState.getZoomLevel() > 14) {
+//                                    geoJsonTileLoader.getTiles(DataHolder.getMap().getBoundingBox(), mapState.getZoomLevel());
+//                                    if (geoJsonTileMapContainer == null) {
+//                                        geoJsonTileMapContainer = geoJsonTileLoader.getMapContainer();
+//                                        DataHolder.getMap().addMapObject(geoJsonTileMapContainer);
+//                                    }
+//                                }
                                 if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
                                     positionAccuracyMapCircle.setLineWidth(0);
                                     positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
@@ -1815,13 +1828,16 @@ class MapFragmentView {
 
                             }
                         });
-                        DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, true).getPositioningManager());
+                        activateHereAdvancedPositioning = true;
+                        DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, activateHereAdvancedPositioning).getPositioningManager());
                         DataHolder.getPositioningManager().addListener(new WeakReference<>(positionChangedListener));
                         positionIndicator = supportMapFragment.getPositionIndicator();
                         positionIndicator.setSmoothPositionChange(true);
                         positionIndicator.setAccuracyIndicatorVisible(true);
                         positionIndicator.setVisible(true);
                         trafficWarningTextView = DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view);
+
+                        geoJsonTileLoader = new GeoJsonTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/xVHzxzsl/tile/web/%s_%s_%s?access_token=AJt8bGnvRgWmUd0RppoLxQA&tags=");
 
                         gpsSwitch = DataHolder.getActivity().findViewById(R.id.gps_switch);
                         gpsSwitch.setChecked(true);
@@ -1832,18 +1848,19 @@ class MapFragmentView {
                                 DataHolder.getPositioningManager().stop();
                                 DataHolder.getNavigationManager().stop();
                                 DataHolder.getPositioningManager().removeListener(positionChangedListener);
+                                DataHolder.setPositioningManager(null);
                                 positionIndicator.setVisible(false);
                                 currentPositionMapLocalModel.setVisible(false);
                                 positionAccuracyMapCircle.setVisible(false);
                                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_off_white_24dp);
                                 gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.red));
                                 if (isChecked) {
-                                    DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, true).getPositioningManager());
+                                    DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, activateHereAdvancedPositioning).getPositioningManager());
                                     DataHolder.getNavigationManager().startTracking();
                                 } else {
-                                    DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.NETWORK, true).getPositioningManager());
-                                    DataHolder.getNavigationManager().stop();
+                                    DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.NETWORK, activateHereAdvancedPositioning).getPositioningManager());
                                     guidanceSpeedView.setVisibility(View.INVISIBLE);
+                                    guidanceSpeedLimitView.setVisibility(View.INVISIBLE);
                                     speedLabelTextView.setVisibility(View.INVISIBLE);
                                 }
                                 DataHolder.setPositioningManager(DataHolder.getPositioningManager());
