@@ -1837,7 +1837,7 @@ class MapFragmentView {
                         positionIndicator.setVisible(true);
                         trafficWarningTextView = DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view);
 
-                        geoJsonTileLoader = new GeoJsonTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/xVHzxzsl/tile/web/%s_%s_%s?access_token=AJt8bGnvRgWmUd0RppoLxQA&tags=");
+//                        geoJsonTileLoader = new GeoJsonTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/xVHzxzsl/tile/web/%s_%s_%s?access_token=AJt8bGnvRgWmUd0RppoLxQA&tags=");
 
                         gpsSwitch = DataHolder.getActivity().findViewById(R.id.gps_switch);
                         gpsSwitch.setChecked(true);
