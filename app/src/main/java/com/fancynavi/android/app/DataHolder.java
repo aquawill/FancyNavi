@@ -2,12 +2,14 @@ package com.fancynavi.android.app;
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.graphics.PointF;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
+import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.SupportMapFragment;
 
 class DataHolder {
@@ -77,5 +79,15 @@ class DataHolder {
 
     static void setSupportMapFragment(SupportMapFragment supportMapFragment) {
         DataHolder.supportMapFragment = supportMapFragment;
+    }
+
+    static PointF getMapMarkerAnchorPoint(MapMarker mapMarker) {
+        int iconHeight = (int) mapMarker.getIcon().getHeight();
+        int iconWidth = (int) mapMarker.getIcon().getWidth();
+        return new PointF((float) (iconWidth / 2), (float) iconHeight);
+    }
+
+    static PointF getMapOverlayAnchorPoint(int width, int height) {
+        return new PointF((float) (width / 2), (float) height);
     }
 }

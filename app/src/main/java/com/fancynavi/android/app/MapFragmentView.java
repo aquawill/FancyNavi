@@ -133,6 +133,8 @@ import com.here.msdkui.guidance.GuidanceStreetLabelListener;
 import com.here.msdkui.guidance.GuidanceStreetLabelPresenter;
 import com.here.msdkui.guidance.GuidanceStreetLabelView;
 
+import org.json.JSONException;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -176,8 +178,9 @@ class MapFragmentView {
             return false;
         }
     };
-    private GeoJsonTileLoader geoJsonTileLoader;
-    private MapContainer geoJsonTileMapContainer;
+    private MapState previousMapState = null;
+    private GeoJSONTileLoader roadkillGeoJSONTileLoader;
+    private MapContainer roadkillGeoJsonTileMapContainer;
     private boolean isSatelliteMap = false;
     private boolean isLaneDisplaying = false;
     private int maneuverIconId;
@@ -274,7 +277,7 @@ class MapFragmentView {
                     @Override
                     public void onGlobalLayout() {
                         laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        laneInformationMapOverlay.setAnchorPoint(getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
+                        laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
                     }
                 });
                 laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
@@ -758,7 +761,7 @@ class MapFragmentView {
                 Image icon = new Image();
                 icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_pin, 128, 128));
                 safetyCameraMapMarker.setIcon(icon);
-                safetyCameraMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(safetyCameraMapMarker));
+                safetyCameraMapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(safetyCameraMapMarker));
                 safetyCameraMapMarker.setTransparency(1);
                 distanceToSafetyCamera = safetySpotInfo.getDistance();
                 safetyCameraSpeedLimit = safetySpotInfo.getSafetySpot().getSpeedLimit1();
@@ -1034,16 +1037,6 @@ class MapFragmentView {
         DataHolder.getSupportMapFragment().setOnTouchListener(emptyMapOnTouchListener);
     }
 
-    private static PointF getMapMarkerAnchorPoint(MapMarker mapMarker) {
-        int iconHeight = (int) mapMarker.getIcon().getHeight();
-        int iconWidth = (int) mapMarker.getIcon().getWidth();
-        return new PointF((float) (iconWidth / 2), (float) iconHeight);
-    }
-
-    private static PointF getMapOverlayAnchorPoint(int width, int height) {
-        return new PointF((float) (width / 2), (float) height);
-    }
-
     private void initGuidanceEstimatedArrivalView(NavigationManager navigationManager) {
 
         guidanceEstimatedArrivalViewPresenter = new GuidanceEstimatedArrivalViewPresenter(navigationManager);
@@ -1257,7 +1250,7 @@ class MapFragmentView {
         MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
         mapMarker.setDraggable(true);
         userInputWaypoints.add(mapMarker);
-        mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
+        mapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(mapMarker));
         DataHolder.getMap().addMapObject(mapMarker);
         DataHolder.getActivity().findViewById(R.id.vehicleTypeTableLayout).setVisibility(View.VISIBLE);
         carRouteButton.setVisibility(View.VISIBLE);
@@ -1536,7 +1529,7 @@ class MapFragmentView {
         hereRouter.setContext(DataHolder.getActivity());
         hereRouter.createRouteForNavi();
         for (MapMarker m : wayPointIcons) {
-            m.setAnchorPoint(getMapMarkerAnchorPoint(m));
+            m.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(m));
             DataHolder.getMap().addMapObject(m);
         }
 //        Log.d(TAG, "wayPointIcons: " + wayPointIcons.size());
@@ -1706,6 +1699,8 @@ class MapFragmentView {
                         DataHolder.getMap().setCenter(defaultMapCenter, Map.Animation.NONE);
                         isDragged = false;
 
+
+
                         /* Rotate compass icon*/
                         DataHolder.getMap().addTransformListener(new Map.OnTransformListener() {
                             @Override
@@ -1714,51 +1709,159 @@ class MapFragmentView {
 
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
-//                                if (mapState.getZoomLevel() > 14) {
-//                                    geoJsonTileLoader.getTiles(DataHolder.getMap().getBoundingBox(), mapState.getZoomLevel());
-//                                    if (geoJsonTileMapContainer == null) {
-//                                        geoJsonTileMapContainer = geoJsonTileLoader.getMapContainer();
-//                                        DataHolder.getMap().addMapObject(geoJsonTileMapContainer);
-//                                    }
-//                                }
-                                if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
-                                    positionAccuracyMapCircle.setLineWidth(0);
-                                    positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
-                                }
-                                northUpButton.setRotation(mapState.getOrientation() * -1);
-                                if (!isNavigating) {
-                                    if (mapState.getZoomLevel() > 8) {
-                                        GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
-                                        try {
-                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
-                                            if (addresses.size() > 0) {
-                                                for (Address address : addresses) {
-                                                    String countryName = address.getCountryName();
-                                                    String adminAreaName = address.getAdminArea();
-                                                    if (countryName != null && adminAreaName != null) {
-                                                        if (countryName.equals("China") || countryName.equals("中国")) {
-                                                            if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
-                                                                if (customRasterTileOverlay == null) {
-                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
-                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
-                                                                        String[] subDomainsArray = {"a", "b", "c"};
-                                                                        customRasterTileOverlay.setSubDomains(subDomainsArray);
-                                                                        customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
-                                                                    }
-                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+                                if (previousMapState != null) {
+                                    if (previousMapState.getCenter().distanceTo(mapState.getCenter()) > 0 || previousMapState.getZoomLevel() != mapState.getZoomLevel()) {
+                                        roadkillGeoJsonTileMapContainer.removeAllMapObjects();
+                                        previousMapState = mapState;
+                                        roadkillGeoJSONTileLoader.getTilesWithMapBoundingBox(DataHolder.getMap().getBoundingBox(), mapState.getZoomLevel());
+                                        roadkillGeoJSONTileLoader.setOnTileRequestCompletedListener(new GeoJSONTileLoader.OnTileRequestCompletedListener() {
+                                            @Override
+                                            public void onCompleted() {
+                                                List<GeoJSONTileLoader.PointResult> pointResultList = roadkillGeoJSONTileLoader.getPointResultList();
+                                                for (GeoJSONTileLoader.PointResult pointResult : pointResultList) {
+                                                    try {
+                                                        String type = pointResult.getProperties().getString("type");
+                                                        String dayNight = pointResult.getProperties().getString("day_night");
+                                                        String recommendedType = pointResult.getProperties().getString("rec_type");
+                                                        String season = pointResult.getProperties().getString("season");
+                                                        String routeDescription = pointResult.getProperties().getString("rt_desc");
+                                                        MapMarker geoJSONTileMapMarker = new MapMarker(pointResult.getGeoCoordinate());
+                                                        geoJSONTileMapMarker.setTitle(recommendedType);
+                                                        geoJSONTileMapMarker.setDescription(season + "\n" + routeDescription);
+                                                        switch (type) {
+                                                            case "鳥類":
+                                                                if (dayNight.equals("晚上")) {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_bird_night, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                } else {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_bird_day, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
                                                                 }
-                                                            }
-                                                        } else if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
-                                                            if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-
-                                                                if (customRasterTileOverlay == null) {
-                                                                    customRasterTileOverlay = new CustomRasterTileOverlay();
-                                                                    if (customRasterTileOverlay.getTileUrl() == null) {
-                                                                        customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
-                                                                    }
-                                                                    DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-
+                                                                break;
+                                                            case "哺乳類":
+                                                                if (dayNight.equals("晚上")) {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_mammal_night, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                } else {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_mammal_day, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
                                                                 }
+                                                                break;
+                                                            case "兩生類":
+                                                                if (dayNight.equals("晚上")) {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_frog_night, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                } else {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_frog_day, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                }
+                                                                break;
+                                                            case "爬行類":
+                                                                if (recommendedType.equals("烏龜")) {
+                                                                    if (dayNight.equals("晚上")) {
+                                                                        Image icon = new Image();
+                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_turtle_night, 64, 64));
+                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                    } else {
+                                                                        Image icon = new Image();
+                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_turtle_day, 64, 64));
+                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                    }
+                                                                } else {
+                                                                    if (dayNight.equals("晚上")) {
+                                                                        Image icon = new Image();
+                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_snake_night, 64, 64));
+                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                    } else {
+                                                                        Image icon = new Image();
+                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_snake_day, 64, 64));
+                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                    }
+                                                                }
+                                                                break;
+                                                            case "陸蟹":
+                                                                if (dayNight.equals("晚上")) {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_crab_night, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                } else {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_crab_day, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                }
+                                                                break;
+                                                            case "昆蟲":
+                                                                if (dayNight.equals("晚上")) {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_butterfly_night, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                } else {
+                                                                    Image icon = new Image();
+                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_butterfly_day, 64, 64));
+                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                }
+                                                                break;
+                                                        }
+                                                        roadkillGeoJsonTileMapContainer.addMapObject(geoJSONTileMapMarker);
+                                                    } catch (JSONException e) {
+                                                        e.printStackTrace();
+                                                    }
+                                                }
+                                                Log.d(TAG, "getLineStringResultList().size(): " + roadkillGeoJSONTileLoader.getLineStringResultList().size());
+                                                Log.d(TAG, "getPolygonResultList().size(): " + roadkillGeoJSONTileLoader.getPolygonResultList().size());
+                                            }
+                                        });
+//                                        if (geoJsonTileMapContainer == null) {
+//                                            geoJsonTileMapContainer = geoJsonTileLoader.getMapContainer();
+//                                            DataHolder.getMap().addMapObject(geoJsonTileMapContainer);
+//                                        }
+                                    }
+                                    if (!isNavigating) {
+                                        if (mapState.getZoomLevel() > 8) {
+                                            GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
+                                            try {
+                                                List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+                                                if (addresses.size() > 0) {
+                                                    for (Address address : addresses) {
+                                                        String countryName = address.getCountryName();
+                                                        String adminAreaName = address.getAdminArea();
+                                                        if (countryName != null && adminAreaName != null) {
+                                                            if (countryName.equals("China") || countryName.equals("中国")) {
+                                                                if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
+                                                                    if (customRasterTileOverlay == null) {
+                                                                        customRasterTileOverlay = new CustomRasterTileOverlay();
+                                                                        if (customRasterTileOverlay.getTileUrl() == null) {
+                                                                            String[] subDomainsArray = {"a", "b", "c"};
+                                                                            customRasterTileOverlay.setSubDomains(subDomainsArray);
+                                                                            customRasterTileOverlay.setTileUrl("https://%s.tile.openstreetmap.org/%s/%s/%s.png");
+                                                                        }
+                                                                        DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+                                                                    }
+                                                                }
+                                                            } else if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
+                                                                if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+
+                                                                    if (customRasterTileOverlay == null) {
+                                                                        customRasterTileOverlay = new CustomRasterTileOverlay();
+                                                                        if (customRasterTileOverlay.getTileUrl() == null) {
+                                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                                        }
+                                                                        DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+
+                                                                    }
+                                                                }
+                                                            } else {
+                                                                if (customRasterTileOverlay != null) {
+                                                                    DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
+                                                                    customRasterTileOverlay = null;
+                                                                }
+
                                                             }
                                                         } else {
                                                             if (customRasterTileOverlay != null) {
@@ -1767,20 +1870,23 @@ class MapFragmentView {
                                                             }
 
                                                         }
-                                                    } else {
-                                                        if (customRasterTileOverlay != null) {
-                                                            DataHolder.getMap().removeRasterTileSource(customRasterTileOverlay);
-                                                            customRasterTileOverlay = null;
-                                                        }
-
                                                     }
                                                 }
+                                            } catch (IOException e) {
+                                                e.printStackTrace();
                                             }
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
                                         }
                                     }
+                                } else {
+                                    previousMapState = mapState;
                                 }
+
+                                if (isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
+                                    positionAccuracyMapCircle.setLineWidth(0);
+                                    positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
+                                }
+                                northUpButton.setRotation(mapState.getOrientation() * -1);
+
                             }
                         });
 
@@ -1837,7 +1943,9 @@ class MapFragmentView {
                         positionIndicator.setVisible(true);
                         trafficWarningTextView = DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view);
 
-//                        geoJsonTileLoader = new GeoJsonTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/xVHzxzsl/tile/web/%s_%s_%s?access_token=AJt8bGnvRgWmUd0RppoLxQA&tags=");
+                        roadkillGeoJSONTileLoader = new GeoJSONTileLoader(DataHolder.getActivity(), "https://xyz.api.here.com/hub/spaces/ppwW5xZ4/tile/web/%s_%s_%s?access_token=AJt8bGnvRgWmUd0RppoLxQA&tags=");
+                        roadkillGeoJsonTileMapContainer = new MapContainer();
+                        DataHolder.getMap().addMapObject(roadkillGeoJsonTileMapContainer);
 
                         gpsSwitch = DataHolder.getActivity().findViewById(R.id.gps_switch);
                         gpsSwitch.setChecked(true);
@@ -2407,6 +2515,7 @@ class MapFragmentView {
                         String trafficEventShortText = trafficEventObject.getTrafficEvent().getEventText();
                         String trafficEventAffectedStreet = trafficEventObject.getTrafficEvent().getFirstAffectedStreet();
                         searchResultString = trafficEventShortText + " / " + trafficEventAffectedStreet;
+                        showSelectionFocus(trafficEventObjectGeoCoordinate, searchResultString);
                         showResultSnackbar(trafficEventObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_SHORT);
                         break;
                     case "com.here.android.mpa.mapping.SafetySpotObject":
@@ -2419,8 +2528,18 @@ class MapFragmentView {
                             safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                         }
                         searchResultString = "Safety Camera / " + safetyCameraSpeedLimitKM + " km/h";
+                        showSelectionFocus(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString);
                         showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_SHORT);
                         break;
+                    case "com.here.android.mpa.mapping.MapMarker":
+                        MapMarker selectedMapMarker = (MapMarker) selectedMapObjects.get(0);
+                        if (selectedMapMarker.getTitle() != null && selectedMapMarker.getDescription() != null) {
+                            searchResultString = selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
+                            showSelectionFocus(selectedMapMarker.getCoordinate(), searchResultString);
+                            showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_SHORT);
+                        }
+                        break;
+
                 }
             }
         }
@@ -2432,7 +2551,7 @@ class MapFragmentView {
             icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_search_result));
             selectedFeatureMapMarker.setIcon(icon);
             selectedFeatureMapMarker.setTitle(string);
-            selectedFeatureMapMarker.setAnchorPoint(getMapMarkerAnchorPoint(selectedFeatureMapMarker));
+            selectedFeatureMapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(selectedFeatureMapMarker));
             DataHolder.getMap().addMapObject(selectedFeatureMapMarker);
         }
 
@@ -2458,7 +2577,7 @@ class MapFragmentView {
             MapMarker mapMarker = new MapMarker(geoCoordinate);
             mapMarker.setDraggable(true);
             userInputWaypoints.add(mapMarker);
-            mapMarker.setAnchorPoint(getMapMarkerAnchorPoint(mapMarker));
+            mapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(mapMarker));
             DataHolder.getMap().addMapObject(mapMarker);
             carRouteButton.setVisibility(View.VISIBLE);
             truckRouteButton.setVisibility(View.VISIBLE);
