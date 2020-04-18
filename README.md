@@ -37,6 +37,7 @@
 1. HERE SDK for Android (Premium Edition) V3.x - https://bit.ly/2RFSM5X
 2. heremaps / msdkui-android - https://github.com/heremaps/msdkui-android
 3. javagl / Obj - https://github.com/javagl/Obj
+4. cocoahero /android-geojson - https://github.com/cocoahero/android-geojson
 
 -------------
 
