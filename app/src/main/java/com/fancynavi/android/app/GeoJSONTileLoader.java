@@ -41,7 +41,7 @@ class GeoJSONTileLoader {
     private String baseUrl;
     private RequestQueue requestQueue;
     private List<PointResult> pointResultList;
-    private List<LingStringResult> lineStringResultList;
+    private List<LineStringResult> lineStringResultList;
     private List<PolygonResult> polygonResultList;
     private OnTileRequestCompletedListener onTileRequestCompletedListener;
 
@@ -63,7 +63,7 @@ class GeoJSONTileLoader {
         return new GeoCoordinate(pointPosition[1], pointPosition[0], pointPosition[2]);
     }
 
-    private GeoPolyline processLingString(LineString lineString) {
+    private GeoPolyline processLineString(LineString lineString) {
         GeoPolyline multiLineStringGeoPolyline = new GeoPolyline();
         List<Position> multiLineStringShapePointList = lineString.getPositions();
         for (Position shapePointPosition : multiLineStringShapePointList) {
@@ -89,7 +89,7 @@ class GeoJSONTileLoader {
         return pointResultList;
     }
 
-    List<LingStringResult> getLineStringResultList() {
+    List<LineStringResult> getLineStringResultList() {
         return lineStringResultList;
     }
 
@@ -124,9 +124,9 @@ class GeoJSONTileLoader {
                                     polygonResultList.add(polygonResult);
                                     break;
                                 case "LineString":
-                                    GeoPolyline geoPolyline = processLingString(new LineString(feature.getGeometry().toJSON()));
+                                    GeoPolyline geoPolyline = processLineString(new LineString(feature.getGeometry().toJSON()));
                                     resultMapContainer.addMapObject(new MapPolyline(geoPolyline));
-                                    LingStringResult lineStringResult = new LingStringResult(featureId, url, geoPolyline, featureProperties);
+                                    LineStringResult lineStringResult = new LineStringResult(featureId, url, geoPolyline, featureProperties);
                                     lineStringResultList.add(lineStringResult);
                                     break;
                                 case "MultiPoint":
@@ -141,9 +141,9 @@ class GeoJSONTileLoader {
                                 case "MultiLineString":
                                     List<LineString> lineStringList = new MultiLineString(feature.getGeometry().toJSON()).getLineStrings();
                                     for (LineString lineString : lineStringList) {
-                                        GeoPolyline geoPolylineMultiLineString = processLingString(lineString);
+                                        GeoPolyline geoPolylineMultiLineString = processLineString(lineString);
                                         resultMapContainer.addMapObject(new MapPolyline(geoPolylineMultiLineString));
-                                        LingStringResult lineStringResultMultiLineString = new LingStringResult(featureId, url, geoPolylineMultiLineString, featureProperties);
+                                        LineStringResult lineStringResultMultiLineString = new LineStringResult(featureId, url, geoPolylineMultiLineString, featureProperties);
                                         lineStringResultList.add(lineStringResultMultiLineString);
                                     }
                                     break;
@@ -234,13 +234,13 @@ class GeoJSONTileLoader {
         }
     }
 
-    static class LingStringResult {
+    static class LineStringResult {
         private String id;
         private String url;
         private GeoPolyline geoPolyline;
         private JSONObject properties;
 
-        LingStringResult(String id, String url, GeoPolyline geoPolyline, JSONObject properties) {
+        LineStringResult(String id, String url, GeoPolyline geoPolyline, JSONObject properties) {
             this.id = id;
             this.url = url;
             this.geoPolyline = geoPolyline;
