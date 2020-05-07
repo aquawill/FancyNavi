@@ -45,7 +45,7 @@ class MapModeChanger {
             );
             DataHolder.getNavigationManager().setEnabledAudioEvents(audioEventEnumSet);
             DataHolder.getNavigationManager().removeSafetySpotListener(simpleSafetySpotListener);
-            DataHolder.getNavigationManager().addLaneInformationListener(new WeakReference<>(navigationListeners.getLaneinformationListener()));
+            DataHolder.getNavigationManager().addLaneInformationListener(new WeakReference<>(navigationListeners.getLaneInformationListener()));
             DataHolder.getNavigationManager().addRealisticViewListener(new WeakReference<>(navigationListeners.getRealisticViewListener()));
             DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
         }
@@ -53,7 +53,7 @@ class MapModeChanger {
 
     static void removeNavigationListeners() {
         if (DataHolder.getNavigationManager() != null) {
-            DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneinformationListener());
+            DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneInformationListener());
             DataHolder.getNavigationManager().removeRealisticViewListener(navigationListeners.getRealisticViewListener());
             DataHolder.getNavigationManager().removeSafetySpotListener(navigationListeners.getSafetySpotListener());
             DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(simpleSafetySpotListener));

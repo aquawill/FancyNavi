@@ -3,7 +3,8 @@ package com.fancynavi.android.app;
 import com.here.android.mpa.guidance.NavigationManager;
 
 class NavigationListeners {
-    private NavigationManager.LaneInformationListener laneinformationListener;
+    private NavigationManager.LaneInformationListener laneInformationListener;
+    private NavigationManager.RoutingZoneListener routingZoneListener;
     private NavigationManager.RealisticViewListener realisticViewListener;
     private NavigationManager.NavigationManagerEventListener navigationManagerEventListener;
     private NavigationManager.PositionListener positionListener;
@@ -11,6 +12,14 @@ class NavigationListeners {
     private NavigationManager.TrafficRerouteListener trafficRerouteListener;
     private NavigationManager.SafetySpotListener safetySpotListener;
     private NavigationManager.ManeuverEventListener maneuverEventListener;
+
+    public NavigationManager.RoutingZoneListener getRoutingZoneListener() {
+        return routingZoneListener;
+    }
+
+    public void setRoutingZoneListener(NavigationManager.RoutingZoneListener routingZoneListener) {
+        this.routingZoneListener = routingZoneListener;
+    }
 
     NavigationManager.ManeuverEventListener getManeuverEventListener() {
         return maneuverEventListener;
@@ -20,12 +29,12 @@ class NavigationListeners {
         this.maneuverEventListener = maneuverEventListener;
     }
 
-    NavigationManager.LaneInformationListener getLaneinformationListener() {
-        return laneinformationListener;
+    NavigationManager.LaneInformationListener getLaneInformationListener() {
+        return laneInformationListener;
     }
 
-    void setLaneinformationListener(NavigationManager.LaneInformationListener laneinformationListener) {
-        this.laneinformationListener = laneinformationListener;
+    void setLaneInformationListener(NavigationManager.LaneInformationListener laneInformationListener) {
+        this.laneInformationListener = laneInformationListener;
     }
 
     NavigationManager.RealisticViewListener getRealisticViewListener() {

@@ -1,7 +1,6 @@
 package com.fancynavi.android.app;
 
 import android.app.Activity;
-import android.util.Log;
 
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.StringRequest;
@@ -33,8 +32,6 @@ import org.json.JSONObject;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.fancynavi.android.app.DataHolder.TAG;
 
 class GeoJSONTileLoader {
     private MapContainer resultMapContainer;
@@ -164,7 +161,7 @@ class GeoJSONTileLoader {
                     }
 
                 }, volleyError -> {
-                    Log.d(TAG, "volleyError: " + volleyError.getLocalizedMessage());
+//                    Log.d(TAG, "volleyError: " + volleyError.getLocalizedMessage());
                 });
                 geoJsonTileStringRequest.setShouldRetryServerErrors(true);
                 requestQueue.add(geoJsonTileStringRequest);

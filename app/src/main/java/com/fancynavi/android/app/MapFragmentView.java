@@ -38,6 +38,7 @@ import android.widget.ProgressBar;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -65,6 +66,8 @@ import com.here.android.mpa.customlocation2.CLE2Request;
 import com.here.android.mpa.customlocation2.CLE2Result;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.guidance.RoutingZoneNotification;
+import com.here.android.mpa.guidance.RoutingZoneRestrictionsChecker;
 import com.here.android.mpa.guidance.SafetySpotNotification;
 import com.here.android.mpa.guidance.SafetySpotNotificationInfo;
 import com.here.android.mpa.guidance.TrafficNotification;
@@ -104,6 +107,8 @@ import com.here.android.mpa.routing.RouteResult;
 import com.here.android.mpa.routing.RouteWaypoint;
 import com.here.android.mpa.routing.Router;
 import com.here.android.mpa.routing.RoutingError;
+import com.here.android.mpa.routing.RoutingZone;
+import com.here.android.mpa.routing.RoutingZoneRestriction;
 import com.here.android.mpa.search.DiscoveryResultPage;
 import com.here.android.mpa.search.ErrorCode;
 import com.here.android.mpa.search.PlaceLink;
@@ -140,6 +145,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -386,6 +392,7 @@ class MapFragmentView {
         public void onPositionUpdated(GeoPosition geoPosition) {
             positionIndicator.setVisible(false);
 
+
             if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 300) {
                 guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
             }
@@ -436,6 +443,28 @@ class MapFragmentView {
                 }
 
                 if (isNavigating) {
+
+                    List<RoutingZone> routingZoneList = RoutingZoneRestrictionsChecker.getRoutingZones(DataHolder.getPositioningManager().getRoadElement());
+                    String roadName = DataHolder.getPositioningManager().getRoadElement().getRoadName();
+                    if (routingZoneList.size() > 0) {
+                        for (RoutingZone routingZone : routingZoneList) {
+                            String routingZoneId = routingZone.getId();
+                            String routingZoneName = routingZone.getName();
+                            Log.d(TAG, roadName + " routingZoneId: " + routingZoneId + " routingZoneName: " + routingZoneName);
+                            List<RoutingZoneRestriction> routingZoneRestrictionList = routingZone.getRestrictions();
+                            for (RoutingZoneRestriction routingZoneRestriction : routingZoneRestrictionList) {
+                                String routingZoneLicensePlateLastDigits = routingZoneRestriction.getLicensePlateLastDigits();
+                                Date routingZoneRestrictionTimeBegin = routingZoneRestriction.getTimeBegin();
+                                Date routingZoneRestrictionTimeEnd = routingZoneRestriction.getTimeEnd();
+                                List<RouteOptions.TransportMode> transportModeList = routingZoneRestriction.getTransportTypes();
+                                for (RouteOptions.TransportMode transportMode : transportModeList) {
+                                    int transportModeValue = transportMode.value();
+                                }
+
+                            }
+                        }
+                    }
+
                     if (formOfWay == RoadElement.FormOfWay.MOTORWAY && !routeName.equals("")) {
                         String layerId = "TWN_HWAY_MILEAGE";
                         int radius = 200;
@@ -740,11 +769,25 @@ class MapFragmentView {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
-            Log.d(TAG, "onManeuverEvent");
-            Log.d(TAG, "isVisible: " + isVisible);
+//            Log.d(TAG, "onManeuverEvent");
+//            Log.d(TAG, "isVisible: " + isVisible);
             if (!isVisible) {
                 new NavigationNotificationPusher(maneuverIconId);
             }
+        }
+    };
+
+    private NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
+        @Override
+        public void onRoutingZoneUpdated(@NonNull List<RoutingZone> list) {
+            Log.d(TAG, "onRoutingZoneUpdated");
+            super.onRoutingZoneUpdated(list);
+        }
+
+        @Override
+        public void onRoutingZoneAhead(@NonNull RoutingZoneNotification routingZoneNotification) {
+            Log.d(TAG, "onRoutingZoneAhead");
+            super.onRoutingZoneAhead(routingZoneNotification);
         }
     };
 
@@ -1599,6 +1642,7 @@ class MapFragmentView {
                             routeLength = route.getLength() + " m";
                         }
 
+
                         switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
                             case CAR:
                             case TRUCK:
@@ -1693,13 +1737,15 @@ class MapFragmentView {
                         DataHolder.getMap().setFadingAnimations(false);
                         mapSchemeChanger = new MapSchemeChanger(DataHolder.getMap());
 
+                        DataHolder.getMap().setFleetFeaturesVisible(EnumSet.of(
+                                Map.FleetFeature.CONGESTION_ZONES,
+                                Map.FleetFeature.ENVIRONMENTAL_ZONES));
+
                         Geocoder geocoder = new Geocoder(DataHolder.getActivity(), Locale.ENGLISH);
                         isNavigating = false;
                         GeoCoordinate defaultMapCenter = new GeoCoordinate(25.038137, 121.513936);
                         DataHolder.getMap().setCenter(defaultMapCenter, Map.Animation.NONE);
                         isDragged = false;
-
-
 
                         /* Rotate compass icon*/
                         DataHolder.getMap().addTransformListener(new Map.OnTransformListener() {
@@ -1813,8 +1859,8 @@ class MapFragmentView {
                                                         e.printStackTrace();
                                                     }
                                                 }
-                                                Log.d(TAG, "getLineStringResultList().size(): " + roadkillGeoJSONTileLoader.getLineStringResultList().size());
-                                                Log.d(TAG, "getPolygonResultList().size(): " + roadkillGeoJSONTileLoader.getPolygonResultList().size());
+//                                                Log.d(TAG, "getLineStringResultList().size(): " + roadkillGeoJSONTileLoader.getLineStringResultList().size());
+//                                                Log.d(TAG, "getPolygonResultList().size(): " + roadkillGeoJSONTileLoader.getPolygonResultList().size());
                                             }
                                         });
 //                                        if (geoJsonTileMapContainer == null) {
@@ -2293,8 +2339,10 @@ class MapFragmentView {
         mapSchemeChanger = new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager());
         navigationListeners.setSafetySpotListener(safetySpotListener);
         navigationListeners.setPositionListener(positionListener);
+//        navigationListeners.setRoutingZoneListener(routingZoneListener);
         DataHolder.getNavigationManager().addPositionListener(new WeakReference<>(navigationListeners.getPositionListener()));
         DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
+//        DataHolder.getNavigationManager().addRoutingZoneListener(new WeakReference<>(navigationListeners.getRoutingZoneListener()));
     }
 
     private void stopNavigationManager() {
@@ -2413,14 +2461,14 @@ class MapFragmentView {
 //        DataHolder.getNavigationManager().removeSafetySpotListener(navigationListeners.getSafetySpotListener());
         DataHolder.getNavigationManager().removeRealisticViewListener(navigationListeners.getRealisticViewListener());
         DataHolder.getNavigationManager().removePositionListener(navigationListeners.getPositionListener());
-        DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneinformationListener());
+        DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneInformationListener());
         DataHolder.getNavigationManager().removeRerouteListener(navigationListeners.getRerouteListener());
         DataHolder.getNavigationManager().removeTrafficRerouteListener(navigationListeners.getTrafficRerouteListener());
     }
 
     private void addNavigationListeners() {
         DataHolder.getActivity().findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
-        navigationListeners.setLaneinformationListener(laneInformationListener);
+        navigationListeners.setLaneInformationListener(laneInformationListener);
         navigationListeners.setNavigationManagerEventListener(navigationManagerEventListener);
 //        navigationListeners.setPositionListener(positionListener);
         navigationListeners.setRealisticViewListener(realisticViewListener);
@@ -2436,7 +2484,7 @@ class MapFragmentView {
         DataHolder.getNavigationManager().addRealisticViewListener(new WeakReference<>(navigationListeners.getRealisticViewListener()));
 //        DataHolder.getNavigationManager().addPositionListener(new WeakReference<>(navigationListeners.getPositionListener()));
         if (route.getFirstManeuver().getTransportMode() == RouteOptions.TransportMode.CAR || route.getFirstManeuver().getTransportMode() == RouteOptions.TransportMode.TRUCK) {
-            DataHolder.getNavigationManager().addLaneInformationListener(new WeakReference<>(navigationListeners.getLaneinformationListener()));
+            DataHolder.getNavigationManager().addLaneInformationListener(new WeakReference<>(navigationListeners.getLaneInformationListener()));
         }
         DataHolder.getNavigationManager().addRerouteListener(new WeakReference<>(navigationListeners.getRerouteListener()));
         DataHolder.getNavigationManager().addTrafficRerouteListener(new WeakReference<>(navigationListeners.getTrafficRerouteListener()));
