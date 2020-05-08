@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.graphics.PointF;
 import android.graphics.Typeface;
@@ -101,6 +102,7 @@ import com.here.android.mpa.mapping.customization.ZoomRange;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.DynamicPenalty;
 import com.here.android.mpa.routing.Route;
+import com.here.android.mpa.routing.RouteElement;
 import com.here.android.mpa.routing.RouteOptions;
 import com.here.android.mpa.routing.RoutePlan;
 import com.here.android.mpa.routing.RouteResult;
@@ -318,6 +320,7 @@ class MapFragmentView {
     private TextView calculatingTextView;
     private Route route;
     private MapRoute mapRoute;
+    private MapContainer trafficSignMapContainer;
     private boolean foregroundServiceStarted;
     private CoreRouter coreRouter;
     //HERE SDK UI KIT components
@@ -337,7 +340,7 @@ class MapFragmentView {
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
     private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
-    private long simulationSpeedMs = 16; //defines the speed of navigation simulation
+    private long simulationSpeedMs = 10; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
     private GeoCoordinate destinationLocationGeoCoordinate;
     private double proceedingDistance = 0;
@@ -525,10 +528,12 @@ class MapFragmentView {
 
                 /* Traffic Sign display*/
                 if (!roadElement.equals(lastRoadElement)) {
+                    Log.d(TAG, "!roadElement.equals(lastRoadElement)");
                     List<TrafficSign> targetTrafficSignList = new ArrayList<>();
                     GeoCoordinate trafficSignGeoCoordinate = null;
                     try {
                         List<TrafficSign> trafficSignList = roadElement.getTrafficSigns();
+                        Log.d(TAG, "trafficSignList: " + trafficSignList.size());
                         for (TrafficSign trafficSign : trafficSignList) {
                             double distanceToSign = geoCoordinateList.get(0).distanceTo(trafficSign.coordinate);
                             if (distanceToSign > 0 && !lastTrafficSignList.equals(trafficSignList)) {
@@ -541,7 +546,11 @@ class MapFragmentView {
                         e.printStackTrace();
                     }
                     if (trafficSignGeoCoordinate != null && lastKnownLocation != null) {
-                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
+                        Log.d(TAG, "trafficSignGeoCoordinate: " + trafficSignGeoCoordinate);
+                        Log.d(TAG, "lastKnownLocation: " + lastKnownLocation);
+                        Log.d(TAG, "lastKnownLocation.distanceTo(trafficSignGeoCoordinate: " + lastKnownLocation.distanceTo(trafficSignGeoCoordinate));
+                        Log.d(TAG, "geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate): " + geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate));
+                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) > geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
                             isSignShowing = false;
                             TrafficSignPresenter trafficSignPresenter = new TrafficSignPresenter();
                             trafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
@@ -1607,6 +1616,7 @@ class MapFragmentView {
                 supportMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
+                        trafficSignMapContainer.removeAllMapObjects();
                         route = routeResults.get(0).getRoute();
                         isRouteOverView = true;
                         destinationLocationGeoCoordinate = route.getRoutePlan().getWaypoint(route.getRoutePlan().getWaypointCount() - 1).getNavigablePosition();
@@ -1642,6 +1652,31 @@ class MapFragmentView {
                             routeLength = route.getLength() + " m";
                         }
 
+                        //Check TrafficSigns from route calculation result
+                        List<RouteElement> routeElementList = route.getRouteElements().getElements();
+                        for (RouteElement routeElement : routeElementList) {
+                            RoadElement roadElementOfCalculatedRoute = routeElement.getRoadElement();
+                            try {
+                                List<GeoCoordinate> roadElementGeometry = roadElementOfCalculatedRoute.getGeometry();
+                                GeoCoordinate lastPointOfRoadElement = roadElementGeometry.get(roadElementGeometry.size() - 1);
+                                for (TrafficSign trafficSign : roadElementOfCalculatedRoute.getTrafficSigns()) {
+                                    GeoCoordinate trafficSignGeoCoordinate = trafficSign.coordinate;
+                                    if (lastPointOfRoadElement.distanceTo(trafficSignGeoCoordinate) == 0) {
+                                        int trafficSignType = trafficSign.type;
+                                        Image icon = new Image();
+                                        Bitmap trafficSignBitmap = BitmapFactory.decodeResource(DataHolder.getActivity().getResources(), new TrafficSignPresenter().getImageResourceName(trafficSignType));
+                                        float aspectRatio = (float) trafficSignBitmap.getHeight() / (float) trafficSignBitmap.getWidth();
+                                        Bitmap iconBitmap = Bitmap.createScaledBitmap(trafficSignBitmap, 64, (int) (64 * aspectRatio), false);
+                                        icon.setBitmap(iconBitmap);
+                                        MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
+                                        trafficSignMapContainer.addMapObject(trafficSignMapMarker);
+                                    }
+                                }
+                            } catch (DataNotReadyException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        //Check TrafficSigns from route calculation result
 
                         switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
                             case CAR:
@@ -1740,6 +1775,9 @@ class MapFragmentView {
                         DataHolder.getMap().setFleetFeaturesVisible(EnumSet.of(
                                 Map.FleetFeature.CONGESTION_ZONES,
                                 Map.FleetFeature.ENVIRONMENTAL_ZONES));
+
+                        trafficSignMapContainer = new MapContainer();
+                        DataHolder.getMap().addMapObject(trafficSignMapContainer);
 
                         Geocoder geocoder = new Geocoder(DataHolder.getActivity(), Locale.ENGLISH);
                         isNavigating = false;
@@ -2352,6 +2390,7 @@ class MapFragmentView {
 
     private void resetMap() {
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
+        trafficSignMapContainer.removeAllMapObjects();
         safetyCameraMapMarker.setTransparency(0);
         DataHolder.getMap().removeMapObject(endGuidanceDirectionalMapPolyline);
         trafficWarningTextView.setVisibility(View.GONE);

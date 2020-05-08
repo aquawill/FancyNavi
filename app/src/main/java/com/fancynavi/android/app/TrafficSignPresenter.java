@@ -20,6 +20,90 @@ class TrafficSignPresenter {
     private ImageView imageView1;
     private ImageView imageView2;
     private ImageView imageView3;
+    private int imageResourceName;
+
+    public int getImageResourceName(int trafficSignType) {
+        switch (trafficSignType) {
+            case 1:
+                imageResourceName = R.drawable.traffic_sign_type_1;
+                break;
+            case 6:
+                imageResourceName = R.drawable.traffic_sign_type_6;
+                break;
+            case 7:
+                imageResourceName = R.drawable.traffic_sign_type_7;
+                break;
+            case 9:
+                imageResourceName = R.drawable.traffic_sign_type_9;
+                break;
+            case 10:
+                imageResourceName = R.drawable.traffic_sign_type_10;
+                break;
+            case 11:
+                imageResourceName = R.drawable.traffic_sign_type_11;
+                break;
+            case 12:
+                imageResourceName = R.drawable.traffic_sign_type_12;
+                break;
+            case 13:
+                imageResourceName = R.drawable.traffic_sign_type_13;
+                break;
+            case 14:
+                imageResourceName = R.drawable.traffic_sign_type_14;
+                break;
+            case 15:
+                imageResourceName = R.drawable.traffic_sign_type_15;
+                break;
+            case 18:
+                imageResourceName = R.drawable.traffic_sign_type_18;
+                break;
+            case 19:
+                imageResourceName = R.drawable.traffic_sign_type_19;
+                break;
+            case 20:
+                imageResourceName = R.drawable.traffic_sign_type_20;
+                break;
+            case 21:
+                imageResourceName = R.drawable.traffic_sign_type_21;
+                break;
+            case 22:
+                imageResourceName = R.drawable.traffic_sign_type_22;
+                break;
+            case 23:
+                imageResourceName = R.drawable.traffic_sign_type_23;
+                break;
+            case 27:
+                break;
+            case 29:
+                imageResourceName = R.drawable.traffic_sign_type_29;
+                break;
+            case 30:
+                imageResourceName = R.drawable.traffic_sign_type_30;
+                break;
+            case 31:
+                imageResourceName = R.drawable.traffic_sign_type_31;
+                break;
+            case 32:
+                imageResourceName = R.drawable.traffic_sign_type_32;
+                break;
+            case 34:
+                imageResourceName = R.drawable.traffic_sign_type_34;
+                break;
+            case 36:
+                imageResourceName = R.drawable.traffic_sign_type_36;
+                break;
+            case 41:
+                imageResourceName = R.drawable.traffic_sign_type_41;
+                break;
+            case 42:
+                imageResourceName = R.drawable.traffic_sign_type_42;
+                break;
+            case 59:
+                imageResourceName = R.drawable.traffic_sign_type_59;
+                break;
+        }
+        return imageResourceName;
+    }
 
     void setSignImageViews(ImageView imageView1, ImageView imageView2, ImageView imageView3) {
         this.imageView1 = imageView1;
