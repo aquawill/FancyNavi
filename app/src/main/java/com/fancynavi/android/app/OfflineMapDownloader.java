@@ -20,15 +20,15 @@ import java.util.List;
 import static com.fancynavi.android.app.DataHolder.TAG;
 
 class OfflineMapDownloader {
-    MapLoader mapLoader;
-    Snackbar offlineDownloadSnackbar;
-    TextView progressingTextView;
-    ProgressBar progressBar;
-    Button cancelButton;
-    List<Integer> mapIdList = new ArrayList<>();
-    List<String> mapNameList = new ArrayList<>();
-    List<String> mapEnglishNameList = new ArrayList<>();
-    int progress = -1;
+    private MapLoader mapLoader;
+    private Snackbar offlineDownloadSnackbar;
+    private TextView progressingTextView;
+    private ProgressBar progressBar;
+    private Button cancelButton;
+    private List<Integer> mapIdList = new ArrayList<>();
+    private List<String> mapNameList = new ArrayList<>();
+    private List<String> mapEnglishNameList = new ArrayList<>();
+    private int progress = -1;
 
     private MapLoader.Listener mapLoaderListener = new MapLoader.Listener() {
         public void onUninstallMapPackagesComplete(MapPackage rootMapPackage,
