@@ -209,6 +209,7 @@ class MapFragmentView {
     private LinearLayout safetyCamLinearLayout;
     private LinearLayout laneInfoLinearLayoutOverlay;
     private double distanceToSafetyCamera;
+    private OfflineMapDownloader offlineMapDownloader;
     private HereRouter hereRouter;
     private List<TrafficSign> lastTrafficSignList = new ArrayList<>();
     private RoadElement lastRoadElement;
@@ -313,11 +314,12 @@ class MapFragmentView {
     private Button satMapButton;
     private Button minimizeMapButton;
     private Button searchButton;
+    private Button downloadOfflineMapButton;
     private EditText searchTextBar;
     private LinearLayout searchBarLinearLayout;
     private boolean trafficEnabled;
     private ProgressBar progressBar;
-    private TextView calculatingTextView;
+    private TextView progressingTextView;
     private Route route;
     private MapRoute mapRoute;
     private MapContainer trafficSignMapContainer;
@@ -951,6 +953,7 @@ class MapFragmentView {
 
         @Override
         public boolean onDoubleTapEvent(PointF pointF) {
+            isDragged = true;
 //            searchBarLinearLayout.setVisibility(View.GONE);
 //            touchToAddWaypoint(pointF);
 //            switchUiControls(View.VISIBLE);
@@ -1450,6 +1453,7 @@ class MapFragmentView {
 //        gpsStatusImageView.setVisibility(View.GONE);
         gpsSwitch.setVisibility(View.GONE);
         searchButton.setVisibility(View.GONE);
+        downloadOfflineMapButton.setVisibility(View.GONE);
         switchUiControls(View.GONE);
         initGuidanceManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
         initGuidanceNextManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
@@ -1560,6 +1564,7 @@ class MapFragmentView {
     private void calculateRoute(RouteOptions routeOptions) {
         searchBarLinearLayout.setVisibility(View.GONE);
         searchButton.setVisibility(View.GONE);
+        downloadOfflineMapButton.setVisibility(View.GONE);
         if (selectedFeatureMapMarker != null) {
             DataHolder.getMap().removeMapObject(selectedFeatureMapMarker);
         }
@@ -1593,18 +1598,19 @@ class MapFragmentView {
             coreRouter.setDynamicPenalty(dynamicPenalty);
         }
 
-        progressBar = DataHolder.getActivity().findViewById(R.id.progressBar);
-        calculatingTextView = DataHolder.getActivity().findViewById(R.id.calculatingTextView);
+        progressBar = DataHolder.getActivity().findViewById(R.id.progress_bar);
+        progressingTextView = DataHolder.getActivity().findViewById(R.id.progressing_text_view);
 //        Log.d(TAG, "Route Calculation Started.");
         coreRouter.calculateRoute(hereRouter.getRoutePlan(), new Router.Listener<List<RouteResult>, RoutingError>() {
             @Override
             public void onProgress(int i) {
                 if (i < 100) {
                     progressBar.setVisibility(View.VISIBLE);
-                    calculatingTextView.setVisibility(View.VISIBLE);
+                    progressingTextView.setText("Calculating...");
+                    progressingTextView.setVisibility(View.VISIBLE);
                     progressBar.setProgress(i);
                 } else {
-                    calculatingTextView.setVisibility(View.INVISIBLE);
+                    progressingTextView.setVisibility(View.INVISIBLE);
                     progressBar.setVisibility(View.INVISIBLE);
                 }
             }
@@ -1712,7 +1718,7 @@ class MapFragmentView {
                     }
                 } else {
                     Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Error: " + routingError.name(), Snackbar.LENGTH_LONG).show();
-                    calculatingTextView.setVisibility(View.INVISIBLE);
+                    progressingTextView.setVisibility(View.INVISIBLE);
                     progressBar.setVisibility(View.INVISIBLE);
                     if (mapRoute != null) {
                         DataHolder.getMap().removeMapObject(mapRoute);
@@ -1794,118 +1800,7 @@ class MapFragmentView {
                             @Override
                             public void onMapTransformEnd(MapState mapState) {
                                 if (previousMapState != null) {
-                                    if (previousMapState.getCenter().distanceTo(mapState.getCenter()) > 0 || previousMapState.getZoomLevel() != mapState.getZoomLevel()) {
-                                        roadkillGeoJsonTileMapContainer.removeAllMapObjects();
-                                        previousMapState = mapState;
-                                        roadkillGeoJSONTileLoader.getTilesWithMapBoundingBox(DataHolder.getMap().getBoundingBox(), mapState.getZoomLevel());
-                                        roadkillGeoJSONTileLoader.setOnTileRequestCompletedListener(new GeoJSONTileLoader.OnTileRequestCompletedListener() {
-                                            @Override
-                                            public void onCompleted() {
-                                                List<GeoJSONTileLoader.PointResult> pointResultList = roadkillGeoJSONTileLoader.getPointResultList();
-                                                for (GeoJSONTileLoader.PointResult pointResult : pointResultList) {
-                                                    try {
-                                                        String type = pointResult.getProperties().getString("type");
-                                                        String dayNight = pointResult.getProperties().getString("day_night");
-                                                        String recommendedType = pointResult.getProperties().getString("rec_type");
-                                                        String season = pointResult.getProperties().getString("season");
-                                                        String routeDescription = pointResult.getProperties().getString("rt_desc");
-                                                        MapMarker geoJSONTileMapMarker = new MapMarker(pointResult.getGeoCoordinate());
-                                                        geoJSONTileMapMarker.setTitle(recommendedType);
-                                                        geoJSONTileMapMarker.setDescription(season + "\n" + routeDescription);
-                                                        switch (type) {
-                                                            case "鳥類":
-                                                                if (dayNight.equals("晚上")) {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_bird_night, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                } else {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_bird_day, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                }
-                                                                break;
-                                                            case "哺乳類":
-                                                                if (dayNight.equals("晚上")) {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_mammal_night, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                } else {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_mammal_day, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                }
-                                                                break;
-                                                            case "兩生類":
-                                                                if (dayNight.equals("晚上")) {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_frog_night, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                } else {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_frog_day, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                }
-                                                                break;
-                                                            case "爬行類":
-                                                                if (recommendedType.equals("烏龜")) {
-                                                                    if (dayNight.equals("晚上")) {
-                                                                        Image icon = new Image();
-                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_turtle_night, 64, 64));
-                                                                        geoJSONTileMapMarker.setIcon(icon);
-                                                                    } else {
-                                                                        Image icon = new Image();
-                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_turtle_day, 64, 64));
-                                                                        geoJSONTileMapMarker.setIcon(icon);
-                                                                    }
-                                                                } else {
-                                                                    if (dayNight.equals("晚上")) {
-                                                                        Image icon = new Image();
-                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_snake_night, 64, 64));
-                                                                        geoJSONTileMapMarker.setIcon(icon);
-                                                                    } else {
-                                                                        Image icon = new Image();
-                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_snake_day, 64, 64));
-                                                                        geoJSONTileMapMarker.setIcon(icon);
-                                                                    }
-                                                                }
-                                                                break;
-                                                            case "陸蟹":
-                                                                if (dayNight.equals("晚上")) {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_crab_night, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                } else {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_crab_day, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                }
-                                                                break;
-                                                            case "昆蟲":
-                                                                if (dayNight.equals("晚上")) {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_butterfly_night, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                } else {
-                                                                    Image icon = new Image();
-                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_butterfly_day, 64, 64));
-                                                                    geoJSONTileMapMarker.setIcon(icon);
-                                                                }
-                                                                break;
-                                                        }
-                                                        roadkillGeoJsonTileMapContainer.addMapObject(geoJSONTileMapMarker);
-                                                    } catch (JSONException e) {
-                                                        e.printStackTrace();
-                                                    }
-                                                }
-//                                                Log.d(TAG, "getLineStringResultList().size(): " + roadkillGeoJSONTileLoader.getLineStringResultList().size());
-//                                                Log.d(TAG, "getPolygonResultList().size(): " + roadkillGeoJSONTileLoader.getPolygonResultList().size());
-                                            }
-                                        });
-//                                        if (geoJsonTileMapContainer == null) {
-//                                            geoJsonTileMapContainer = geoJsonTileLoader.getMapContainer();
-//                                            DataHolder.getMap().addMapObject(geoJsonTileMapContainer);
-//                                        }
-                                    }
+
                                     if (!isNavigating) {
                                         if (mapState.getZoomLevel() > 8) {
                                             GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
@@ -1928,16 +1823,130 @@ class MapFragmentView {
                                                                         DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
                                                                     }
                                                                 }
-                                                            } else if (countryName.equals("Taiwan") && adminAreaName.equals("Taipei City")) {
-                                                                if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-
-                                                                    if (customRasterTileOverlay == null) {
-                                                                        customRasterTileOverlay = new CustomRasterTileOverlay();
-                                                                        if (customRasterTileOverlay.getTileUrl() == null) {
-                                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                            } else if (countryName.equals("Taiwan")) {
+                                                                if (adminAreaName.equals("Taipei City")) {
+                                                                    if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+                                                                        if (customRasterTileOverlay == null) {
+                                                                            customRasterTileOverlay = new CustomRasterTileOverlay();
+                                                                            if (customRasterTileOverlay.getTileUrl() == null) {
+                                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                                            }
+                                                                            DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
                                                                         }
-                                                                        DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-
+                                                                    }
+                                                                }
+                                                                if (previousMapState.getCenter().distanceTo(mapState.getCenter()) > 0 || previousMapState.getZoomLevel() != mapState.getZoomLevel()) {
+                                                                    roadkillGeoJsonTileMapContainer.removeAllMapObjects();
+                                                                    previousMapState = mapState;
+                                                                    if (DataHolder.getMap().getBoundingBox() != null) {
+                                                                        roadkillGeoJSONTileLoader.getTilesWithMapBoundingBox(DataHolder.getMap().getBoundingBox(), mapState.getZoomLevel());
+                                                                        roadkillGeoJSONTileLoader.setOnTileRequestCompletedListener(new GeoJSONTileLoader.OnTileRequestCompletedListener() {
+                                                                            @Override
+                                                                            public void onCompleted() {
+                                                                                List<GeoJSONTileLoader.PointResult> pointResultList = roadkillGeoJSONTileLoader.getPointResultList();
+                                                                                for (GeoJSONTileLoader.PointResult pointResult : pointResultList) {
+                                                                                    try {
+                                                                                        String type = pointResult.getProperties().getString("type");
+                                                                                        String dayNight = pointResult.getProperties().getString("day_night");
+                                                                                        String recommendedType = pointResult.getProperties().getString("rec_type");
+                                                                                        String season = pointResult.getProperties().getString("season");
+                                                                                        String routeDescription = pointResult.getProperties().getString("rt_desc");
+                                                                                        MapMarker geoJSONTileMapMarker = new MapMarker(pointResult.getGeoCoordinate());
+                                                                                        geoJSONTileMapMarker.setTitle(recommendedType);
+                                                                                        geoJSONTileMapMarker.setDescription(season + "\n" + routeDescription);
+                                                                                        switch (type) {
+                                                                                            case "鳥類":
+                                                                                                if (dayNight.equals("晚上")) {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_bird_night, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                } else {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_bird_day, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                }
+                                                                                                break;
+                                                                                            case "哺乳類":
+                                                                                                if (dayNight.equals("晚上")) {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_mammal_night, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                } else {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_mammal_day, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                }
+                                                                                                break;
+                                                                                            case "兩生類":
+                                                                                                if (dayNight.equals("晚上")) {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_frog_night, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                } else {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_frog_day, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                }
+                                                                                                break;
+                                                                                            case "爬行類":
+                                                                                                if (recommendedType.equals("烏龜")) {
+                                                                                                    if (dayNight.equals("晚上")) {
+                                                                                                        Image icon = new Image();
+                                                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_turtle_night, 64, 64));
+                                                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                                                    } else {
+                                                                                                        Image icon = new Image();
+                                                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_turtle_day, 64, 64));
+                                                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                                                    }
+                                                                                                } else {
+                                                                                                    if (dayNight.equals("晚上")) {
+                                                                                                        Image icon = new Image();
+                                                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_snake_night, 64, 64));
+                                                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                                                    } else {
+                                                                                                        Image icon = new Image();
+                                                                                                        icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_snake_day, 64, 64));
+                                                                                                        geoJSONTileMapMarker.setIcon(icon);
+                                                                                                    }
+                                                                                                }
+                                                                                                break;
+                                                                                            case "陸蟹":
+                                                                                                if (dayNight.equals("晚上")) {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_crab_night, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                } else {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_crab_day, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                }
+                                                                                                break;
+                                                                                            case "昆蟲":
+                                                                                                if (dayNight.equals("晚上")) {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_butterfly_night, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                } else {
+                                                                                                    Image icon = new Image();
+                                                                                                    icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_butterfly_day, 64, 64));
+                                                                                                    geoJSONTileMapMarker.setIcon(icon);
+                                                                                                }
+                                                                                                break;
+                                                                                        }
+                                                                                        roadkillGeoJsonTileMapContainer.addMapObject(geoJSONTileMapMarker);
+                                                                                    } catch (JSONException e) {
+                                                                                        e.printStackTrace();
+                                                                                    }
+                                                                                }
+//                                                                                Log.d(TAG, "getLineStringResultList().size(): " + roadkillGeoJSONTileLoader.getLineStringResultList().size());
+//                                                                                Log.d(TAG, "getPolygonResultList().size(): " + roadkillGeoJSONTileLoader.getPolygonResultList().size());
+                                                                            }
+                                                                        });
+//                                                                        if (geoJsonTileMapContainer == null) {
+//                                                                            geoJsonTileMapContainer = geoJsonTileLoader.getMapContainer();
+//                                                                            DataHolder.getMap().addMapObject(geoJsonTileMapContainer);
+//                                                                        }
                                                                     }
                                                                 }
                                                             } else {
@@ -2187,6 +2196,16 @@ class MapFragmentView {
                         });
 
                         searchButton = DataHolder.getActivity().findViewById(R.id.search_button);
+                        downloadOfflineMapButton = DataHolder.getActivity().findViewById(R.id.download_button);
+                        offlineMapDownloader = new OfflineMapDownloader();
+                        downloadOfflineMapButton.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Checking offline map...", Snackbar.LENGTH_SHORT).show();
+                                downloadOfflineMapButton.setVisibility(View.GONE);
+                                offlineMapDownloader.downloadOfflineMapPackageOnMapCenter(DataHolder.getMap().getCenter());
+                            }
+                        });
                         searchTextBar = DataHolder.getActivity().findViewById(R.id.search_input_text);
                         searchBarLinearLayout = DataHolder.getActivity().findViewById(R.id.search_bar_linear_layout);
                         searchButton.setOnClickListener(new View.OnClickListener() {
@@ -2415,6 +2434,7 @@ class MapFragmentView {
 //        DataHolder.getNavigationManager() = null;
         switchGuidanceUiViews(View.GONE);
         searchButton.setVisibility(View.VISIBLE);
+        downloadOfflineMapButton.setVisibility(View.VISIBLE);
 //        gpsStatusImageView.setVisibility(View.VISIBLE);
         gpsSwitch.setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.junctionImageView).setVisibility(View.INVISIBLE);

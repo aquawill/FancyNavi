@@ -39,8 +39,8 @@
 3. javagl / Obj - https://github.com/javagl/Obj
 4. cocoahero / android-geojson - https://github.com/cocoahero/android-geojson
 
--------------
 
+## Screenshots:
 Search for places/POI.
 
 ![](https://i.imgur.com/d8uHfMu.gif)
@@ -89,3 +89,9 @@ Support MultiWindow Mode.
 Notification with map image
 
 ![](https://i.imgur.com/Bz2ljIm.gif)
+
+## Credits:
+* Icons made by <a href="https://www.flaticon.com/authors/vectors-market" title="Vectors Market">Vectors Market</a> from <a href="https://www.flaticon.com/" title="Flaticon"> www.flaticon.com</a>
+* <div>Icons made by <a href="https://www.flaticon.com/authors/freepik" title="Freepik">Freepik</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+* <div>Icons made by <a href="https://www.flaticon.com/authors/smashicons" title="Smashicons">Smashicons</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div>
+* 

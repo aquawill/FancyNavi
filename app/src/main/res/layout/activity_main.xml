@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main_linear_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -95,13 +94,24 @@
             app:layout_constraintEnd_toEndOf="parent" />
 
         <Button
+            android:id="@+id/download_button"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:layout_marginEnd="8dp"
+            android:background="#00000000"
+            android:foreground="@drawable/ic_download"
+            app:layout_constraintBottom_toBottomOf="@id/sat_map_button"
+            app:layout_constraintEnd_toStartOf="@id/sat_map_button"
+            app:layout_constraintTop_toTopOf="@id/traffic_button" />
+
+        <Button
             android:id="@+id/search_button"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="8dp"
             android:background="#00000000"
-            android:foreground="@drawable/ic_search"
+            android:foreground="@drawable/ic_tools_and_utensils"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/top_button_linear_layout" />
 
@@ -336,7 +346,7 @@
         </LinearLayout>
 
         <ProgressBar
-            android:id="@+id/progressBar"
+            android:id="@+id/progress_bar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -438,19 +448,35 @@
         </TableLayout>
 
         <TextView
-            android:id="@+id/calculatingTextView"
+            android:id="@+id/progressing_text_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:background="#00C7C7C7"
             android:elevation="2dp"
-            android:text="Calculating..."
             android:shadowColor="#FF000000"
             android:shadowRadius="16"
             android:textColor="#FFFFFFFF"
             android:visibility="invisible"
-            app:layout_constraintBottom_toTopOf="@id/progressBar"
+            app:layout_constraintBottom_toTopOf="@id/progress_bar"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <Button
+            android:id="@+id/cancel_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="#00C7C7C7"
+            android:elevation="2dp"
+            android:shadowColor="#FF000000"
+            android:shadowRadius="16"
+            android:text="Cancel"
+            android:visibility="invisible"
+            android:textColor="#FFFF5555"
+            app:layout_constraintTop_toBottomOf="@id/progress_bar"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -540,8 +566,9 @@
             class="com.here.android.mpa.mapping.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            app:layout_constraintTop_toTopOf="@id/top_button_linear_layout"
-            tools:layout_editor_absoluteX="25dp" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="@id/top_button_linear_layout" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
