@@ -17,20 +17,22 @@
 14. Speed limit warning/display.
 15. Traffic congestion warning.
 16. Traffic sign warning and display (driver alert).
-17. Traffic aware rerouting.
-18. 3D object display as position indicator.
-19. Custom location extension with SDK (freeway mileage display).
-20. Map customization and scheme switching.
-21. HERE SDK UI Kit (GuidanceManeuverView/GuidanceNextManeuverView).
-22. HERE advanced network positioning (with cell/WiFi).
-23. Switch GPS on/off.
-24. Location logging (for road test purposes).
-25. Toll Cost calculation for Car/Truck.
-26. Display guidance maneuver information with PIP mode (Android N).
-27. Support Multi Window mode (Android N).
-28. Overlay OSM tiles for China.
-29. Show notification with snapshot of the next maneuver while app is on the background.
-30. Implement GeoJSONTileLoader.java to load GeoJSON geometries in EPSG:4326 tiling scheme.
+17. Traffic signs along the route.
+18. Traffic aware rerouting.
+19. 3D object display as position indicator.
+20. Custom location extension with SDK (freeway mileage display).
+21. Map customization and scheme switching.
+22. HERE SDK UI Kit (GuidanceManeuverView/GuidanceNextManeuverView).
+23. HERE advanced network positioning (with cell/WiFi).
+24. Switch GPS on/off.
+25. Location logging (for road test purposes).
+26. Toll Cost calculation for Car/Truck.
+27. Display guidance maneuver information with PIP mode (Android N).
+28. Support Multi Window mode (Android N).
+29. Overlay OSM tiles for China.
+30. Show notification with snapshot of the next maneuver while app is on the background.
+31. Implement GeoJSONTileLoader.java to load GeoJSON geometries in EPSG:4326 tiling scheme.
+32. Offline map download/update.
 
 
 ## Dependencies:
