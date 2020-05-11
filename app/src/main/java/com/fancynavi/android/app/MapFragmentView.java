@@ -302,6 +302,7 @@ class MapFragmentView {
         }
     };
     private VoiceActivation voiceActivation;
+    private LinearLayout mainLinearLayout;
     private boolean activateHereAdvancedPositioning;
     private Button zoomInButton;
     private Button zoomOutButton;
@@ -530,12 +531,11 @@ class MapFragmentView {
 
                 /* Traffic Sign display*/
                 if (!roadElement.equals(lastRoadElement)) {
-                    Log.d(TAG, "!roadElement.equals(lastRoadElement)");
+//                    Log.d(TAG, "!roadElement.equals(lastRoadElement)");
                     List<TrafficSign> targetTrafficSignList = new ArrayList<>();
                     GeoCoordinate trafficSignGeoCoordinate = null;
                     try {
                         List<TrafficSign> trafficSignList = roadElement.getTrafficSigns();
-                        Log.d(TAG, "trafficSignList: " + trafficSignList.size());
                         for (TrafficSign trafficSign : trafficSignList) {
                             double distanceToSign = geoCoordinateList.get(0).distanceTo(trafficSign.coordinate);
                             if (distanceToSign > 0 && !lastTrafficSignList.equals(trafficSignList)) {
@@ -734,7 +734,7 @@ class MapFragmentView {
 
         @Override
         public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            View mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
+
             junctionViewImageView.requestLayout();
             signpostImageView.requestLayout();
             int jvViewWidth = (int) (mainLinearLayout.getWidth() / 2.5);
@@ -1768,6 +1768,13 @@ class MapFragmentView {
                     if (error == Error.NONE) {
 
                         new OfflineMapDownloader();
+                        mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
+//                        View view = new View(DataHolder.getActivity());
+//                        view.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
+//                        view.setBackgroundColor(Color.argb(255, 0, 0, 0));
+//                        view.setElevation(30f);
+//                        view.setVisibility(View.VISIBLE);
+//                        mainLinearLayout.addView(view);
 
                         coreRouter = new CoreRouter();
                         DataHolder.setMap(supportMapFragment.getMap());

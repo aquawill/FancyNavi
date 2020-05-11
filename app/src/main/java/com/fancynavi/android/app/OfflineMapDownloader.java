@@ -1,12 +1,16 @@
 package com.fancynavi.android.app;
 
+import android.graphics.Color;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.TableLayout;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.google.android.material.snackbar.BaseTransientBottomBar;
 import com.google.android.material.snackbar.Snackbar;
@@ -29,11 +33,14 @@ class OfflineMapDownloader {
     private List<String> mapNameList = new ArrayList<>();
     private List<String> mapEnglishNameList = new ArrayList<>();
     private int progress = -1;
+    private View v;
+    private ConstraintLayout l;
 
     private MapLoader.Listener mapLoaderListener = new MapLoader.Listener() {
         public void onUninstallMapPackagesComplete(MapPackage rootMapPackage,
                                                    MapLoader.ResultCode mapLoaderResultCode) {
             progress = -1;
+            darkenAllViews(false);
             DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
             offlineDownloadSnackbar.setText("Mma");
             Log.d(TAG, "onUninstallMapPackagesComplete");
@@ -42,13 +49,22 @@ class OfflineMapDownloader {
         public void onProgress(int progressPercentage) {
             progress = progressPercentage;
             Log.d(TAG, "offline map download: " + progressPercentage);
+
             if (progressPercentage < 100) {
+                progressingTextView.setText("Downloading: " + progressPercentage + "%");
                 progressBar.setProgress(progressPercentage);
             } else {
+                darkenAllViews(false);
                 progressingTextView.setVisibility(View.INVISIBLE);
                 cancelButton.setVisibility(View.INVISIBLE);
                 progressBar.setVisibility(View.INVISIBLE);
                 offlineDownloadSnackbar.setText("Download Completed!");
+                offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+
+                    }
+                });
                 offlineDownloadSnackbar.show();
             }
         }
@@ -56,6 +72,7 @@ class OfflineMapDownloader {
         public void onPerformMapDataUpdateComplete(MapPackage rootMapPackage,
                                                    MapLoader.ResultCode mapLoaderResultCode) {
             progress = -1;
+            darkenAllViews(false);
             DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
             Log.d(TAG, "onPerformMapDataUpdateComplete");
 
@@ -68,6 +85,7 @@ class OfflineMapDownloader {
         public void onInstallMapPackagesComplete(MapPackage rootMapPackage,
                                                  MapLoader.ResultCode mapLoaderResultCode) {
             progress = -1;
+            darkenAllViews(false);
             DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
             Log.d(TAG, "onInstallMapPackagesComplete");
 
@@ -115,9 +133,11 @@ class OfflineMapDownloader {
                             mapLoader.addListener(mapLoaderListener);
                             boolean successInstall = mapLoader.performMapDataUpdate();
                             if (successInstall) {
+                                darkenAllViews(true);
                                 progressingTextView.setVisibility(View.VISIBLE);
+                                progressingTextView.setText("Downloading: 0%");
                                 cancelButton.setVisibility(View.VISIBLE);
-                                progressingTextView.setText("Downloading...");
+                                progressingTextView.setText("Updating...");
                                 progressBar.setVisibility(View.VISIBLE);
                             } else {
                                 Log.d(TAG, "installMapPackages() failed.");
@@ -163,6 +183,7 @@ class OfflineMapDownloader {
             @Override
             public void onClick(View v) {
                 mapLoader.cancelCurrentOperation();
+                darkenAllViews(false);
                 progressBar.setVisibility(View.GONE);
                 cancelButton.setVisibility(View.GONE);
                 progressingTextView.setVisibility(View.GONE);
@@ -192,6 +213,38 @@ class OfflineMapDownloader {
         } else {
             Log.d(TAG, "getMapPackages() failed.");
         }
+        v = new View(DataHolder.getActivity());
+        v.setLayoutParams(new TableLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        v.setBackgroundColor(Color.argb(128, 0, 0, 0));
+        v.setElevation(10);
+        l = DataHolder.getActivity().findViewById(R.id.map_constraint_layout);
+    }
+
+    private void darkenAllViews(boolean bool) {
+        Log.d(TAG, "darkenAllViews: " + bool);
+        if (bool) {
+            l.addView(v);
+            DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.traffic_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.sat_map_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.log_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.gps_switch).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.north_up).setClickable(!bool);
+            DataHolder.getSupportMapFragment().getMapGesture().setAllGesturesEnabled(!bool);
+        } else {
+            l.removeView(v);
+            DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.traffic_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.sat_map_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.log_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.gps_switch).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.north_up).setClickable(!bool);
+            DataHolder.getSupportMapFragment().getMapGesture().setAllGesturesEnabled(!bool);
+        }
     }
 
     void downloadOfflineMapPackageOnMapCenter(GeoCoordinate geoCoordinate) {
@@ -210,7 +263,7 @@ class OfflineMapDownloader {
                         long mapPackageSize = mapPackage.getSize();
                         mapIdList.add(mapPackageId);
                         mapNameList.add(rootMapPackageTitle);
-                        mapEnglishNameList.add(rootMapPackageTitle);
+                        mapEnglishNameList.add(rootMapPackageEnglishTitle);
                         Log.d(TAG, "MapPackageOnMapCenter:" + rootMapPackageTitle + " | " + rootMapPackageEnglishTitle + " | id: " + mapPackageId + " | size: " + mapPackageSize);
                         Log.d(TAG, "mapPackage.getInstallationState(): " + mapPackage.getInstallationState().name());
                         switch (mapPackage.getInstallationState()) {
@@ -241,9 +294,10 @@ class OfflineMapDownloader {
                                         boolean successInstall = mapLoader.installMapPackages(mapIdList);
                                         if (successInstall) {
                                             Log.d(TAG, "installMapPackages() success.");
+                                            darkenAllViews(true);
                                             progressingTextView.setVisibility(View.VISIBLE);
+                                            progressingTextView.setText("Downloading: 0%");
                                             cancelButton.setVisibility(View.VISIBLE);
-                                            progressingTextView.setText("Downloading...");
                                             progressBar.setVisibility(View.VISIBLE);
                                         } else {
                                             Log.d(TAG, "installMapPackages() failed.");
@@ -257,10 +311,22 @@ class OfflineMapDownloader {
                         }
                     } else {
                         offlineDownloadSnackbar.setText("No offline map at\n" + geoCoordinate.getLatitude() + ", " + geoCoordinate.getLongitude());
+                        offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+
+                            }
+                        });
                         offlineDownloadSnackbar.show();
                     }
                 } else {
                     offlineDownloadSnackbar.setText("Error: " + resultCode.name());
+                    offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                        }
+                    });
                     offlineDownloadSnackbar.show();
                 }
             }

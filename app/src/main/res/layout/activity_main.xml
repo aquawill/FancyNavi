@@ -4,6 +4,7 @@
     android:id="@+id/main_linear_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#000000"
     android:orientation="vertical">
 
     <com.here.msdkui.guidance.GuidanceManeuverView
@@ -355,7 +356,7 @@
             android:layout_marginEnd="60dp"
             android:layout_marginBottom="8dp"
             android:background="#00C7C7C7"
-            android:elevation="2dp"
+            android:elevation="20dp"
             android:max="100"
             android:visibility="invisible"
             app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
@@ -384,8 +385,8 @@
             android:layout_marginStart="160dp"
             android:layout_marginTop="8dp"
             android:layout_marginEnd="160dp"
-            android:visibility="gone"
             android:elevation="2dp"
+            android:visibility="gone"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/top_button_linear_layout">
@@ -454,7 +455,7 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:background="#00C7C7C7"
-            android:elevation="2dp"
+            android:elevation="20dp"
             android:shadowColor="#FF000000"
             android:shadowRadius="16"
             android:textColor="#FFFFFFFF"
@@ -470,15 +471,15 @@
             android:layout_marginStart="8dp"
             android:layout_marginEnd="8dp"
             android:background="#00C7C7C7"
-            android:elevation="2dp"
-            android:shadowColor="#FF000000"
+            android:elevation="20dp"
+            android:shadowColor="#FFFF5555"
             android:shadowRadius="16"
             android:text="Cancel"
+            android:textColor="#FFFF0000"
             android:visibility="invisible"
-            android:textColor="#FFFF5555"
-            app:layout_constraintTop_toBottomOf="@id/progress_bar"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/progress_bar" />
 
         <TextView
             android:id="@+id/guidance_speed_view"
@@ -502,9 +503,9 @@
             android:shadowColor="@color/white"
             android:shadowRadius="16"
             android:text="SPEED"
-            android:visibility="invisible"
             android:textAlignment="center"
             android:textSize="16sp"
+            android:visibility="invisible"
             app:layout_constraintBottom_toTopOf="@id/guidance_speed_view"
             app:layout_constraintEnd_toEndOf="@id/guidance_speed_view"
             app:layout_constraintStart_toStartOf="@id/guidance_speed_view" />
