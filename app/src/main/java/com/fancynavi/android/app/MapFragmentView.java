@@ -1398,7 +1398,7 @@ class MapFragmentView {
 
     private void createPosition3dObj() {
         currentPositionMapLocalModel = new MapLocalModel();
-        LocalModelLoader localModelLoader = new LocalModelLoader(DataHolder.getActivity());
+        LocalModelLoader localModelLoader = new LocalModelLoader(DataHolder.getActivity(), R.raw.arrow_new_obj);
         LocalMesh localMesh = new LocalMesh();
         localMesh.setVertices(localModelLoader.getObjVertices());
         localMesh.setVertexIndices(localModelLoader.getObjIndices());

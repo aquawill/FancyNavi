@@ -130,6 +130,8 @@ class OfflineMapDownloader {
                     offlineDownloadSnackbar.setAction("UPDATE", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
+                            progress = 0;
+                            progressBar.setProgress(0);
                             mapLoader.addListener(mapLoaderListener);
                             boolean successInstall = mapLoader.performMapDataUpdate();
                             if (successInstall) {
@@ -289,6 +291,7 @@ class OfflineMapDownloader {
                                     @Override
                                     public void onClick(View v) {
                                         progress = 0;
+                                        progressBar.setProgress(0);
                                         Log.d(TAG, "mapIdsToInstall: " + mapIdList);
                                         boolean successInstall = mapLoader.installMapPackages(mapIdList);
                                         if (successInstall) {

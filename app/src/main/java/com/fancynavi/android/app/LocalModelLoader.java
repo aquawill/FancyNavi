@@ -13,22 +13,18 @@ import de.javagl.obj.ObjReader;
 
 class LocalModelLoader {
 
-    private Context context;
     private Obj obj;
 
-    LocalModelLoader(Context context) {
-        this.context = context;
-        loadModelResource();
-    }
-
-    private void loadModelResource() {
+    LocalModelLoader(Context context, int resourceId) {
         try {
-            InputStream objStream = context.getResources().openRawResource(R.raw.arrow_modified);
+            InputStream objStream = context.getResources().openRawResource(resourceId);
             obj = ObjReader.read(objStream);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
     }
+
 
     FloatBuffer getObjTexCoords() {
         FloatBuffer texCoords = ObjData.getTexCoords(obj, 2);
