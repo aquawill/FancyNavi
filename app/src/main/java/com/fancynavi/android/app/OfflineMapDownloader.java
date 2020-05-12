@@ -137,7 +137,6 @@ class OfflineMapDownloader {
                                 progressingTextView.setVisibility(View.VISIBLE);
                                 progressingTextView.setText("Downloading: 0%");
                                 cancelButton.setVisibility(View.VISIBLE);
-                                progressingTextView.setText("Updating...");
                                 progressBar.setVisibility(View.VISIBLE);
                             } else {
                                 Log.d(TAG, "installMapPackages() failed.");
