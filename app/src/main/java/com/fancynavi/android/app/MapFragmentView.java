@@ -555,7 +555,7 @@ class MapFragmentView {
                         Log.d(TAG, "lastKnownLocation: " + lastKnownLocation);
                         Log.d(TAG, "lastKnownLocation.distanceTo(trafficSignGeoCoordinate: " + lastKnownLocation.distanceTo(trafficSignGeoCoordinate));
                         Log.d(TAG, "geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate): " + geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate));
-                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate) && lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < 10) {
+                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) > geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
                             Log.d(TAG, "show sign");
                             isSignShowing = false;
                             TrafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
