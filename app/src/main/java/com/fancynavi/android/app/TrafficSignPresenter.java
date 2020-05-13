@@ -88,7 +88,7 @@ class TrafficSignPresenter {
                 imageResourceName = R.drawable.traffic_sign_type_32;
                 break;
             case 34:
-                imageResourceName = R.drawable.traffic_sign_type_34;
+                imageResourceName = R.drawable.traffic_sign_alert;
                 break;
             case 36:
                 imageResourceName = R.drawable.traffic_sign_type_36;

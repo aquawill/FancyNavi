@@ -97,6 +97,8 @@ import com.here.android.mpa.mapping.SafetySpotObject;
 import com.here.android.mpa.mapping.SupportMapFragment;
 import com.here.android.mpa.mapping.TrafficEvent;
 import com.here.android.mpa.mapping.TrafficEventObject;
+import com.here.android.mpa.mapping.TransitAccessObject;
+import com.here.android.mpa.mapping.TransitStopObject;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.mapping.customization.CustomizableVariables;
 import com.here.android.mpa.mapping.customization.ZoomRange;
@@ -427,15 +429,15 @@ class MapFragmentView {
                 String routeName = roadElement.getRouteName();
 
                 if (geoPosition.getSpeed() > roadElement.getSpeedLimit()) {
-                    guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
-                    speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
+                    guidanceSpeedView.setTextColor(Color.argb(255, 255, 0, 0));
+                    speedLabelTextView.setTextColor(Color.argb(255, 255, 0, 0));
                 } else {
                     if (DataHolder.getMap().getMapScheme().contains("hybrid") || DataHolder.getMap().getMapScheme().contains("night")) {
-                        guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.white));
-                        speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.white));
+                        guidanceSpeedView.setTextColor(Color.argb(255, 255, 255, 255));
+                        speedLabelTextView.setTextColor(Color.argb(255, 255, 255, 255));
                     } else {
-                        guidanceSpeedView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.black));
-                        speedLabelTextView.setTextColor(DataHolder.getActivity().getResources().getColor(R.color.black));
+                        guidanceSpeedView.setTextColor(Color.argb(255, 0, 0, 0));
+                        speedLabelTextView.setTextColor(Color.argb(255, 0, 0, 0));
                     }
 
                 }
@@ -553,7 +555,7 @@ class MapFragmentView {
                         Log.d(TAG, "lastKnownLocation: " + lastKnownLocation);
                         Log.d(TAG, "lastKnownLocation.distanceTo(trafficSignGeoCoordinate: " + lastKnownLocation.distanceTo(trafficSignGeoCoordinate));
                         Log.d(TAG, "geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate): " + geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate));
-                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) > geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
+                        if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate) && lastKnownLocation.distanceTo(trafficSignGeoCoordinate) < 10) {
                             Log.d(TAG, "show sign");
                             isSignShowing = false;
                             TrafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
@@ -2594,7 +2596,7 @@ class MapFragmentView {
                             GeoCoordinate placesSearchresultGeoCoordinate = placeLink.getPosition();
 //                            searchResultString = placesSearchResultTitle + " / " + placesSearchCategoryName;
                             showSelectionFocus(placesSearchresultGeoCoordinate, placesSearchResultTitle);
-                            showResultSnackbar(placesSearchresultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_INDEFINITE);
+                            showResultSnackbar(placesSearchresultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_LONG);
                             searchBarLinearLayout.setVisibility(View.GONE);
                             isDragged = true;
                             map.setCenter(placesSearchresultGeoCoordinate, Map.Animation.LINEAR);
@@ -2612,7 +2614,7 @@ class MapFragmentView {
             }
             searchResultString = location.getAddress().getText();
             this.showSelectionFocus(location.getCoordinate(), searchResultString);
-            showResultSnackbar(location.getCoordinate(), location.getAddress().getText(), view, Snackbar.LENGTH_INDEFINITE);
+            showResultSnackbar(location.getCoordinate(), location.getAddress().getText(), view, Snackbar.LENGTH_LONG);
         }
 
         SearchResultHandler(View view, PointF pointF, Map map) {
@@ -2621,7 +2623,7 @@ class MapFragmentView {
             }
             List<ViewObject> selectedMapObjects = DataHolder.getMap().getSelectedObjectsNearby(pointF);
             if (selectedMapObjects.size() > 0) {
-//                Log.d(TAG, selectedMapObjects.get(0).getClass().getName());
+                Log.d(TAG, selectedMapObjects.get(0).getClass().getName());
                 switch (selectedMapObjects.get(0).getClass().getName()) {
                     case "com.here.android.mpa.mapping.MapCartoMarker":
                         MapCartoMarker selectedMapCartoMarker = (MapCartoMarker) selectedMapObjects.get(0);
@@ -2630,7 +2632,21 @@ class MapFragmentView {
                         String category = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
                         searchResultString = placeName + " / " + category;
                         showSelectionFocus(location.getCoordinate(), searchResultString);
-                        showResultSnackbar(location.getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
+                        showResultSnackbar(location.getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
+                        break;
+                    case "com.here.android.mpa.mapping.TransitAccessObject":
+                        TransitAccessObject selectedTransitAccessObject = (TransitAccessObject) selectedMapObjects.get(0);
+                        GeoCoordinate transitAccessObjectGeoCoordinate = selectedTransitAccessObject.getCoordinate();
+                        searchResultString = selectedTransitAccessObject.getTransitAccessInfo().getName();
+                        showSelectionFocus(transitAccessObjectGeoCoordinate, searchResultString);
+                        showResultSnackbar(transitAccessObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_LONG);
+                        break;
+                    case "com.here.android.mpa.mapping.TransitStopObject":
+                        TransitStopObject selectedTransitStopObject = (TransitStopObject) selectedMapObjects.get(0);
+                        GeoCoordinate transitStopObjectGeoCoordinate = selectedTransitStopObject.getCoordinate();
+                        searchResultString = selectedTransitStopObject.getTransitStopInfo().getOfficialName();
+                        showSelectionFocus(transitStopObjectGeoCoordinate, searchResultString);
+                        showResultSnackbar(transitStopObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_LONG);
                         break;
                     case "com.here.android.mpa.mapping.TrafficEventObject":
                         TrafficEventObject trafficEventObject = (TrafficEventObject) selectedMapObjects.get(0);
@@ -2639,7 +2655,7 @@ class MapFragmentView {
                         String trafficEventAffectedStreet = trafficEventObject.getTrafficEvent().getFirstAffectedStreet();
                         searchResultString = trafficEventShortText + " / " + trafficEventAffectedStreet;
                         showSelectionFocus(trafficEventObjectGeoCoordinate, searchResultString);
-                        showResultSnackbar(trafficEventObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_SHORT);
+                        showResultSnackbar(trafficEventObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_LONG);
                         break;
                     case "com.here.android.mpa.mapping.SafetySpotObject":
                         SafetySpotObject safetySpotObject = (SafetySpotObject) selectedMapObjects.get(0);
@@ -2652,14 +2668,14 @@ class MapFragmentView {
                         }
                         searchResultString = "Safety Camera / " + safetyCameraSpeedLimitKM + " km/h";
                         showSelectionFocus(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString);
-                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_SHORT);
+                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
                         break;
                     case "com.here.android.mpa.mapping.MapMarker":
                         MapMarker selectedMapMarker = (MapMarker) selectedMapObjects.get(0);
                         if (selectedMapMarker.getTitle() != null && selectedMapMarker.getDescription() != null) {
                             searchResultString = selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
                             showSelectionFocus(selectedMapMarker.getCoordinate(), searchResultString);
-                            showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_SHORT);
+                            showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
                         }
                         break;
 
@@ -2693,6 +2709,15 @@ class MapFragmentView {
                     switchUiControls(View.VISIBLE);
                 }
             });
+//            searchResultSnackbar.addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
+//                @Override
+//                public void onDismissed(Snackbar transientBottomBar, int event) {
+//                    super.onDismissed(transientBottomBar, event);
+//                    if (selectedFeatureMapMarker != null) {
+//                        map.removeMapObject(selectedFeatureMapMarker);
+//                    }
+//                }
+//            });
             searchResultSnackbar.show();
         }
 
