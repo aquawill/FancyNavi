@@ -16,6 +16,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -553,10 +554,10 @@ class MapFragmentView {
                         Log.d(TAG, "lastKnownLocation.distanceTo(trafficSignGeoCoordinate: " + lastKnownLocation.distanceTo(trafficSignGeoCoordinate));
                         Log.d(TAG, "geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate): " + geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate));
                         if (lastKnownLocation.distanceTo(trafficSignGeoCoordinate) > geoPosition.getCoordinate().distanceTo(trafficSignGeoCoordinate)) {
+                            Log.d(TAG, "show sign");
                             isSignShowing = false;
-                            TrafficSignPresenter trafficSignPresenter = new TrafficSignPresenter();
-                            trafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
-                            trafficSignPresenter.showTrafficSigns(targetTrafficSignList, roadElement, DataHolder.getActivity());
+                            TrafficSignPresenter.setSignImageViews(signImageView1, signImageView2, signImageView3);
+                            TrafficSignPresenter.showTrafficSigns(targetTrafficSignList, roadElement, DataHolder.getActivity());
                         }
                     }
 
@@ -573,6 +574,10 @@ class MapFragmentView {
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
+                    MediaPlayer mediaPlayer = MediaPlayer.create(DataHolder.getActivity(), R.raw.hint);
+                    if (mediaPlayer != null) {
+                        mediaPlayer.start();
+                    }
                     safetyCamLinearLayout.setVisibility(View.GONE);
 //                    gpsStatusImageView.setVisibility(View.VISIBLE);
                 } else {
@@ -1669,13 +1674,17 @@ class MapFragmentView {
                                     GeoCoordinate trafficSignGeoCoordinate = trafficSign.coordinate;
                                     if (lastPointOfRoadElement.distanceTo(trafficSignGeoCoordinate) == 0) {
                                         int trafficSignType = trafficSign.type;
-                                        Image icon = new Image();
-                                        Bitmap trafficSignBitmap = BitmapFactory.decodeResource(DataHolder.getActivity().getResources(), new TrafficSignPresenter().getImageResourceName(trafficSignType));
-                                        float aspectRatio = (float) trafficSignBitmap.getHeight() / (float) trafficSignBitmap.getWidth();
-                                        Bitmap iconBitmap = Bitmap.createScaledBitmap(trafficSignBitmap, 64, (int) (64 * aspectRatio), false);
-                                        icon.setBitmap(iconBitmap);
-                                        MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
-                                        trafficSignMapContainer.addMapObject(trafficSignMapMarker);
+                                        try {
+                                            Image icon = new Image();
+                                            Bitmap trafficSignBitmap = BitmapFactory.decodeResource(DataHolder.getActivity().getResources(), TrafficSignPresenter.getTrafficSignImageResourceName(trafficSignType));
+                                            float aspectRatio = (float) trafficSignBitmap.getHeight() / (float) trafficSignBitmap.getWidth();
+                                            Bitmap iconBitmap = Bitmap.createScaledBitmap(trafficSignBitmap, 64, (int) (64 * aspectRatio), false);
+                                            icon.setBitmap(iconBitmap);
+                                            MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
+                                            trafficSignMapContainer.addMapObject(trafficSignMapMarker);
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
                                     }
                                 }
                             } catch (DataNotReadyException e) {

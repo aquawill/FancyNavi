@@ -17,12 +17,12 @@ import static com.fancynavi.android.app.MapFragmentView.isSignShowing;
 
 class TrafficSignPresenter {
 
-    private ImageView imageView1;
-    private ImageView imageView2;
-    private ImageView imageView3;
-    private int imageResourceName;
+    private static ImageView imageView1;
+    private static ImageView imageView2;
+    private static ImageView imageView3;
+    private static int imageResourceName;
 
-    public int getImageResourceName(int trafficSignType) {
+    static int getTrafficSignImageResourceName(int trafficSignType) {
         switch (trafficSignType) {
             case 1:
                 imageResourceName = R.drawable.traffic_sign_type_1;
@@ -73,6 +73,7 @@ class TrafficSignPresenter {
                 imageResourceName = R.drawable.traffic_sign_type_23;
                 break;
             case 27:
+                imageResourceName = R.drawable.traffic_sign_type_27;
                 break;
             case 29:
                 imageResourceName = R.drawable.traffic_sign_type_29;
@@ -105,13 +106,13 @@ class TrafficSignPresenter {
         return imageResourceName;
     }
 
-    void setSignImageViews(ImageView imageView1, ImageView imageView2, ImageView imageView3) {
-        this.imageView1 = imageView1;
-        this.imageView2 = imageView2;
-        this.imageView3 = imageView3;
+    static void setSignImageViews(ImageView signImageView1, ImageView signImageView2, ImageView signImageView3) {
+        imageView1 = signImageView1;
+        imageView2 = signImageView2;
+        imageView3 = signImageView3;
     }
 
-    private void showTrafficSignImageView(ImageView imageView, RoadElement roadElement) {
+    static private void showTrafficSignImageView(ImageView imageView, RoadElement roadElement) {
         imageView.setVisibility(View.VISIBLE);
         int showSignTimePeriod;
         if (roadElement.getFormOfWay() == RoadElement.FormOfWay.MOTORWAY) {
@@ -130,7 +131,7 @@ class TrafficSignPresenter {
         }.start();
     }
 
-    void showTrafficSigns(List<TrafficSign> trafficSigns, RoadElement roadElement, Context context) {
+    static void showTrafficSigns(List<TrafficSign> trafficSigns, RoadElement roadElement, Context context) {
 
         int numberOfTrafficSigns = trafficSigns.size();
         int i = 0;
@@ -257,7 +258,7 @@ class TrafficSignPresenter {
                         break;
                 }
                 if (!isSignShowing) {
-                    this.showTrafficSignImageView(targetSignImageView, roadElement);
+                    showTrafficSignImageView(targetSignImageView, roadElement);
                     MediaPlayer mediaPlayer = MediaPlayer.create(context, R.raw.beep_short);
                     if (mediaPlayer != null) {
                         mediaPlayer.start();
