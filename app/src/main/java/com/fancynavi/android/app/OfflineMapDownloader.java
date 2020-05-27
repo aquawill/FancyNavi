@@ -233,7 +233,7 @@ class OfflineMapDownloader {
             DataHolder.getActivity().findViewById(R.id.log_button).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.gps_switch).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.north_up).setClickable(!bool);
-            DataHolder.getSupportMapFragment().getMapGesture().setAllGesturesEnabled(!bool);
+            DataHolder.getAndroidXCompositeFragment().getMapGesture().setAllGesturesEnabled(!bool);
         } else {
             l.removeView(v);
             DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
@@ -244,7 +244,7 @@ class OfflineMapDownloader {
             DataHolder.getActivity().findViewById(R.id.log_button).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.gps_switch).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.north_up).setClickable(!bool);
-            DataHolder.getSupportMapFragment().getMapGesture().setAllGesturesEnabled(!bool);
+            DataHolder.getAndroidXCompositeFragment().getMapGesture().setAllGesturesEnabled(!bool);
         }
     }
 

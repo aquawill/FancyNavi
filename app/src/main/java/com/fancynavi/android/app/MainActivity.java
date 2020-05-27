@@ -35,6 +35,7 @@ import android.os.Environment;
 import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
@@ -57,6 +58,7 @@ import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
+import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.customlocation2.CLE2DataManager;
 import com.here.android.mpa.customlocation2.CLE2OperationResult;
 import com.here.android.mpa.customlocation2.CLE2Request;
@@ -64,7 +66,6 @@ import com.here.android.mpa.customlocation2.CLE2Task;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapOverlay;
-import com.here.odnp.util.Log;
 
 import org.apache.commons.io.FileUtils;
 
@@ -77,8 +78,8 @@ import java.util.Locale;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
-import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
 import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
+import static com.fancynavi.android.app.MapFragmentView.gpsPositionMapLocalModel;
 import static com.fancynavi.android.app.MapFragmentView.isDragged;
 import static com.fancynavi.android.app.MapFragmentView.isNavigating;
 import static com.fancynavi.android.app.MapFragmentView.isPipMode;
@@ -105,7 +106,6 @@ public class MainActivity extends AppCompatActivity {
     static TextToSpeech textToSpeech;
     SensorManager mySensorManager;
     Bundle mViewBundle = new Bundle();
-    List<Float> azimuthArrayList = new ArrayList<>();
     private boolean isDarkMode = false;
     private final SensorEventListener sensorEventListener = new SensorEventListener() {
         float[] mGravity;
@@ -117,10 +117,18 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-            Log.d(TAG, "onSensorChanged");
+//            Log.d(TAG, "onSensorChanged");
+//            if (DataHolder.isArStarted()) {
+//                if (DataHolder.getArController().getPose() != null) {
+//                    float pitch = DataHolder.getArController().getPose().getPitch();
+//                    float roll = DataHolder.getArController().getPose().getRoll();
+//                    Log.d(TAG, "pitch: " + pitch + " roll: " + roll);
+//
+//                }
+//            }
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 lightSensorValue = event.values[0];
-                Log.d(TAG, String.valueOf(lightSensorValue));
+//                Log.d(TAG, String.valueOf(lightSensorValue));
             }
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 mGravity = event.values;
@@ -157,23 +165,22 @@ public class MainActivity extends AppCompatActivity {
                     float[] orientation = new float[3];
                     SensorManager.getOrientation(R, orientation);
                     azimuth = (float) Math.toDegrees(orientation[0]);
-                    if (azimuthArrayList.size() > 64) {
-                        azimuthArrayList.remove(0);
-                    }
-                    azimuthArrayList.add(azimuth);
-                    float averagedAzimuth = getAverageFromFloatArrayList(azimuthArrayList);
-                    if (currentPositionMapLocalModel != null && !isNavigating) {
-                        float rotatingAngle = new BigDecimal(averagedAzimuth).setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();
-                        currentPositionMapLocalModel.setYaw(rotatingAngle);
+                    float rotatingAngle = new BigDecimal(azimuth).setScale(2, BigDecimal.ROUND_HALF_UP).floatValue();
+                    if (gpsPositionMapLocalModel != null && !isNavigating) {
+                        gpsPositionMapLocalModel.setYaw(azimuth);
                         if (!isMapRotating) {
-                            if (!isDragged) {
-                                northUpButton.setRotation(0);
-                                DataHolder.getMap().setOrientation(0);
-                            }
+                            northUpButton.setRotation(0);
+                            DataHolder.getMap().setOrientation(0);
+                            DataHolder.getAndroidXCompositeFragment().getMapGesture().setPanningEnabled(true);
+                            DataHolder.getAndroidXCompositeFragment().getMapGesture().setTwoFingerPanningEnabled(true);
+                            DataHolder.getAndroidXCompositeFragment().getMapGesture().setRotateEnabled(true);
                         } else {
-                            northUpButton.setRotation(rotatingAngle * -1);
-                            DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getPosition().getCoordinate(), Map.Animation.LINEAR);
+                            northUpButton.setRotation(-azimuth);
+                            DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getPosition().getCoordinate(), Map.Animation.NONE);
                             DataHolder.getMap().setOrientation(rotatingAngle);
+                            DataHolder.getAndroidXCompositeFragment().getMapGesture().setPanningEnabled(false);
+                            DataHolder.getAndroidXCompositeFragment().getMapGesture().setTwoFingerPanningEnabled(false);
+                            DataHolder.getAndroidXCompositeFragment().getMapGesture().setRotateEnabled(false);
                             isDragged = false;
                         }
                     }
@@ -383,7 +390,7 @@ public class MainActivity extends AppCompatActivity {
             DataHolder.getMap().setTilt(60);
             isRouteOverView = false;
             if (laneInformationMapOverlay != null) {
-                DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
+                boolean addLaneInformationMapOverlaySuccessful = DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
             }
             trafficWarningTextView.setVisibility(View.VISIBLE);
             junctionViewImageView.setAlpha(1f);
@@ -393,10 +400,10 @@ public class MainActivity extends AppCompatActivity {
             DataHolder.getNavigationManager().resume();
             if (distanceMarkerMapOverlayList.size() > 0) {
                 for (MapOverlay o : distanceMarkerMapOverlayList) {
-                    DataHolder.getMap().addMapOverlay(o);
+                    boolean addOMapOverlaySuccessful = DataHolder.getMap().addMapOverlay(o);
                 }
             }
-            DataHolder.getSupportMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+            DataHolder.getAndroidXCompositeFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         }
     }
 
@@ -422,7 +429,7 @@ public class MainActivity extends AppCompatActivity {
         requiredSDKPermissions.add(Manifest.permission.INTERNET);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_WIFI_STATE);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_NETWORK_STATE);
-//        requiredSDKPermissions.add(Manifest.permission.CAMERA);
+        requiredSDKPermissions.add(Manifest.permission.CAMERA);
 
         ActivityCompat.requestPermissions(this,
                 requiredSDKPermissions.toArray(new String[requiredSDKPermissions.size()]),
@@ -457,6 +464,7 @@ public class MainActivity extends AppCompatActivity {
                  * the HERE SDK requires all permissions defined above to operate properly.
                  */
                 mapFragmentView = new MapFragmentView(this);
+
                 break;
             }
             default:
@@ -534,6 +542,33 @@ public class MainActivity extends AppCompatActivity {
         isNavigating = false;
         isRouteOverView = false;
         super.onDestroy();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+
+        int newOrientation = newConfig.orientation;
+        Log.d(TAG, "newConfig.orientation: " + newOrientation);
+        if (DataHolder.getArController() != null) {
+
+            Log.d(TAG, DataHolder.getArController().toString());
+        }
+
+        if (newOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+            Log.d(TAG, "ORIENTATION_LANDSCAPE");
+            if (DataHolder.getDevicePositionLocationMethod() == PositioningManager.LocationMethod.GPS) {
+                DataHolder.getArController().start();
+                DataHolder.getArController().setOcclusionEnabled(true);
+                DataHolder.setArStarted(true);
+            }
+        } else if (newOrientation == Configuration.ORIENTATION_PORTRAIT) {
+            Log.d(TAG, "ORIENTATION_PORTRAIT");
+            if (DataHolder.getArController() != null) {
+                DataHolder.getArController().stop(false);
+                DataHolder.setArStarted(false);
+            }
+        }
+        super.onConfigurationChanged(newConfig);
     }
 
 }
