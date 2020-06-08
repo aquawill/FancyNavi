@@ -6,8 +6,6 @@ import android.graphics.PointF;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.here.android.mpa.ar.ARController;
-import com.here.android.mpa.ar.AndroidXCompositeFragment;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
@@ -26,44 +24,6 @@ class DataHolder {
     private static SupportMapFragment supportMapFragment;
     private static NotificationChannel notificationChannel;
     private static NotificationManager notificationManager;
-    private static AndroidXCompositeFragment androidXCompositeFragment;
-    private static ARController arController;
-    private static PositioningManager.LocationMethod devicePositionLocationMethod;
-    private static boolean arStarted = false;
-
-
-    static void setDevicePositionLocationMethod(PositioningManager.LocationMethod devicePositionLocationMethod) {
-        DataHolder.devicePositionLocationMethod = devicePositionLocationMethod;
-    }
-
-    static PositioningManager.LocationMethod getDevicePositionLocationMethod() {
-        return devicePositionLocationMethod;
-    }
-
-
-    static void setArStarted(boolean arStarted) {
-        DataHolder.arStarted = arStarted;
-    }
-
-    static boolean isArStarted() {
-        return arStarted;
-    }
-
-    static void setArController(ARController arController) {
-        DataHolder.arController = arController;
-    }
-
-    public static ARController getArController() {
-        return arController;
-    }
-
-    static AndroidXCompositeFragment getAndroidXCompositeFragment() {
-        return androidXCompositeFragment;
-    }
-
-    static void setAndroidXCompositeFragment(AndroidXCompositeFragment androidXCompositeFragment) {
-        DataHolder.androidXCompositeFragment = androidXCompositeFragment;
-    }
 
     static NotificationChannel getNotificationChannel() {
         return notificationChannel;

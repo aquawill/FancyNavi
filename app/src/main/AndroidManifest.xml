@@ -7,7 +7,6 @@
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_navigator"
         android:label="HERESdkTest"
-        android:hardwareAccelerated="true"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/MSDKUIDarkTheme">
@@ -17,7 +16,7 @@
             android:name="com.fancynavi.android.app.MainActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:launchMode="singleTask"
-            android:screenOrientation="fullSensor"
+            android:screenOrientation="portrait"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true">
 
