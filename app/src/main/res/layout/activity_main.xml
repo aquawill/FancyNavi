@@ -359,7 +359,7 @@
             android:elevation="20dp"
             android:max="100"
             android:visibility="invisible"
-            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="@id/mapFragmentView"
             app:layout_constraintStart_toStartOf="@id/mapFragmentView"
             app:layout_constraintTop_toTopOf="@id/mapFragmentView" />
@@ -558,13 +558,13 @@
             android:elevation="2dp"
             android:textAlignment="center"
             android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="@+id/mapFragmentView"
+            app:layout_constraintBottom_toBottomOf="@id/mapFragmentView"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
         <fragment
             android:id="@+id/mapFragmentView"
-            class="com.here.android.mpa.mapping.SupportMapFragment"
+            class="com.here.android.mpa.mapping.AndroidXMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             app:layout_constraintEnd_toEndOf="parent"

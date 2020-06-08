@@ -396,7 +396,7 @@ public class MainActivity extends AppCompatActivity {
                     DataHolder.getMap().addMapOverlay(o);
                 }
             }
-            DataHolder.getSupportMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         }
     }
 

@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
+import com.here.android.mpa.mapping.AndroidXMapFragment;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
 import com.here.android.mpa.mapping.SupportMapFragment;
@@ -21,7 +22,7 @@ class DataHolder {
     private static AppCompatActivity activity;
     private static NavigationManager navigationManager;
     private static PositioningManager positioningManager;
-    private static SupportMapFragment supportMapFragment;
+    private static AndroidXMapFragment androidXMapFragment;
     private static NotificationChannel notificationChannel;
     private static NotificationManager notificationManager;
 
@@ -73,12 +74,12 @@ class DataHolder {
         DataHolder.positioningManager = positioningManager;
     }
 
-    static SupportMapFragment getSupportMapFragment() {
-        return supportMapFragment;
+    static AndroidXMapFragment getAndroidXMapFragment() {
+        return androidXMapFragment;
     }
 
-    static void setSupportMapFragment(SupportMapFragment supportMapFragment) {
-        DataHolder.supportMapFragment = supportMapFragment;
+    static void setAndroidXMapFragment(AndroidXMapFragment androidXMapFragment) {
+        DataHolder.androidXMapFragment = androidXMapFragment;
     }
 
     static PointF getMapMarkerAnchorPoint(MapMarker mapMarker) {

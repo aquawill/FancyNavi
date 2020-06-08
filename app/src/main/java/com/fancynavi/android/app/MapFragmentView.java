@@ -77,6 +77,7 @@ import com.here.android.mpa.guidance.TrafficNotificationInfo;
 import com.here.android.mpa.guidance.TrafficWarner;
 import com.here.android.mpa.guidance.VoiceCatalog;
 import com.here.android.mpa.guidance.VoiceGuidanceOptions;
+import com.here.android.mpa.mapping.AndroidXMapFragment;
 import com.here.android.mpa.mapping.LocalMesh;
 import com.here.android.mpa.mapping.Location;
 import com.here.android.mpa.mapping.LocationInfo;
@@ -94,7 +95,6 @@ import com.here.android.mpa.mapping.MapState;
 import com.here.android.mpa.mapping.OnMapRenderListener;
 import com.here.android.mpa.mapping.PositionIndicator;
 import com.here.android.mpa.mapping.SafetySpotObject;
-import com.here.android.mpa.mapping.SupportMapFragment;
 import com.here.android.mpa.mapping.TrafficEvent;
 import com.here.android.mpa.mapping.TrafficEventObject;
 import com.here.android.mpa.mapping.TransitAccessObject;
@@ -201,7 +201,7 @@ class MapFragmentView {
     private MapPolyline endGuidanceDirectionalMapPolyline;
     private KeyguardManager keyguardManager;
     private CLE2ProximityRequest cle2ProximityRequest;
-    private SupportMapFragment supportMapFragment;
+    private AndroidXMapFragment androidXMapFragment;
     private LinearLayout distanceMarkerLinearLayout;
     private ImageView distanceMarkerFreeIdImageView;
     private TextView distanceMarkerDistanceValue;
@@ -1070,7 +1070,7 @@ class MapFragmentView {
     MapFragmentView(AppCompatActivity activity) {
         DataHolder.setActivity(activity);
         keyguardManager = (KeyguardManager) DataHolder.getActivity().getSystemService(Context.KEYGUARD_SERVICE);
-        initSupportMapFragment();
+        initAndroidXMapFragment();
     }
 
     private static void intoRouteOverView() {
@@ -1096,7 +1096,7 @@ class MapFragmentView {
         clearButton.setVisibility(View.VISIBLE);
         junctionViewImageView.setAlpha(0f);
         signpostImageView.setAlpha(0f);
-        DataHolder.getSupportMapFragment().setOnTouchListener(emptyMapOnTouchListener);
+        DataHolder.getAndroidXMapFragment().setOnTouchListener(emptyMapOnTouchListener);
     }
 
     private void initGuidanceEstimatedArrivalView(NavigationManager navigationManager) {
@@ -1324,8 +1324,8 @@ class MapFragmentView {
         clearButton.setVisibility(View.VISIBLE);
     }
 
-    private SupportMapFragment getMapFragment() {
-        return (SupportMapFragment) DataHolder.getActivity().getSupportFragmentManager().findFragmentById(R.id.mapFragmentView);
+    private AndroidXMapFragment getMapFragment() {
+        return (AndroidXMapFragment) DataHolder.getActivity().getSupportFragmentManager().findFragmentById(R.id.mapFragmentView);
     }
 
     /*
@@ -1510,7 +1510,7 @@ class MapFragmentView {
         );
         DataHolder.getNavigationManager().setEnabledAudioEvents(audioEventEnumSet);
 
-        supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
+        androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
 
@@ -1626,7 +1626,7 @@ class MapFragmentView {
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
 //                Log.d(TAG, "Route Calculation Ended.");
 //                Log.d(TAG, routingError.toString());
-                supportMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
+                androidXMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         trafficSignMapContainer.removeAllMapObjects();
@@ -1721,7 +1721,7 @@ class MapFragmentView {
                             default:
                                 Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Route of " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
                         }
-                        supportMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
+                        androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
 
                     } else {
@@ -1749,10 +1749,10 @@ class MapFragmentView {
         }
     }
 
-    private void initSupportMapFragment() {
-        DataHolder.setSupportMapFragment(getMapFragment());
-        supportMapFragment = DataHolder.getSupportMapFragment();
-        supportMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
+    private void initAndroidXMapFragment() {
+        DataHolder.setAndroidXMapFragment(getMapFragment());
+        androidXMapFragment = DataHolder.getAndroidXMapFragment();
+        androidXMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
         // Set path of isolated disk cache
         // Retrieve intent name from manifest
         String intentName = "";
@@ -1773,7 +1773,7 @@ class MapFragmentView {
             // (getExternalStorageDirectory()/.here-maps).
             // Also, ensure the provided intent name does not match the default intent name.
         } else {
-            if (supportMapFragment != null) supportMapFragment.init(new OnEngineInitListener() {
+            if (androidXMapFragment != null) androidXMapFragment.init(new OnEngineInitListener() {
                 @Override
                 public void onEngineInitializationCompleted(Error error) {
                     if (error == Error.NONE) {
@@ -1788,7 +1788,7 @@ class MapFragmentView {
 //                        mainLinearLayout.addView(view);
 
                         coreRouter = new CoreRouter();
-                        DataHolder.setMap(supportMapFragment.getMap());
+                        DataHolder.setMap(androidXMapFragment.getMap());
                         navigationListeners = new NavigationListeners();
                         MapScaleView mapScaleView = DataHolder.getActivity().findViewById(R.id.map_scale_view);
                         mapScaleView.setMap(DataHolder.getMap());
@@ -2003,7 +2003,7 @@ class MapFragmentView {
 
                         DataHolder.getMap().addSchemeChangedListener(s -> Log.d(TAG, "onMapSchemeChanged: " + s));
 
-                        supportMapFragment.addOnMapRenderListener(new OnMapRenderListener() {
+                        androidXMapFragment.addOnMapRenderListener(new OnMapRenderListener() {
                             @Override
                             public void onPreDraw() {
                             }
@@ -2048,7 +2048,7 @@ class MapFragmentView {
                         activateHereAdvancedPositioning = true;
                         DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, activateHereAdvancedPositioning).getPositioningManager());
                         DataHolder.getPositioningManager().addListener(new WeakReference<>(positionChangedListener));
-                        positionIndicator = supportMapFragment.getPositionIndicator();
+                        positionIndicator = androidXMapFragment.getPositionIndicator();
                         positionIndicator.setSmoothPositionChange(true);
                         positionIndicator.setAccuracyIndicatorVisible(true);
                         positionIndicator.setVisible(true);
@@ -2304,7 +2304,7 @@ class MapFragmentView {
                         distanceMarkerFreeIdImageView = DataHolder.getActivity().findViewById(R.id.distance_marker_freeway_id);
                         distanceMarkerDistanceValue = DataHolder.getActivity().findViewById(R.id.distance_marker_distance_value);
 
-                        supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
+                        androidXMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
 
                         /* Download voice */
                         voiceActivation = new VoiceActivation(DataHolder.getActivity());
@@ -2478,7 +2478,7 @@ class MapFragmentView {
                 coreRouter.cancel();
             }
         }
-        supportMapFragment.setOnTouchListener(null);
+        androidXMapFragment.setOnTouchListener(null);
         if (DataHolder.getNavigationManager() != null) {
             if (DataHolder.getNavigationManager().getRunningState() == NavigationManager.NavigationState.RUNNING) {
                 DataHolder.getNavigationManager().stop();
@@ -2515,7 +2515,7 @@ class MapFragmentView {
         isDragged = false;
 
         northUpButton.callOnClick();
-        supportMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
+        androidXMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
         switchUiControls(View.GONE);
         northUpButton.setVisibility(View.VISIBLE);
 
