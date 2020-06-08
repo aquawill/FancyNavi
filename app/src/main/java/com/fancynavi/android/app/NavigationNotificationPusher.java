@@ -32,7 +32,9 @@ class NavigationNotificationPusher {
 
         DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
         Maneuver nextManeuver = DataHolder.getNavigationManager().getNextManeuver();
-        DataHolder.getMap().setOrientation(nextManeuver.getMapOrientation());
+        if (nextManeuver != null) {
+            DataHolder.getMap().setOrientation(nextManeuver.getMapOrientation());
+        }
         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
         DataHolder.getMap().setTilt(0);
         DataHolder.getMap().setCenter(nextManeuver.getCoordinate(), Map.Animation.NONE);

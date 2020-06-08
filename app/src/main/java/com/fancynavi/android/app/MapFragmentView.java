@@ -1152,7 +1152,7 @@ class MapFragmentView {
         int shapePointIndex = 0;
         while (shapePointIndex < geoCoordinateList.size() - 1) {
 //            Log.d(TAG, routeShapePointGeoCoordinateList.size() + " / " + shapePointIndex);
-            if (shapePointIndex < routeShapePointGeoCoordinateList.size()) {
+            if (shapePointIndex < routeShapePointGeoCoordinateList.size() - 1) {
                 distance += routeShapePointGeoCoordinateList.get(shapePointIndex).distanceTo(routeShapePointGeoCoordinateList.get(shapePointIndex + 1));
                 if (distance < 10000) {
                     croppedShapePointGeoCoordinateList.add(routeShapePointGeoCoordinateList.get(shapePointIndex));
