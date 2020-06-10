@@ -28,11 +28,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
 import android.speech.tts.TextToSpeech;
 import android.util.DisplayMetrics;
 import android.view.View;
@@ -45,17 +43,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.location.LocationSettingsRequest;
-import com.google.android.gms.location.SettingsClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.snackbar.Snackbar;
 import com.here.android.mpa.customlocation2.CLE2DataManager;
 import com.here.android.mpa.customlocation2.CLE2OperationResult;
@@ -90,7 +78,17 @@ import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
 import static com.fancynavi.android.app.MapFragmentView.northUpButton;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
-import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
+
+//import com.google.android.gms.location.FusedLocationProviderClient;
+//import com.google.android.gms.location.LocationCallback;
+//import com.google.android.gms.location.LocationRequest;
+//import com.google.android.gms.location.LocationResult;
+//import com.google.android.gms.location.LocationServices;
+//import com.google.android.gms.location.LocationSettingsRequest;
+//import com.google.android.gms.location.SettingsClient;
+//import com.google.android.gms.tasks.OnFailureListener;
+//import com.google.android.gms.tasks.OnSuccessListener;
+//import static com.google.android.gms.location.LocationServices.getFusedLocationProviderClient;
 
 /**
  * Main activity which launches map view and handles Android run-time requesting permission.
@@ -184,7 +182,7 @@ public class MainActivity extends AppCompatActivity {
     private Configuration configuration;
     private DisplayMetrics metrics;
     private MapFragmentView mapFragmentView;
-    private LocationRequest locationRequest;
+    //    private LocationRequest locationRequest;
     private long UPDATE_INTERVAL = 5 * 1000;
     private long FASTEST_INTERVAL = 1000;
 
@@ -226,7 +224,7 @@ public class MainActivity extends AppCompatActivity {
         hideGuidanceView();
         hideJunctionView();
         requestPermissions();
-        startLocationUpdates();
+//        startLocationUpdates();
         mySensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         Sensor lightSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_LIGHT);
         Sensor accelerometerSensor = mySensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -297,78 +295,78 @@ public class MainActivity extends AppCompatActivity {
         return sum / list.size();
     }
 
-    protected void startLocationUpdates() {
+//    protected void startLocationUpdates() {
+//
+//        // Create the location request to start receiving updates
+//        locationRequest = new LocationRequest();
+//        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+//        locationRequest.setInterval(UPDATE_INTERVAL);
+//        locationRequest.setFastestInterval(FASTEST_INTERVAL);
+//
+//        // Create LocationSettingsRequest object using location request
+//        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+//        builder.addLocationRequest(locationRequest);
+//        LocationSettingsRequest locationSettingsRequest = builder.build();
+//
+//        // Check whether location settings are satisfied
+//        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
+//        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
+//        settingsClient.checkLocationSettings(locationSettingsRequest);
+//
+//        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            checkPermissions();
+//            return;
+//        }
+//        getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, new LocationCallback() {
+//                    @Override
+//                    public void onLocationResult(LocationResult locationResult) {
+//                        // do work here
+//                        onLocationChanged(locationResult.getLastLocation());
+//                    }
+//                },
+//                Looper.myLooper());
+//    }
 
-        // Create the location request to start receiving updates
-        locationRequest = new LocationRequest();
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setInterval(UPDATE_INTERVAL);
-        locationRequest.setFastestInterval(FASTEST_INTERVAL);
+//    public void onLocationChanged(Location location) {
+//        //updatedLatLng = new GeoCoordinate(location.getLatitude(), location.getLongitude());
+//    }
 
-        // Create LocationSettingsRequest object using location request
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(locationRequest);
-        LocationSettingsRequest locationSettingsRequest = builder.build();
+//    public void getLastLocation() {
+//        // Get last known recent location using new Google Play Services SDK (v11+)
+//        FusedLocationProviderClient locationClient = getFusedLocationProviderClient(this);
+//
+//        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            checkPermissions();
+//            return;
+//        }
+//        locationClient.getLastLocation()
+//                .addOnSuccessListener(new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        // GPS location can be null if GPS is switched off
+//                        if (location != null) {
+//                            onLocationChanged(location);
+//                        }
+//                    }
+//                })
+//                .addOnFailureListener(new OnFailureListener() {
+//                    @Override
+//                    public void onFailure(@NonNull Exception e) {
+//                        e.printStackTrace();
+//                    }
+//                });
+//    }
 
-        // Check whether location settings are satisfied
-        // https://developers.google.com/android/reference/com/google/android/gms/location/SettingsClient
-        SettingsClient settingsClient = LocationServices.getSettingsClient(this);
-        settingsClient.checkLocationSettings(locationSettingsRequest);
-
-        // new Google API SDK v11 uses getFusedLocationProviderClient(this)
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            checkPermissions();
-            return;
-        }
-        getFusedLocationProviderClient(this).requestLocationUpdates(locationRequest, new LocationCallback() {
-                    @Override
-                    public void onLocationResult(LocationResult locationResult) {
-                        // do work here
-                        onLocationChanged(locationResult.getLastLocation());
-                    }
-                },
-                Looper.myLooper());
-    }
-
-    public void onLocationChanged(Location location) {
-        //updatedLatLng = new GeoCoordinate(location.getLatitude(), location.getLongitude());
-    }
-
-    public void getLastLocation() {
-        // Get last known recent location using new Google Play Services SDK (v11+)
-        FusedLocationProviderClient locationClient = getFusedLocationProviderClient(this);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            checkPermissions();
-            return;
-        }
-        locationClient.getLastLocation()
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                    @Override
-                    public void onSuccess(Location location) {
-                        // GPS location can be null if GPS is switched off
-                        if (location != null) {
-                            onLocationChanged(location);
-                        }
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        e.printStackTrace();
-                    }
-                });
-    }
-
-    private boolean checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            return true;
-        } else {
-            requestPermissions();
-            return false;
-        }
-    }
+//    private boolean checkPermissions() {
+//        if (ContextCompat.checkSelfPermission(this,
+//                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+//            return true;
+//        } else {
+//            requestPermissions();
+//            return false;
+//        }
+//    }
 
     void intoGuidanceMode() {
         if (DataHolder.getNavigationManager() != null) {
@@ -433,34 +431,16 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case REQUEST_CODE_ASK_PERMISSIONS: {
-                for (int index = 0; index < permissions.length; index++) {
-                    if (grantResults[index] != PackageManager.PERMISSION_GRANTED) {
-
-                        /**
-                         * If the user turned down the permission request in the past and chose the
-                         * Don't ask again option in the permission request system dialog.
-                         */
-                        if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
-                                permissions[index])) {
-                            Snackbar.make(findViewById(R.id.mapFragmentView), "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
-                        } else {
-                            Snackbar.make(findViewById(R.id.mapFragmentView), "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
-
-                        }
-                    }
+        if (requestCode == REQUEST_CODE_ASK_PERMISSIONS) {
+            for (int index = 0; index < permissions.length; index++) {
+                if (grantResults[index] != PackageManager.PERMISSION_GRANTED) {
+                    Snackbar.make(findViewById(R.id.mapFragmentView), "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
                 }
-
-                /**
-                 * All permission requests are being handled.Create map fragment view.Please note
-                 * the HERE SDK requires all permissions defined above to operate properly.
-                 */
-                mapFragmentView = new MapFragmentView(this);
-                break;
             }
-            default:
-                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+            mapFragmentView = new MapFragmentView(this);
+        } else {
+            super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         }
     }
 
