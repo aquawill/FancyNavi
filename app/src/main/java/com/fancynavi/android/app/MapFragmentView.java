@@ -2593,13 +2593,13 @@ class MapFragmentView {
 //                            Log.d(TAG, placeLink.getTitle());
                             placesSearchResultTitle = placeLink.getTitle();
 //                            placesSearchCategoryName = placeLink.getCategory().getName();
-                            GeoCoordinate placesSearchresultGeoCoordinate = placeLink.getPosition();
+                            GeoCoordinate placesSearchResultGeoCoordinate = placeLink.getPosition();
 //                            searchResultString = placesSearchResultTitle + " / " + placesSearchCategoryName;
-                            showSelectionFocus(placesSearchresultGeoCoordinate, placesSearchResultTitle);
-                            showResultSnackbar(placesSearchresultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_LONG);
+                            showSelectionFocus(placesSearchResultGeoCoordinate, placesSearchResultTitle);
+                            showResultSnackbar(placesSearchResultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_LONG);
                             searchBarLinearLayout.setVisibility(View.GONE);
                             isDragged = true;
-                            map.setCenter(placesSearchresultGeoCoordinate, Map.Animation.LINEAR);
+                            map.setCenter(placesSearchResultGeoCoordinate, Map.Animation.LINEAR);
                         }
                     } else {
                         Snackbar.make(view, "No result returned.", Snackbar.LENGTH_SHORT).show();
