@@ -6,13 +6,11 @@ import android.util.DisplayMetrics;
 class DpConverter {
 
     static float convertDpToPixel(float dp, Context context) {
-        float px = dp * getDensity(context);
-        return px;
+        return dp * getDensity(context);
     }
 
     static float convertPixelToDp(float px, Context context) {
-        float dp = px / getDensity(context);
-        return dp;
+        return px / getDensity(context);
     }
 
     private static float getDensity(Context context) {
