@@ -205,7 +205,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        Log.d(TAG, "onCreate()");
         configuration = getResources().getConfiguration();
         metrics = getResources().getDisplayMetrics();
 
@@ -267,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
         purgeCacheSnackBar.show();
 
     }
+
 
     @Override
     protected void onPause() {
@@ -373,10 +374,10 @@ public class MainActivity extends AppCompatActivity {
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             if (isInMultiWindowMode()) {
                 new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
-                MapModeChanger.setSimpleMode();
+                MapModeChanger.intoSimpleMode();
             } else {
                 new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);
-                MapModeChanger.setFullMode();
+                MapModeChanger.intoFullMode();
             }
             DataHolder.getMap().setTilt(60);
             isRouteOverView = false;
@@ -394,7 +395,9 @@ public class MainActivity extends AppCompatActivity {
                     DataHolder.getMap().addMapOverlay(o);
                 }
             }
-            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+            if (!DataHolder.isSimpleMode()) {
+                DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+            }
         }
     }
 
@@ -460,11 +463,13 @@ public class MainActivity extends AppCompatActivity {
                 MapModeChanger.setMapZoomLevel(17);
                 MapModeChanger.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM);
             }
-            MapModeChanger.setSimpleMode();
+            MapModeChanger.intoSimpleMode();
             MapModeChanger.removeNavigationListeners();
         } else {
-            MapModeChanger.setFullMode();
-            MapModeChanger.addNavigationListeners();
+            MapModeChanger.intoFullMode();
+            if (isNavigating) {
+                MapModeChanger.addNavigationListeners();
+            }
             if (isNavigating) {
                 MapModeChanger.setMapTilt(60);
                 MapModeChanger.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
@@ -475,6 +480,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        Log.d(TAG, "onStart()");
         setVisible(true);
     }
 
@@ -488,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.guidance_maneuver_panel_layout).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
             TextView distanceTextView = findViewById(R.id.distanceView);
             distanceTextView.setTextSize(DpConverter.convertDpToPixel(8, this));
-            MapModeChanger.setSimpleMode();
+            MapModeChanger.intoSimpleMode();
             MapModeChanger.removeNavigationListeners();
         } else {
             findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
@@ -496,8 +502,10 @@ public class MainActivity extends AppCompatActivity {
             findViewById(R.id.guidance_maneuver_panel_layout).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
             TextView distanceTextView = findViewById(R.id.distanceView);
             distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, this));
-            MapModeChanger.setFullMode();
-            MapModeChanger.addNavigationListeners();
+            MapModeChanger.intoFullMode();
+            if (isNavigating) {
+                MapModeChanger.addNavigationListeners();
+            }
             MapModeChanger.setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             isPipMode = false;
         }

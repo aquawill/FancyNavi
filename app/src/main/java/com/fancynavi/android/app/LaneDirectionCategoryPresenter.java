@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable;
 import androidx.appcompat.app.AppCompatActivity;
 
 
-public class LaneDirectionCategoryPresenter {
+class LaneDirectionCategoryPresenter {
     static boolean isLaneDirectionCategoryShowing = false;
 
     static boolean isLaneDirectionCategoryShowing() {

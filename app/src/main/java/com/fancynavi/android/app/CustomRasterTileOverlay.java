@@ -3,7 +3,7 @@ package com.fancynavi.android.app;
 import com.here.android.mpa.mapping.MapOverlayType;
 import com.here.android.mpa.mapping.UrlMapRasterTileSourceBase;
 
-public class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
+class CustomRasterTileOverlay extends UrlMapRasterTileSourceBase {
 
     private String[] subDomains;
     private String tileUrl;

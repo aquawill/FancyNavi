@@ -69,7 +69,13 @@ class MapModeChanger {
         }
     }
 
-    static void setSimpleMode() {
+    static void intoSimpleMode() {
+        DataHolder.setSimpleMode(true);
+//        DataHolder.getMapOffScreenRenderer().setSize(DataHolder.getMap().getWidth(), DataHolder.getMap().getHeight());
+//        if (!DataHolder.isOffScreenRendererEnabled()) {
+//            DataHolder.getMapOffScreenRenderer().start();
+//            DataHolder.setOffScreenRendererEnabled(true);
+//        }
         DataHolder.getActivity().findViewById(R.id.speed_label_text_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.guidance_speed_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.sat_map_button).setVisibility(View.GONE);
@@ -83,14 +89,21 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(0);
+        DataHolder.getActivity().findViewById(R.id.download_button).setAlpha(0);
         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
         DataHolder.getAndroidXMapFragment().setOnTouchListener(emptyMapOnTouchListener);
         if (laneInformationMapOverlay != null) {
             DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
         }
+
     }
 
-    static void setFullMode() {
+    static void intoFullMode() {
+        DataHolder.setSimpleMode(false);
+//        if (DataHolder.isOffScreenRendererEnabled()) {
+//            DataHolder.getMapOffScreenRenderer().stop();
+//            DataHolder.setOffScreenRendererEnabled(false);
+//        }
         DataHolder.getActivity().findViewById(R.id.speed_label_text_view).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.guidance_speed_view).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.sat_map_button).setVisibility(View.VISIBLE);
@@ -100,6 +113,7 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.sign_imageView_1).setAlpha(0.7f);
         DataHolder.getActivity().findViewById(R.id.sign_imageView_2).setAlpha(0.7f);
         DataHolder.getActivity().findViewById(R.id.sign_imageView_3).setAlpha(0.7f);
+        DataHolder.getActivity().findViewById(R.id.download_button).setAlpha(1);
         if (!isNavigating) {
             DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
             DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
@@ -109,9 +123,9 @@ class MapModeChanger {
         if (isNavigating) {
             new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
             new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
         }
-        DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
     }
 }

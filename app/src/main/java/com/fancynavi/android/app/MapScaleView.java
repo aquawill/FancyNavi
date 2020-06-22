@@ -18,7 +18,7 @@ import java.text.DecimalFormat;
 
 import static java.lang.Math.floor;
 
-public class MapScaleView extends View implements Map.OnTransformListener {
+class MapScaleView extends View implements Map.OnTransformListener {
     private static final float VIEW_WIDTH_INCH = 1.f,
             VIEW_HEIGHT_INCH = .2f;
 

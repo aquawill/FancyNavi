@@ -22,7 +22,7 @@ import java.util.List;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
 
-public class ElectronicHorizonActivation {
+class ElectronicHorizonActivation {
 
     ElectronicHorizon electronicHorizon;
     MapAccessor mapAccessor;

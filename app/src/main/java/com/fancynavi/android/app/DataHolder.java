@@ -11,13 +11,16 @@ import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.AndroidXMapFragment;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
-import com.here.android.mpa.mapping.SupportMapFragment;
 
 class DataHolder {
     static final String TAG = "HERE_SDK_TEST";
     static int FOREGROUND_SERVICE_ID = 9527;
     static String CHANNEL = "heresdk";
     static String CHANNEL_NAME = "HRERSDKTEST";
+    static boolean simpleMode = false;
+    static boolean offScreenRendererEnabled = false;
+
+
     private static Map map;
     private static AppCompatActivity activity;
     private static NavigationManager navigationManager;
@@ -28,6 +31,22 @@ class DataHolder {
 
     static NotificationChannel getNotificationChannel() {
         return notificationChannel;
+    }
+
+    public static boolean isOffScreenRendererEnabled() {
+        return offScreenRendererEnabled;
+    }
+
+    public static void setOffScreenRendererEnabled(boolean offScreenRendererEnabled) {
+        DataHolder.offScreenRendererEnabled = offScreenRendererEnabled;
+    }
+
+    public static boolean isSimpleMode() {
+        return simpleMode;
+    }
+
+    public static void setSimpleMode(boolean simpleMode) {
+        DataHolder.simpleMode = simpleMode;
     }
 
     static void setNotificationChannel(NotificationChannel notificationChannel) {

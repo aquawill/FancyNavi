@@ -345,7 +345,7 @@ class MapFragmentView {
     private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
-    private String diskCacheRoot = Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps";
+    private String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
     private long simulationSpeedMs = 10; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
     private GeoCoordinate destinationLocationGeoCoordinate;
@@ -1487,13 +1487,13 @@ class MapFragmentView {
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM);
 
 //            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
-            MapModeChanger.setSimpleMode();
+            MapModeChanger.intoSimpleMode();
         } else {
             DataHolder.getMap().setTilt(60);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
 
 //            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);
-            MapModeChanger.setFullMode();
+            MapModeChanger.intoFullMode();
         }
         DataHolder.getNavigationManager().startNavigation(route);
         DataHolder.getPositioningManager().setMapMatchingEnabled(true);
@@ -1777,8 +1777,8 @@ class MapFragmentView {
                 @Override
                 public void onEngineInitializationCompleted(Error error) {
                     if (error == Error.NONE) {
-
-                        new OfflineMapDownloader();
+                        /* Entrance */
+                        DataHolder.setMap(androidXMapFragment.getMap());
                         mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
 //                        View view = new View(DataHolder.getActivity());
 //                        view.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
@@ -1786,9 +1786,8 @@ class MapFragmentView {
 //                        view.setElevation(30f);
 //                        view.setVisibility(View.VISIBLE);
 //                        mainLinearLayout.addView(view);
-
+                        new OfflineMapDownloader();
                         coreRouter = new CoreRouter();
-                        DataHolder.setMap(androidXMapFragment.getMap());
                         navigationListeners = new NavigationListeners();
                         MapScaleView mapScaleView = DataHolder.getActivity().findViewById(R.id.map_scale_view);
                         mapScaleView.setMap(DataHolder.getMap());
