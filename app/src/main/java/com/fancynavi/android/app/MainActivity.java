@@ -64,13 +64,13 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.isDragged;
+import static com.fancynavi.android.app.DataHolder.isNavigating;
+import static com.fancynavi.android.app.DataHolder.isPipMode;
+import static com.fancynavi.android.app.DataHolder.isRouteOverView;
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
 import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
 import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
-import static com.fancynavi.android.app.MapFragmentView.isDragged;
-import static com.fancynavi.android.app.MapFragmentView.isNavigating;
-import static com.fancynavi.android.app.MapFragmentView.isPipMode;
-import static com.fancynavi.android.app.MapFragmentView.isRouteOverView;
 import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
 import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
 import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListenerForNavigation;
@@ -187,7 +187,7 @@ public class MainActivity extends AppCompatActivity {
     private long FASTEST_INTERVAL = 1000;
 
     public void hideGuidanceView() {
-        View guidanceView = findViewById(R.id.guidanceManeuverView);
+        View guidanceView = findViewById(R.id.guidance_maneuver_view);
         guidanceView.setVisibility(View.GONE);
     }
 
@@ -376,7 +376,7 @@ public class MainActivity extends AppCompatActivity {
                 new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
                 MapModeChanger.intoSimpleMode();
             } else {
-                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);
+                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
                 MapModeChanger.intoFullMode();
             }
             DataHolder.getMap().setTilt(60);
@@ -403,7 +403,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        if (!MapFragmentView.isRoadView && isNavigating) {
+        if (!DataHolder.isRoadView && isNavigating) {
             intoGuidanceMode();
         } else {
             isDragged = false;
@@ -499,7 +499,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
             findViewById(R.id.map_constraint_layout).setVisibility(View.VISIBLE);
-            findViewById(R.id.guidance_maneuver_panel_layout).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT));
+            findViewById(R.id.guidance_maneuver_panel_layout).setLayoutParams(new RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.WRAP_CONTENT));
             TextView distanceTextView = findViewById(R.id.distanceView);
             distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, this));
             MapModeChanger.intoFullMode();
@@ -522,6 +522,28 @@ public class MainActivity extends AppCompatActivity {
         isNavigating = false;
         isRouteOverView = false;
         super.onDestroy();
+    }
+
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        LinearLayout mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
+        if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//            findViewById(R.id.zoom_in).setVisibility(View.GONE);
+//            findViewById(R.id.zoom_out).setVisibility(View.GONE);
+            findViewById(R.id.guidance_maneuver_view).setVisibility(View.GONE);
+            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.GONE);
+            mainLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+//            findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
+//            findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
+            mainLinearLayout.setOrientation(LinearLayout.VERTICAL);
+            if (isNavigating) {
+                findViewById(R.id.guidance_maneuver_view).setVisibility(View.VISIBLE);
+                findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
+            }
+        }
     }
 
 }

@@ -1,6 +1,7 @@
 package com.fancynavi.android.app;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.media.MediaPlayer;
 import android.os.CountDownTimer;
 import android.speech.tts.TextToSpeech;
@@ -12,8 +13,8 @@ import com.here.android.mpa.common.TrafficSign;
 
 import java.util.List;
 
+import static com.fancynavi.android.app.DataHolder.isSignShowing;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
-import static com.fancynavi.android.app.MapFragmentView.isSignShowing;
 
 class TrafficSignPresenter {
 
@@ -113,7 +114,9 @@ class TrafficSignPresenter {
     }
 
     static private void showTrafficSignImageView(ImageView imageView, RoadElement roadElement) {
-        imageView.setVisibility(View.VISIBLE);
+        if (DataHolder.getActivity().getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            imageView.setVisibility(View.VISIBLE);
+        }
         int showSignTimePeriod;
         if (roadElement.getFormOfWay() == RoadElement.FormOfWay.MOTORWAY) {
             showSignTimePeriod = 5000;

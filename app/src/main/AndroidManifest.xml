@@ -16,11 +16,9 @@
             android:name="com.fancynavi.android.app.MainActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:launchMode="singleTask"
-            android:screenOrientation="portrait"
+            android:screenOrientation="fullSensor"
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true">
-
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -28,10 +26,8 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
-
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-
                 <data
                     android:host="fencynavi.com"
                     android:scheme="http" />

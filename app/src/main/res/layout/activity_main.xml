@@ -7,21 +7,29 @@
     android:background="#000000"
     android:orientation="vertical">
 
-    <com.here.msdkui.guidance.GuidanceManeuverView
-        android:id="@+id/guidanceManeuverView"
-        android:layout_width="match_parent"
+    <LinearLayout
+        android:id="@+id/guidance_info_linear_layout"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:elevation="2dp"
-        android:visibility="gone">
+        android:orientation="vertical">
 
-    </com.here.msdkui.guidance.GuidanceManeuverView>
+        <com.here.msdkui.guidance.GuidanceManeuverView
+            android:id="@+id/guidance_maneuver_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="2dp"
+            android:visibility="gone">
 
-    <com.here.msdkui.guidance.GuidanceNextManeuverView
-        android:id="@+id/guidance_next_maneuver_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="2dp"
-        android:visibility="gone" />
+        </com.here.msdkui.guidance.GuidanceManeuverView>
+
+        <com.here.msdkui.guidance.GuidanceNextManeuverView
+            android:id="@+id/guidance_next_maneuver_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:elevation="2dp"
+            android:visibility="gone" />
+
+    </LinearLayout>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/map_constraint_layout"
@@ -301,7 +309,8 @@
                 android:layout_weight="1"
                 android:background="#00000000"
                 android:foreground="@drawable/ic_plus"
-                android:paddingBottom="4dp" />
+                android:paddingBottom="4dp"
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/zoom_out"
@@ -311,7 +320,8 @@
                 android:layout_weight="1"
                 android:background="#00000000"
                 android:foreground="@drawable/ic_minus"
-                android:textSize="24sp" />
+                android:textSize="24sp"
+                android:visibility="gone" />
         </LinearLayout>
 
         <LinearLayout

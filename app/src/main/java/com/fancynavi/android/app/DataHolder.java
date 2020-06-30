@@ -6,6 +6,7 @@ import android.graphics.PointF;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.AndroidXMapFragment;
@@ -19,7 +20,12 @@ class DataHolder {
     static String CHANNEL_NAME = "HRERSDKTEST";
     static boolean simpleMode = false;
     static boolean offScreenRendererEnabled = false;
-
+    static boolean isPipMode;
+    static boolean isDragged;
+    static boolean isRoadView = false;
+    static boolean isRouteOverView = false;
+    static boolean isNavigating = false;
+    static boolean isSignShowing = false;
 
     private static Map map;
     private static AppCompatActivity activity;
@@ -28,6 +34,25 @@ class DataHolder {
     private static AndroidXMapFragment androidXMapFragment;
     private static NotificationChannel notificationChannel;
     private static NotificationManager notificationManager;
+    private static GeoCoordinate lastMapCenter;
+    private static double lastMapZoom;
+
+
+    public static GeoCoordinate getLastMapCenter() {
+        return lastMapCenter;
+    }
+
+    public static void setLastMapCenter(GeoCoordinate lastMapCenter) {
+        DataHolder.lastMapCenter = lastMapCenter;
+    }
+
+    public static double getLastMapZoom() {
+        return lastMapZoom;
+    }
+
+    public static void setLastMapZoom(double lastMapZoom) {
+        DataHolder.lastMapZoom = lastMapZoom;
+    }
 
     static NotificationChannel getNotificationChannel() {
         return notificationChannel;

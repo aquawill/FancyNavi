@@ -8,8 +8,8 @@ import com.here.android.mpa.guidance.SafetySpotNotification;
 import java.lang.ref.WeakReference;
 import java.util.EnumSet;
 
+import static com.fancynavi.android.app.DataHolder.isNavigating;
 import static com.fancynavi.android.app.MapFragmentView.emptyMapOnTouchListener;
-import static com.fancynavi.android.app.MapFragmentView.isNavigating;
 import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
 import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListenerForNavigation;
 import static com.fancynavi.android.app.MapFragmentView.navigationListeners;
@@ -71,11 +71,6 @@ class MapModeChanger {
 
     static void intoSimpleMode() {
         DataHolder.setSimpleMode(true);
-//        DataHolder.getMapOffScreenRenderer().setSize(DataHolder.getMap().getWidth(), DataHolder.getMap().getHeight());
-//        if (!DataHolder.isOffScreenRendererEnabled()) {
-//            DataHolder.getMapOffScreenRenderer().start();
-//            DataHolder.setOffScreenRendererEnabled(true);
-//        }
         DataHolder.getActivity().findViewById(R.id.speed_label_text_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.guidance_speed_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.sat_map_button).setVisibility(View.GONE);
@@ -121,7 +116,7 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(1);
         if (isNavigating) {
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.8f);
+            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
