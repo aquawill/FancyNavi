@@ -6,7 +6,7 @@
         android:allowBackup="true"
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_navigator"
-        android:label="HERESdkTest"
+        android:label="FencyNavi"
         android:networkSecurityConfig="@xml/network_security_config"
         android:supportsRtl="true"
         android:theme="@style/MSDKUIDarkTheme">
