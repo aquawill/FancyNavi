@@ -675,12 +675,12 @@ class MapFragmentView {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
-            textToSpeech.speak("發現避開壅塞路徑，是否使用？", TextToSpeech.QUEUE_FLUSH, null);
-            Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Found a better route, follow?", Snackbar.LENGTH_LONG);
-            trafficReRoutedSnackBar.setAction("Yes", new View.OnClickListener() {
+            textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion), TextToSpeech.QUEUE_FLUSH, null);
+            Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
+            trafficReRoutedSnackBar.setAction(R.string.yes, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    textToSpeech.speak("路徑已避開壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                    textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null);
                     resetMapRoute(routeResult.getRoute());
                     Log.d(TAG, "traffic rerouted.");
                     route = routeResult.getRoute();
@@ -829,7 +829,7 @@ class MapFragmentView {
                 } else {
                     safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                 }
-                textToSpeech.speak("前方有測速照相，速限：" + safetyCameraSpeedLimitKM + "公里", TextToSpeech.QUEUE_FLUSH, null);
+                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.speed_camera_ahead_voice) + safetyCameraSpeedLimitKM + DataHolder.getAndroidXMapFragment().getString(R.string.kilometers), TextToSpeech.QUEUE_FLUSH, null);
                 safetyCameraAhead = true;
             }
         }
@@ -1022,7 +1022,7 @@ class MapFragmentView {
 //                            Log.d(TAG, location.getAddress().getAdditionalData().toString());
                             new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), location, DataHolder.getMap());
                         } else {
-                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Unable to find an address at " + touchPointGeoCoordinate.toString(), Snackbar.LENGTH_LONG).show();
+                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.unable_to_find_an_address_at) + touchPointGeoCoordinate.toString(), Snackbar.LENGTH_LONG).show();
                         }
                     } else {
                         Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), errorCode.name(), Snackbar.LENGTH_INDEFINITE).show();
@@ -1559,8 +1559,8 @@ class MapFragmentView {
 
     private void retryRouting(Context context, RoutingError routingError, RouteOptions routeOptions) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-        alertDialogBuilder.setTitle("Route Calculation Failed:\n" + routingError.name());
-        alertDialogBuilder.setNegativeButton("Retry", new DialogInterface.OnClickListener() {
+        alertDialogBuilder.setTitle(context.getString(R.string.route_calculation_failed) + routingError.name());
+        alertDialogBuilder.setNegativeButton(R.string.retry, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 calculateRoute(routeOptions);
             }
@@ -1616,7 +1616,7 @@ class MapFragmentView {
             public void onProgress(int i) {
                 if (i < 100) {
                     progressBar.setVisibility(View.VISIBLE);
-                    progressingTextView.setText("Calculating...");
+                    progressingTextView.setText(R.string.calculating);
                     progressingTextView.setVisibility(View.VISIBLE);
                     progressBar.setProgress(i);
                 } else {
@@ -1660,7 +1660,7 @@ class MapFragmentView {
 
                         mapRouteGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getBBoxHeight() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getBBoxWidth() * 0.6));
                         DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
-                        navigationControlButton.setText("Start Navi");
+                        navigationControlButton.setText(R.string.start_navigation);
                         String routeLength;
                         if (route.getLength() > 999) {
                             routeLength = route.getLength() / 1000 + "." + route.getLength() % 1000 + " km";
@@ -1714,24 +1714,24 @@ class MapFragmentView {
                                             Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTotalTollCost());
                                             Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
                                             Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
-                                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Route of " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / Cost: " + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
+                                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
                                         } else {
-                                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Route of " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
                                         }
                                     }
                                 });
                                 break;
                             default:
-                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Route of " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
                         }
                         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
 
                     } else {
-                        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Can't find a route.", Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.cant_find_a_route, Snackbar.LENGTH_LONG).show();
                     }
                 } else {
-                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Error: " + routingError.name(), Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.error) + routingError.name(), Snackbar.LENGTH_LONG).show();
                     progressingTextView.setVisibility(View.INVISIBLE);
                     progressBar.setVisibility(View.INVISIBLE);
                     if (mapRoute != null) {
@@ -2225,7 +2225,7 @@ class MapFragmentView {
                         downloadOfflineMapButton.setOnClickListener(new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Checking offline map...", Snackbar.LENGTH_SHORT).show();
+                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.checking_offline_map, Snackbar.LENGTH_SHORT).show();
                                 downloadOfflineMapButton.setVisibility(View.GONE);
                                 offlineMapDownloader.downloadOfflineMapPackageOnMapCenter(DataHolder.getMap().getCenter());
                             }
@@ -2270,13 +2270,13 @@ class MapFragmentView {
                                             PositioningManager.LogType.MATCHED,
                                             PositioningManager.LogType.DATA_SOURCE
                                     ));
-                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "GPX Logging: " + DataHolder.getActivity().getFilesDir().getAbsolutePath() + File.separator + "gpx/", Snackbar.LENGTH_LONG).show();
+                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.gpx_logging) + DataHolder.getActivity().getFilesDir().getAbsolutePath() + File.separator + "gpx/", Snackbar.LENGTH_LONG).show();
                                 }
                             }
                         });
 
                         navigationControlButton = DataHolder.getActivity().findViewById(R.id.startGuidance);
-                        navigationControlButton.setText("Create Route");
+                        navigationControlButton.setText(R.string.create_route);
                         navigationControlButton.setOnClickListener(v -> {
                             if (route != null) {
 //                                stopNavigationManager();
@@ -2348,9 +2348,9 @@ class MapFragmentView {
                         distanceTextView.setTextSize(DpConverter.convertDpToPixel(16, DataHolder.getActivity()));
                         startNavigationManager();
                         DataHolder.getNavigationManager().startTracking();
-
+                        downloadOfflineMapButton.setVisibility(View.VISIBLE);
                     } else {
-                        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "ERROR: Cannot initialize Map with error " + error, Snackbar.LENGTH_LONG).show();
+                        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.cannot_initialize_map_with_error) + error, Snackbar.LENGTH_LONG).show();
                     }
                 }
             });
@@ -2368,15 +2368,15 @@ class MapFragmentView {
         }
         DataHolder.isDragged = false;
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(DataHolder.getActivity());
-        alertDialogBuilder.setTitle("Navigation");
-        alertDialogBuilder.setMessage("Choose Mode");
-        alertDialogBuilder.setNegativeButton("Navigation", new DialogInterface.OnClickListener() {
+        alertDialogBuilder.setTitle(R.string.navigation);
+        alertDialogBuilder.setMessage(R.string.choose_mode);
+        alertDialogBuilder.setNegativeButton(R.string.navigation, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 addNavigationListeners();
                 DataHolder.isNavigating = true;
                 hideTrafficSigns();
                 DataHolder.isSignShowing = false;
-                navigationControlButton.setText("Restart");
+                navigationControlButton.setText(R.string.restart);
                 intoNavigationMode();
                 DataHolder.isRouteOverView = false;
                 NavigationManager.Error error = DataHolder.getNavigationManager().startNavigation(MapFragmentView.this.route);
@@ -2390,13 +2390,13 @@ class MapFragmentView {
                 startForegroundService();
             }
         });
-        alertDialogBuilder.setPositiveButton("Simulation", new DialogInterface.OnClickListener() {
+        alertDialogBuilder.setPositiveButton(R.string.simulation, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 addNavigationListeners();
                 DataHolder.isNavigating = true;
                 hideTrafficSigns();
                 DataHolder.isSignShowing = false;
-                navigationControlButton.setText("restart");
+                navigationControlButton.setText(R.string.restart);
                 intoNavigationMode();
                 DataHolder.isRouteOverView = false;
                 NavigationManager.Error error = DataHolder.getNavigationManager().simulate(MapFragmentView.this.route, simulationSpeedMs);
@@ -2492,7 +2492,7 @@ class MapFragmentView {
                 DataHolder.getNavigationManager().stop();
             }
         }
-        navigationControlButton.setText("Create Route");
+        navigationControlButton.setText(R.string.create_route);
         route = null;
         switchGuidanceUiPresenters(false);
 
@@ -2610,7 +2610,7 @@ class MapFragmentView {
                             map.setCenter(placesSearchResultGeoCoordinate, Map.Animation.LINEAR);
                         }
                     } else {
-                        Snackbar.make(view, "No result returned.", Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(view, R.string.no_result_returned, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -2674,7 +2674,7 @@ class MapFragmentView {
                         } else {
                             safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                         }
-                        searchResultString = "Safety Camera / " + safetyCameraSpeedLimitKM + " km/h";
+                        searchResultString = DataHolder.getAndroidXMapFragment().getString(R.string.safety_camera_ahead) + safetyCameraSpeedLimitKM + " km/h";
                         showSelectionFocus(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString);
                         showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
                         break;
@@ -2705,7 +2705,7 @@ class MapFragmentView {
         private void showResultSnackbar(GeoCoordinate waypointMapMakerGeoCoordinate, String stringToShow, View view, int duration) {
 
             searchResultSnackbar = Snackbar.make(view, stringToShow, duration);
-            searchResultSnackbar.setAction("Add Waypoint", new View.OnClickListener() {
+            searchResultSnackbar.setAction(R.string.add_waypoint, new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     if (selectedFeatureMapMarker != null) {

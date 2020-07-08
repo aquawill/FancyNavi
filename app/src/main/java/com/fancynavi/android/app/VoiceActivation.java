@@ -72,7 +72,7 @@ class VoiceActivation {
             public void onDownloadDone(VoiceCatalog.Error error) {
                 if (error != VoiceCatalog.Error.NONE) {
                     retryVoiceDownload(context, voiceSkinId);
-                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Failed downloading voice skin " + voiceSkinId, Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.failed_downloading_voice_skin) + voiceSkinId, Snackbar.LENGTH_SHORT).show();
                 } else {
 //                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + voiceSkinId + " downloaded and activated.", Snackbar.LENGTH_SHORT).show();
                     //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
@@ -120,7 +120,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice activated: " + languageName, Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + languageName, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }

@@ -235,8 +235,8 @@ public class MainActivity extends AppCompatActivity {
         if (accelerometerSensor != null) {
             mySensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
         }
-        Snackbar purgeCacheSnackBar = Snackbar.make(this.findViewById(R.id.mapFragmentView), "HERE SDK v" + com.here.android.mpa.common.Version.getSdkVersion(), Snackbar.LENGTH_LONG);
-        purgeCacheSnackBar.setAction("Clear Cache", new View.OnClickListener() {
+        Snackbar purgeCacheSnackBar = Snackbar.make(this.findViewById(R.id.mapFragmentView), getString(R.string.here_sdk_v) + com.here.android.mpa.common.Version.getSdkVersion(), Snackbar.LENGTH_LONG);
+        purgeCacheSnackBar.setAction(R.string.clear_cache, new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 CLE2DataManager.getInstance().newPurgeLocalStorageTask().start(new CLE2Task.Callback<CLE2OperationResult>() {
@@ -247,7 +247,7 @@ public class MainActivity extends AppCompatActivity {
                         Log.d(TAG, "getErrorCode: " + cle2Error.getErrorCode());
                     }
                 });
-                File dir = new File(Environment.getExternalStorageDirectory().getPath() + File.separator + ".isolated-here-maps");
+                File dir = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache");
                 try {
                     FileUtils.deleteDirectory(dir);
                 } catch (IOException e) {
@@ -436,7 +436,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_CODE_ASK_PERMISSIONS) {
             for (int index = 0; index < permissions.length; index++) {
                 if (grantResults[index] != PackageManager.PERMISSION_GRANTED) {
-                    Snackbar.make(findViewById(R.id.mapFragmentView), "Required permission " + permissions[index] + " not granted. ", Snackbar.LENGTH_LONG).show();
+                    Snackbar.make(findViewById(R.id.mapFragmentView), getString(R.string.required_permission) + permissions[index] + getString(R.string.not_granted), Snackbar.LENGTH_LONG).show();
                 }
             }
 

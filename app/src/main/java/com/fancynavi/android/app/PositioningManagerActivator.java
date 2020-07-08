@@ -38,7 +38,7 @@ class PositioningManagerActivator {
         Log.d(TAG, "getGpsStatus(): " + positioningManager.getDataSource().getGpsStatus());
 
         positioningManager.start(locationMethod);
-        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "Positioning: " + positioningManager.getDataSource().getLocationSource().name() + " / " + positioningManager.getLocationMethod(), Snackbar.LENGTH_LONG).show();
+        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.positioning) + positioningManager.getDataSource().getLocationSource().name() + " / " + positioningManager.getLocationMethod(), Snackbar.LENGTH_LONG).show();
         Log.d(TAG, "Positioning: " + positioningManager.getDataSource().getLocationSource().name() + " / " + positioningManager.getLocationMethod());
     }
 

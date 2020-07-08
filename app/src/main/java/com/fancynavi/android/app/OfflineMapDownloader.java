@@ -51,14 +51,14 @@ class OfflineMapDownloader {
             Log.d(TAG, "offline map download: " + progressPercentage);
 
             if (progressPercentage < 100) {
-                progressingTextView.setText("Downloading: " + progressPercentage + "%");
+                progressingTextView.setText(String.format("%s%d%%", DataHolder.getAndroidXMapFragment().getString(R.string.downloading), progressPercentage));
                 progressBar.setProgress(progressPercentage);
             } else {
                 darkenAllViews(false);
                 progressingTextView.setVisibility(View.INVISIBLE);
                 cancelButton.setVisibility(View.INVISIBLE);
                 progressBar.setVisibility(View.INVISIBLE);
-                offlineDownloadSnackbar.setText("Download Completed!");
+                offlineDownloadSnackbar.setText(R.string.download_completed);
                 offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -126,8 +126,8 @@ class OfflineMapDownloader {
             Log.d(TAG, "mapLoaderResultCode: " + mapLoaderResultCode.name());
             if (mapLoaderResultCode == MapLoader.ResultCode.OPERATION_SUCCESSFUL) {
                 if (updateAvailable) {
-                    offlineDownloadSnackbar.setText("Update Available\n" + currentMapVersion + " --> " + newestMapVersion);
-                    offlineDownloadSnackbar.setAction("UPDATE", new View.OnClickListener() {
+                    offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.update_available) + currentMapVersion + " --> " + newestMapVersion);
+                    offlineDownloadSnackbar.setAction(R.string.update, new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
                             progress = 0;
@@ -137,7 +137,7 @@ class OfflineMapDownloader {
                             if (successInstall) {
                                 darkenAllViews(true);
                                 progressingTextView.setVisibility(View.VISIBLE);
-                                progressingTextView.setText("Downloading: 0%");
+                                progressingTextView.setText(R.string.downloading_start);
                                 cancelButton.setVisibility(View.VISIBLE);
                                 progressBar.setVisibility(View.VISIBLE);
                             } else {
@@ -148,7 +148,7 @@ class OfflineMapDownloader {
                     });
                     offlineDownloadSnackbar.show();
                 } else {
-                    offlineDownloadSnackbar.setText("No available map update.");
+                    offlineDownloadSnackbar.setText(R.string.no_available_map_update);
 //                    offlineDownloadSnackbar.setText("No available map update.\nRemove map of " + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + " ?");
 //                    offlineDownloadSnackbar.setAction("REMOVE", new View.OnClickListener(
 //
@@ -167,7 +167,7 @@ class OfflineMapDownloader {
                     offlineDownloadSnackbar.show();
                 }
             } else {
-                offlineDownloadSnackbar.setText("Error: " + mapLoaderResultCode.name());
+                offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.error) + mapLoaderResultCode.name());
                 offlineDownloadSnackbar.show();
             }
 
@@ -269,8 +269,8 @@ class OfflineMapDownloader {
                         Log.d(TAG, "mapPackage.getInstallationState(): " + mapPackage.getInstallationState().name());
                         switch (mapPackage.getInstallationState()) {
                             case INSTALLED:
-                                offlineDownloadSnackbar.setText("Map of " + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + " installed.\nCheck for updates?");
-                                offlineDownloadSnackbar.setAction("CHECK", new View.OnClickListener() {
+                                offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.map_of) + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + DataHolder.getAndroidXMapFragment().getString(R.string.installed_check_for_updates));
+                                offlineDownloadSnackbar.setAction(R.string.check, new View.OnClickListener() {
 
                                     @Override
                                     public void onClick(View v) {
@@ -285,8 +285,8 @@ class OfflineMapDownloader {
                                 mapLoader.checkForMapDataUpdate();
                                 break;
                             case NOT_INSTALLED:
-                                offlineDownloadSnackbar.setText("Download Offline Map for\n" + rootMapPackageTitle + "/" + rootMapPackageEnglishTitle + " (" + Math.round((float) mapPackageSize / 1024) + "MB)?");
-                                offlineDownloadSnackbar.setAction("DOWNLOAD", new View.OnClickListener() {
+                                offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.download_offline_map_for) + rootMapPackageTitle + "/" + rootMapPackageEnglishTitle + " (" + Math.round((float) mapPackageSize / 1024) + "MB)?");
+                                offlineDownloadSnackbar.setAction(R.string.download, new View.OnClickListener() {
 
                                     @Override
                                     public void onClick(View v) {
@@ -298,7 +298,7 @@ class OfflineMapDownloader {
                                             Log.d(TAG, "installMapPackages() success.");
                                             darkenAllViews(true);
                                             progressingTextView.setVisibility(View.VISIBLE);
-                                            progressingTextView.setText("Downloading: 0%");
+                                            progressingTextView.setText(R.string.downloading_start);
                                             cancelButton.setVisibility(View.VISIBLE);
                                             progressBar.setVisibility(View.VISIBLE);
                                         } else {
@@ -312,7 +312,7 @@ class OfflineMapDownloader {
                                 break;
                         }
                     } else {
-                        offlineDownloadSnackbar.setText("No offline map at\n" + geoCoordinate.getLatitude() + ", " + geoCoordinate.getLongitude());
+                        offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.no_offline_map_at) + geoCoordinate.getLatitude() + ", " + geoCoordinate.getLongitude());
                         offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
@@ -322,7 +322,7 @@ class OfflineMapDownloader {
                         offlineDownloadSnackbar.show();
                     }
                 } else {
-                    offlineDownloadSnackbar.setText("Error: " + resultCode.name());
+                    offlineDownloadSnackbar.setText(R.string.error + resultCode.name());
                     offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {

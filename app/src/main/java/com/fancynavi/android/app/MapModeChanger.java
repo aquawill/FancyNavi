@@ -71,7 +71,6 @@ class MapModeChanger {
 
     static void intoSimpleMode() {
         DataHolder.setSimpleMode(true);
-        DataHolder.getActivity().findViewById(R.id.speed_label_text_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.guidance_speed_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.sat_map_button).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.traffic_button).setVisibility(View.GONE);
@@ -102,7 +101,6 @@ class MapModeChanger {
 //            DataHolder.getMapOffScreenRenderer().stop();
 //            DataHolder.setOffScreenRendererEnabled(false);
 //        }
-        DataHolder.getActivity().findViewById(R.id.speed_label_text_view).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.guidance_speed_view).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.sat_map_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_button).setVisibility(View.VISIBLE);
