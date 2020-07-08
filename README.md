@@ -27,22 +27,40 @@
 24. Switch GPS on/off.
 25. Location logging (for road test purposes).
 26. Toll Cost calculation for Car/Truck.
-27. Display guidance maneuver information with PIP mode (Android N).
+27. Map Display with PIP mode (Android N).
 28. Support Multi Window mode (Android N).
 29. Overlay OSM tiles for China.
 30. Show notification with snapshot of the next maneuver while app is on the background.
 31. Implement GeoJSONTileLoader.java to load GeoJSON geometries in EPSG:4326 tiling scheme.
 32. Offline map download/update.
+33. Portrait/Landscape mode switching.
 
+![](https://i.imgur.com/VRSX7aS.jpg)
 
 ## Dependencies:
-1. HERE SDK for Android (Premium Edition) V3.x - https://bit.ly/2RFSM5X
+1. HERE Mobile SDK for Android (Premium Edition) V3.x - https://bit.ly/2RFSM5X
 2. heremaps / msdkui-android - https://github.com/heremaps/msdkui-android
 3. javagl / Obj - https://github.com/javagl/Obj
 4. cocoahero / android-geojson - https://github.com/cocoahero/android-geojson
 
 
 ## Screenshots:
+
+Landscape mode
+
+![](https://i.imgur.com/VRSX7aS.jpg)
+
+
+Traffic Signs along the route.
+
+![](https://i.imgur.com/lYMnF3j.png)
+
+
+Natively Support PIP mode with HERE Mobile SDK for Android (Premium Edition) V3.16
+
+![](https://i.imgur.com/u2AElip.png)
+
+
 Search for places/POI.
 
 ![](https://i.imgur.com/d8uHfMu.gif)
@@ -78,11 +96,6 @@ Display of distance markers and speed limits.
 ![](https://i.imgur.com/SiIswBQ.gif)
 
 
-Display maneuver guidance info with PIP mode.
-
-![](https://i.imgur.com/ha0QuS1.gif)
-
-
 Support MultiWindow Mode.
 
 ![](https://i.imgur.com/ysqDmWe.gif)
@@ -92,10 +105,6 @@ Notification with map image
 
 ![](https://i.imgur.com/Bz2ljIm.gif)
 
-
-Traffic Signs along the route.
-
-![](https://i.imgur.com/lYMnF3j.png)
 
 
 ## Credits:

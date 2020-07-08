@@ -742,7 +742,7 @@ class MapFragmentView {
 
             junctionViewImageView.requestLayout();
             signpostImageView.requestLayout();
-            int jvViewWidth = (int) (mainLinearLayout.getWidth() / 3);
+            int jvViewWidth = mainLinearLayout.getWidth() / 3;
             int jvViewHeight;
             switch (aspectRatio) {
                 case AR_16x9:
@@ -1439,7 +1439,6 @@ class MapFragmentView {
         junctionViewImageView.setVisibility(View.GONE);
         signpostImageView = DataHolder.getActivity().findViewById(R.id.signpostImageView);
         signpostImageView.setVisibility(View.GONE);
-
     }
 
     private void intoNavigationMode() {
@@ -2024,7 +2023,6 @@ class MapFragmentView {
 
                             @Override
                             public void onSizeChanged(int i, int i1) {
-
                                 if (!DataHolder.isNavigating) {
                                     if (DataHolder.getActivity().isInMultiWindowMode()) {
                                         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
@@ -2033,7 +2031,7 @@ class MapFragmentView {
                                     }
                                 } else {
                                     if (DataHolder.getActivity().isInMultiWindowMode()) {
-                                        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
+                                        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
                                     } else {
                                         new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
                                     }

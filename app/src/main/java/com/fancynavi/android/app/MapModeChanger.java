@@ -83,9 +83,12 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.GONE);
+        DataHolder.getActivity().findViewById(R.id.map_scale_view).setVisibility(View.GONE);
+        DataHolder.getActivity().findViewById(R.id.minimize_map_button).setAlpha(0);
+        DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.download_button).setAlpha(0);
-        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
+        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
         DataHolder.getAndroidXMapFragment().setOnTouchListener(emptyMapOnTouchListener);
         if (laneInformationMapOverlay != null) {
             DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
@@ -109,6 +112,9 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.sign_imageView_2).setAlpha(0.7f);
         DataHolder.getActivity().findViewById(R.id.sign_imageView_3).setAlpha(0.7f);
         DataHolder.getActivity().findViewById(R.id.download_button).setAlpha(1);
+        DataHolder.getActivity().findViewById(R.id.minimize_map_button).setAlpha(1);
+        DataHolder.getActivity().findViewById(R.id.map_scale_view).setVisibility(View.VISIBLE);
+        DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(1);
         if (!isNavigating) {
             DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
             DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
