@@ -35,7 +35,6 @@
 32. Offline map download/update.
 33. Portrait/Landscape mode switching.
 
-![](https://i.imgur.com/VRSX7aS.jpg)
 
 ## Dependencies:
 1. HERE Mobile SDK for Android (Premium Edition) V3.x - https://bit.ly/2RFSM5X
