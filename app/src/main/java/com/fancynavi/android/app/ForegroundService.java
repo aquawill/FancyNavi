@@ -56,8 +56,8 @@ public class ForegroundService extends Service {
 
             Notification notification =
                     new NotificationCompat.Builder(this.getApplicationContext(), CHANNEL)
-                            .setContentTitle("Guidance")
-                            .setContentText("Guidance in progress ...")
+                            .setContentTitle(getString(R.string.start_foreground_service_title))
+                            .setContentText(getString(R.string.start_foreground_services_text))
                             .setSmallIcon(R.mipmap.ic_launcher)
                             .setContentIntent(pendingIntent)
                             .setLocalOnly(true)

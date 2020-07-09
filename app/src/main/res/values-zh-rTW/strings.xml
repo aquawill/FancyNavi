@@ -219,4 +219,6 @@
   <string name="toll_fee">通行費：</string>
   <string name="cancel">取消</string>
   <string name="kph">km/h</string>
+  <string name="start_foreground_service_title">開始導航模式</string>
+  <string name="start_foreground_services_text">隱藏App或關閉螢幕時，導航仍會在背景執行。</string>
 </resources>
