@@ -11,7 +11,7 @@
     <string name="route_calculation_failed">Route Calculation Failed:\n</string>
     <string name="found_better_route">Found a better route, follow?</string>
     <string name="reset">Reset</string>
-    <string name="alternative_route_to_avoid_congestion">Would you like to take an alternative route to avoid congestion?</string>
+    <string name="alternative_route_to_avoid_congestion">"An alternative route can save "</string>
     <string name="alternative_route_applied">Alternative route applied, drive carefully.</string>
     <string name="gpx_logging">GPX Logging: </string>
     <string name="cannot_initialize_map_with_error">ERROR: Cannot initialize Map with error </string>
@@ -19,7 +19,7 @@
     <string name="no_result_returned">No result returned.</string>
     <string name="safety_camera_ahead">Safety Camera / </string>
     <string name="add_waypoint">Add Waypoint</string>
-    <string name="yes">Yes</string>
+    <string name="detour">Detour</string>
     <string name="unable_to_find_an_address_at">Unable to find an address at </string>
     <string name="calculating">Calculating...</string>
     <string name="route_of">Route of </string>
@@ -51,4 +51,6 @@
     <string name="cancel">Cancel</string>
     <string name="start_foreground_service_title">Guidance Mode started</string>
     <string name="start_foreground_services_text">Navigation will run in background when screen is locked or App is hidden.</string>
+    <string name="minute">" minutes"</string>
+    <string name="search_places">Search Places...</string>
 </resources>

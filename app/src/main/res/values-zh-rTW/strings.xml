@@ -180,7 +180,7 @@
   <string name="app_name">Fency Navi</string>
   <string name="retry">重試</string>
   <string name="route_calculation_failed">路線計算失敗：</string>
-  <string name="alternative_route_to_avoid_congestion">發現避開壅塞路徑，是否使用？</string>
+  <string name="alternative_route_to_avoid_congestion">發現避開壅塞路徑可節省</string>
   <string name="alternative_route_applied">路徑已避開壅塞路段，請小心駕駛。</string>
   <string name="found_better_route">發現更佳路線，是否使用？</string>
   <string name="reset">取消</string>
@@ -221,4 +221,7 @@
   <string name="kph">km/h</string>
   <string name="start_foreground_service_title">開始導航模式</string>
   <string name="start_foreground_services_text">隱藏App或關閉螢幕時，導航仍會在背景執行。</string>
+  <string name="minute">分鐘</string>
+  <string name="detour">繞路</string>
+  <string name="search_places">搜尋地點...</string>
 </resources>

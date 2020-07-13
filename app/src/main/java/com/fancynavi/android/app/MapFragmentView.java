@@ -397,10 +397,6 @@ class MapFragmentView {
             positionIndicator.setVisible(false);
 
 
-            if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 300) {
-                guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
-            }
-
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
@@ -434,20 +430,9 @@ class MapFragmentView {
                         guidanceSpeedView.setTextColor(Color.argb(255, 0, 0, 0));
                         speedLabelTextView.setTextColor(Color.argb(255, 0, 0, 0));
                     }
-
-                }
-
-                if (roadElement.getSpeedLimit() >= 0) {
-                    guidanceSpeedLimitView.setVisibility(View.VISIBLE);
-                    speedLabelTextView.setVisibility(View.VISIBLE);
-                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
-                } else {
-                    guidanceSpeedLimitView.setVisibility(View.GONE);
-                    speedLabelTextView.setVisibility(View.GONE);
                 }
 
                 if (DataHolder.isNavigating) {
-
                     List<RoutingZone> routingZoneList = RoutingZoneRestrictionsChecker.getRoutingZones(DataHolder.getPositioningManager().getRoadElement());
                     String roadName = DataHolder.getPositioningManager().getRoadElement().getRoadName();
                     if (routingZoneList.size() > 0) {
@@ -489,7 +474,7 @@ class MapFragmentView {
                                             Double distance = cle2PointGeometry.getPoint().distanceTo(geoPositionGeoCoordinateOnGround);
                                             java.util.Map<String, String> geometryAttributeMap = cle2PointGeometry.getAttributes();
                                             String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
-                                            Log.d(TAG, distance + " : " + geometryAttributeMap.get("DISTANCE_VALUE"));
+//                                            Log.d(TAG, distance + " : " + geometryAttributeMap.get("DISTANCE_VALUE"));
                                             if (routeName.equals(freeWayId)) {
                                                 distanceList.add(distance);
                                             }
@@ -498,7 +483,7 @@ class MapFragmentView {
                                         CLE2Geometry geometry = geometries.get(distanceList.indexOf(minimumDistance));
                                         java.util.Map<String, String> geometryAttributeMap = geometry.getAttributes();
                                         String distanceValue = geometryAttributeMap.get("DISTANCE_VALUE");
-                                        Log.d(TAG, "selected : " + geometryAttributeMap.get("DISTANCE_VALUE"));
+//                                        Log.d(TAG, "selected : " + geometryAttributeMap.get("DISTANCE_VALUE"));
                                         String freeWayId = geometryAttributeMap.get("FREE_WAY_ID");
                                         if (routeName.equals(freeWayId) && !DataHolder.isRouteOverView) {
                                             Drawable routeIconDrawable = RouteIconPresenter.getRouteIconName(freeWayId, DataHolder.getActivity());
@@ -564,10 +549,9 @@ class MapFragmentView {
                 guidanceSpeedView.setVisibility(View.INVISIBLE);
                 guidanceSpeedLimitView.setVisibility(View.INVISIBLE);
             }
-
             if (safetyCameraAhead) {
                 distanceToSafetyCamera -= proceedingDistance;
-//                Log.d(TAG, "distanceToSafetyCamera: " + distanceToSafetyCamera);
+                Log.d(TAG, "distanceToSafetyCamera: " + distanceToSafetyCamera);
                 if (distanceToSafetyCamera < 0) {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
@@ -675,22 +659,31 @@ class MapFragmentView {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
-            textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion), TextToSpeech.QUEUE_FLUSH, null);
-            Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
-            trafficReRoutedSnackBar.setAction(R.string.yes, new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null);
-                    resetMapRoute(routeResult.getRoute());
-                    Log.d(TAG, "traffic rerouted.");
-                    route = routeResult.getRoute();
-                    safetyCameraAhead = false;
-                    safetyCameraMapMarker.setTransparency(0);
-                    safetyCamLinearLayout.setVisibility(View.GONE);
-                    cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
-                }
-            });
-            trafficReRoutedSnackBar.show();
+            int currentRouteDuration = DataHolder.getNavigationManager().getTta(Route.TrafficPenaltyMode.OPTIMAL, 0).getDuration();
+            int alternativeRouteDuration = routeResult.getRoute().getTtaIncludingTraffic(0).getDuration();
+            Log.d(TAG, "currentRouteDuration:" + currentRouteDuration);
+            Log.d(TAG, "alternativeRouteDuration:" + alternativeRouteDuration);
+            if (alternativeRouteDuration < currentRouteDuration) {
+                int timeSavedInMinute = (currentRouteDuration - alternativeRouteDuration) / 60;
+                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null);
+                Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
+                trafficReRoutedSnackBar.setAction(R.string.detour, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null);
+                        resetMapRoute(routeResult.getRoute());
+                        Log.d(TAG, "traffic rerouted.");
+                        route = routeResult.getRoute();
+                        safetyCameraAhead = false;
+                        safetyCameraMapMarker.setTransparency(0);
+                        safetyCamLinearLayout.setVisibility(View.GONE);
+                        cle2CorridorRequestForRoute(route.getRouteGeometry(), 70);
+                        DataHolder.getNavigationManager().setRoute(route);
+                    }
+                });
+                trafficReRoutedSnackBar.show();
+            }
+
         }
 
         @Override
@@ -811,6 +804,7 @@ class MapFragmentView {
         @Override
         public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
             super.onSafetySpot(safetySpotNotification);
+            safetyCameraAhead = true;
             List<SafetySpotNotificationInfo> safetySpotNotificationInfoList = safetySpotNotification.getSafetySpotNotificationInfos();
             for (int i = 0; i < safetySpotNotificationInfoList.size(); i++) {
                 SafetySpotNotificationInfo safetySpotInfo = safetySpotNotificationInfoList.get(i);
@@ -830,7 +824,6 @@ class MapFragmentView {
                     safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                 }
                 textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.speed_camera_ahead_voice) + safetyCameraSpeedLimitKM + DataHolder.getAndroidXMapFragment().getString(R.string.kilometers), TextToSpeech.QUEUE_FLUSH, null);
-                safetyCameraAhead = true;
             }
         }
     };
@@ -838,6 +831,15 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
+            RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
+            if (roadElement.getSpeedLimit() >= 0) {
+                guidanceSpeedLimitView.setVisibility(View.VISIBLE);
+                speedLabelTextView.setVisibility(View.VISIBLE);
+                guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
+            } else {
+                guidanceSpeedLimitView.setVisibility(View.GONE);
+                speedLabelTextView.setVisibility(View.GONE);
+            }
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
@@ -874,6 +876,9 @@ class MapFragmentView {
                 }
                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_fixed_white_24dp);
                 gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.green));
+                if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 999) {
+                    guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
+                }
             } else if (locationMethod.equals(PositioningManager.LocationMethod.NETWORK)) {
                 guidanceSpeedView.setVisibility(View.GONE);
                 guidanceSpeedLimitView.setVisibility(View.GONE);
@@ -1296,6 +1301,7 @@ class MapFragmentView {
     }
 
     private void resetMapRoute(Route route) {
+//        DataHolder.getNavigationManager().setRoute(route);
         safetyCameraAhead = false;
         safetyCameraMapMarker.setTransparency(0);
         if (mapRoute != null) {
@@ -1483,8 +1489,8 @@ class MapFragmentView {
                 NavigationManager.NaturalGuidanceMode.STOP_SIGN,
                 NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
         );
-        DataHolder.getNavigationManager().setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.DYNAMIC);
-        DataHolder.getNavigationManager().setRouteRequestInterval(180);
+        DataHolder.getNavigationManager().setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.MANUAL);
+//        DataHolder.getNavigationManager().setRouteRequestInterval(180);
         DataHolder.getNavigationManager().setDistanceWithUTurnToTriggerStopoverReached(100);
 
         DataHolder.getNavigationManager().setNaturalGuidanceMode(naturalGuidanceModes);
@@ -1851,17 +1857,17 @@ class MapFragmentView {
                                                                     }
                                                                 }
                                                             } else if (countryName.equals("Taiwan")) {
-                                                                if (adminAreaName.equals("Taipei City")) {
-                                                                    if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-                                                                        if (customRasterTileOverlay == null) {
-                                                                            customRasterTileOverlay = new CustomRasterTileOverlay();
-                                                                            if (customRasterTileOverlay.getTileUrl() == null) {
-                                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
-                                                                            }
-                                                                            DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-                                                                        }
-                                                                    }
-                                                                }
+//                                                                if (adminAreaName.equals("Taipei City")) {
+//                                                                    if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+//                                                                        if (customRasterTileOverlay == null) {
+//                                                                            customRasterTileOverlay = new CustomRasterTileOverlay();
+//                                                                            if (customRasterTileOverlay.getTileUrl() == null) {
+//                                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+//                                                                            }
+//                                                                            DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+//                                                                        }
+//                                                                    }
+//                                                                }
                                                                 if (previousMapState.getCenter().distanceTo(mapState.getCenter()) > 0 || previousMapState.getZoomLevel() != mapState.getZoomLevel()) {
                                                                     roadkillGeoJsonTileMapContainer.removeAllMapObjects();
                                                                     previousMapState = mapState;
@@ -2437,6 +2443,8 @@ class MapFragmentView {
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         trafficSignMapContainer.removeAllMapObjects();
         safetyCameraMapMarker.setTransparency(0);
+        safetyCamLinearLayout.setVisibility(View.GONE);
+        distanceToSafetyCamera = -1;
         DataHolder.getMap().removeMapObject(endGuidanceDirectionalMapPolyline);
         trafficWarningTextView.setVisibility(View.GONE);
         trafficWarningTextView.setText("");
@@ -2452,10 +2460,15 @@ class MapFragmentView {
         isMapRotating = false;
         DataHolder.isNavigating = false;
         if (DataHolder.getNavigationManager() != null) {
-            DataHolder.getNavigationManager().stop();
+            if (DataHolder.getNavigationManager().getRunningState() == NavigationManager.NavigationState.RUNNING) {
+                DataHolder.getNavigationManager().stop();
+            }
             if (gpsSwitch.isActivated()) {
                 DataHolder.getNavigationManager().startTracking();
             }
+        }
+        if (DataHolder.getNavigationManager() != null) {
+            removeNavigationListeners();
         }
 //        DataHolder.getNavigationManager() = null;
         switchGuidanceUiViews(View.GONE);
@@ -2487,11 +2500,7 @@ class MapFragmentView {
             }
         }
         androidXMapFragment.setOnTouchListener(null);
-        if (DataHolder.getNavigationManager() != null) {
-            if (DataHolder.getNavigationManager().getRunningState() == NavigationManager.NavigationState.RUNNING) {
-                DataHolder.getNavigationManager().stop();
-            }
-        }
+
         navigationControlButton.setText(R.string.create_route);
         route = null;
         switchGuidanceUiPresenters(false);
@@ -2536,14 +2545,12 @@ class MapFragmentView {
         if (laneInformationMapOverlay != null) {
             DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
         }
-        if (DataHolder.getNavigationManager() != null) {
-            removeNavigationListeners();
-        }
+
     }
 
     private void removeNavigationListeners() {
         DataHolder.getNavigationManager().removeNavigationManagerEventListener(navigationListeners.getNavigationManagerEventListener());
-//        DataHolder.getNavigationManager().removeSafetySpotListener(navigationListeners.getSafetySpotListener());
+        DataHolder.getNavigationManager().removeSafetySpotListener(navigationListeners.getSafetySpotListener());
         DataHolder.getNavigationManager().removeRealisticViewListener(navigationListeners.getRealisticViewListener());
         DataHolder.getNavigationManager().removePositionListener(navigationListeners.getPositionListener());
         DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneInformationListener());
@@ -2555,19 +2562,19 @@ class MapFragmentView {
         DataHolder.getActivity().findViewById(R.id.mapFragmentView).getViewTreeObserver().addOnGlobalLayoutListener(onGlobalLayoutListener);
         navigationListeners.setLaneInformationListener(laneInformationListener);
         navigationListeners.setNavigationManagerEventListener(navigationManagerEventListener);
-//        navigationListeners.setPositionListener(positionListener);
+        navigationListeners.setPositionListener(positionListener);
         navigationListeners.setRealisticViewListener(realisticViewListener);
         navigationListeners.setRerouteListener(rerouteListener);
         navigationListeners.setTrafficRerouteListener(trafficRerouteListener);
-//        navigationListeners.setSafetySpotListener(safetySpotListener);
+        navigationListeners.setSafetySpotListener(safetySpotListener);
         navigationListeners.setManeuverEventListener(maneuverEventListener);
 
         DataHolder.getNavigationManager().addNavigationManagerEventListener(new WeakReference<>(navigationListeners.getNavigationManagerEventListener()));
-//        DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
+        DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
         DataHolder.getNavigationManager().setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
         DataHolder.getNavigationManager().addRealisticViewAspectRatio(NavigationManager.AspectRatio.AR_16x9);
         DataHolder.getNavigationManager().addRealisticViewListener(new WeakReference<>(navigationListeners.getRealisticViewListener()));
-//        DataHolder.getNavigationManager().addPositionListener(new WeakReference<>(navigationListeners.getPositionListener()));
+        DataHolder.getNavigationManager().addPositionListener(new WeakReference<>(navigationListeners.getPositionListener()));
         if (route.getFirstManeuver().getTransportMode() == RouteOptions.TransportMode.CAR || route.getFirstManeuver().getTransportMode() == RouteOptions.TransportMode.TRUCK) {
             DataHolder.getNavigationManager().addLaneInformationListener(new WeakReference<>(navigationListeners.getLaneInformationListener()));
         }
