@@ -57,6 +57,7 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 
@@ -125,21 +126,43 @@ public class MainActivity extends AppCompatActivity {
             }
             if (!Build.FINGERPRINT.contains("generic")) {
                 if (DataHolder.getMap() != null) {
-                    if (lightSensorValue < 30) {
-                        if (!isDarkMode) {
-                            setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
-                            new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).darkenMap();
-                            ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);
-                            findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_dark);
-                            isDarkMode = true;
+                    if (!isNavigating) {
+                        if (lightSensorValue < 30) {
+                            if (!isDarkMode) {
+                                setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
+                                new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).darkenMap();
+                                ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);
+                                findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_dark);
+                                isDarkMode = true;
+                            }
+                        } else {
+                            if (isDarkMode) {
+                                setTheme(R.style.MSDKUIDarkTheme);
+                                new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).lightenMap();
+                                ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.BLACK);
+                                findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_bright);
+                                isDarkMode = false;
+                            }
                         }
                     } else {
-                        if (isDarkMode) {
-                            setTheme(R.style.MSDKUIDarkTheme);
-                            new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).lightenMap();
-                            ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.BLACK);
-                            findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_bright);
-                            isDarkMode = false;
+                        Calendar cal = Calendar.getInstance();
+                        int hour = cal.get(Calendar.HOUR_OF_DAY);
+                        if (hour < 6 || hour > 18) {
+                            if (!isDarkMode) {
+                                setTheme(R.style.MSDKUIDarkTheme_WhiteAccent);
+                                new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).darkenMap();
+                                ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.WHITE);
+                                findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_dark);
+                                isDarkMode = true;
+                            }
+                        } else {
+                            if (isDarkMode) {
+                                setTheme(R.style.MSDKUIDarkTheme);
+                                new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager()).lightenMap();
+                                ((MapScaleView) findViewById(R.id.map_scale_view)).setColor(Color.BLACK);
+                                findViewById(R.id.north_up).setBackgroundResource(R.drawable.compass_bright);
+                                isDarkMode = false;
+                            }
                         }
                     }
                 }

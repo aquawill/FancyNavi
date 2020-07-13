@@ -157,6 +157,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.isPipMode;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
@@ -321,6 +322,7 @@ class MapFragmentView {
     private TextView progressingTextView;
     private Route route;
     private MapRoute mapRoute;
+    private MapRoute alternativeMapRoute;
     private MapContainer trafficSignMapContainer;
     private boolean foregroundServiceStarted;
     private CoreRouter coreRouter;
@@ -663,17 +665,35 @@ class MapFragmentView {
             int alternativeRouteDuration = routeResult.getRoute().getTtaIncludingTraffic(0).getDuration();
             Log.d(TAG, "currentRouteDuration:" + currentRouteDuration);
             Log.d(TAG, "alternativeRouteDuration:" + alternativeRouteDuration);
-            if (alternativeRouteDuration < currentRouteDuration) {
+            if (alternativeRouteDuration < currentRouteDuration - 60) {
                 int timeSavedInMinute = (currentRouteDuration - alternativeRouteDuration) / 60;
+
+                if (!isPipMode && !DataHolder.getActivity().isInMultiWindowMode()) {
+                    DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+                    alternativeMapRoute = new MapRoute(routeResult.getRoute());
+                    alternativeMapRoute.setZIndex(90);
+                    alternativeMapRoute.setColor(Color.GREEN);
+                    alternativeMapRoute.setOutlineColor(Color.DKGRAY);
+
+                    GeoBoundingBox alternativeRouteGeoBoundingBox = routeResult.getRoute().getBoundingBox();
+                    DataHolder.getMap().zoomTo(alternativeRouteGeoBoundingBox, 10, 10, Map.Animation.BOW, 0);
+
+                    DataHolder.getMap().addMapObject(alternativeMapRoute);
+                    DataHolder.getMap().setTilt(0);
+                    trafficSignMapContainer.setVisible(false);
+                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
+                }
+
                 textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null);
                 Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
+                trafficReRoutedSnackBar.setDuration(10000);
                 trafficReRoutedSnackBar.setAction(R.string.detour, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null);
-                        resetMapRoute(routeResult.getRoute());
                         Log.d(TAG, "traffic rerouted.");
                         route = routeResult.getRoute();
+                        resetMapRoute(route);
                         safetyCameraAhead = false;
                         safetyCameraMapMarker.setTransparency(0);
                         safetyCamLinearLayout.setVisibility(View.GONE);
@@ -681,9 +701,23 @@ class MapFragmentView {
                         DataHolder.getNavigationManager().setRoute(route);
                     }
                 });
+                trafficReRoutedSnackBar.setCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                        super.onDismissed(transientBottomBar, event);
+                        DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+                        DataHolder.getMap().removeMapObject(alternativeMapRoute);
+                        DataHolder.getMap().setTilt(60);
+                        trafficSignMapContainer.setVisible(true);
+                        if (DataHolder.getActivity().isInMultiWindowMode()) {
+                            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                        } else {
+                            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                        }
+                    }
+                });
                 trafficReRoutedSnackBar.show();
             }
-
         }
 
         @Override
@@ -1302,18 +1336,21 @@ class MapFragmentView {
 
     private void resetMapRoute(Route route) {
 //        DataHolder.getNavigationManager().setRoute(route);
+        trafficSignMapContainer.removeAllMapObjects();
         safetyCameraAhead = false;
         safetyCameraMapMarker.setTransparency(0);
         if (mapRoute != null) {
             DataHolder.getMap().removeMapObject(mapRoute);
         }
         mapRoute = new MapRoute(route);
+        mapRoute.setZIndex(100);
         mapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
         mapRoute.setOutlineColor(Color.argb(255, 78, 0, 143)); //4E008F
         mapRoute.setTraveledColor(Color.DKGRAY);
         mapRoute.setUpcomingColor(Color.LTGRAY);
         mapRoute.setTrafficEnabled(true);
         DataHolder.getMap().addMapObject(mapRoute);
+        getTrafficSignsForRoute(route);
     }
 
     private void touchToAddWaypoint(PointF p) {
@@ -1449,6 +1486,7 @@ class MapFragmentView {
 
     private void intoNavigationMode() {
         initJunctionView();
+        DataHolder.getMap().setExtrudedBuildingsVisible(false);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             minimizeMapButton = DataHolder.getActivity().findViewById(R.id.minimize_map_button);
@@ -1577,6 +1615,36 @@ class MapFragmentView {
         alertDialog.show();
     }
 
+    private void getTrafficSignsForRoute(Route route) {
+        List<RouteElement> routeElementList = route.getRouteElements().getElements();
+        for (RouteElement routeElement : routeElementList) {
+            RoadElement roadElementOfCalculatedRoute = routeElement.getRoadElement();
+            try {
+                List<GeoCoordinate> roadElementGeometry = roadElementOfCalculatedRoute.getGeometry();
+                GeoCoordinate lastPointOfRoadElement = roadElementGeometry.get(roadElementGeometry.size() - 1);
+                for (TrafficSign trafficSign : roadElementOfCalculatedRoute.getTrafficSigns()) {
+                    GeoCoordinate trafficSignGeoCoordinate = trafficSign.coordinate;
+                    if (lastPointOfRoadElement.distanceTo(trafficSignGeoCoordinate) == 0) {
+                        int trafficSignType = trafficSign.type;
+                        try {
+                            Image icon = new Image();
+                            Bitmap trafficSignBitmap = BitmapFactory.decodeResource(DataHolder.getActivity().getResources(), TrafficSignPresenter.getTrafficSignImageResourceName(trafficSignType));
+                            float aspectRatio = (float) trafficSignBitmap.getHeight() / (float) trafficSignBitmap.getWidth();
+                            Bitmap iconBitmap = Bitmap.createScaledBitmap(trafficSignBitmap, 64, (int) (64 * aspectRatio), false);
+                            icon.setBitmap(iconBitmap);
+                            MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
+                            trafficSignMapContainer.addMapObject(trafficSignMapMarker);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            } catch (DataNotReadyException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void calculateRoute(RouteOptions routeOptions) {
         searchBarLinearLayout.setVisibility(View.GONE);
         searchButton.setVisibility(View.GONE);
@@ -1663,7 +1731,6 @@ class MapFragmentView {
                         resetMapRoute(route);
                         mapRouteGeoBoundingBox = route.getBoundingBox();
                         GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(mapRouteGeoBoundingBox);
-
                         mapRouteGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getBBoxHeight() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getBBoxWidth() * 0.6));
                         DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         navigationControlButton.setText(R.string.start_navigation);
@@ -1673,35 +1740,7 @@ class MapFragmentView {
                         } else {
                             routeLength = route.getLength() + " m";
                         }
-
-                        //Check TrafficSigns from route calculation result
-                        List<RouteElement> routeElementList = route.getRouteElements().getElements();
-                        for (RouteElement routeElement : routeElementList) {
-                            RoadElement roadElementOfCalculatedRoute = routeElement.getRoadElement();
-                            try {
-                                List<GeoCoordinate> roadElementGeometry = roadElementOfCalculatedRoute.getGeometry();
-                                GeoCoordinate lastPointOfRoadElement = roadElementGeometry.get(roadElementGeometry.size() - 1);
-                                for (TrafficSign trafficSign : roadElementOfCalculatedRoute.getTrafficSigns()) {
-                                    GeoCoordinate trafficSignGeoCoordinate = trafficSign.coordinate;
-                                    if (lastPointOfRoadElement.distanceTo(trafficSignGeoCoordinate) == 0) {
-                                        int trafficSignType = trafficSign.type;
-                                        try {
-                                            Image icon = new Image();
-                                            Bitmap trafficSignBitmap = BitmapFactory.decodeResource(DataHolder.getActivity().getResources(), TrafficSignPresenter.getTrafficSignImageResourceName(trafficSignType));
-                                            float aspectRatio = (float) trafficSignBitmap.getHeight() / (float) trafficSignBitmap.getWidth();
-                                            Bitmap iconBitmap = Bitmap.createScaledBitmap(trafficSignBitmap, 64, (int) (64 * aspectRatio), false);
-                                            icon.setBitmap(iconBitmap);
-                                            MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
-                                            trafficSignMapContainer.addMapObject(trafficSignMapMarker);
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                }
-                            } catch (DataNotReadyException e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        getTrafficSignsForRoute(route);
 
                         //Check TrafficSigns from route calculation result
                         switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
@@ -2440,7 +2479,11 @@ class MapFragmentView {
     }
 
     private void resetMap() {
+        guidanceSpeedView.setTextColor(Color.argb(255, 0, 0, 0));
+        speedLabelTextView.setTextColor(Color.argb(255, 0, 0, 0));
+
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
+        DataHolder.getMap().setExtrudedBuildingsVisible(true);
         trafficSignMapContainer.removeAllMapObjects();
         safetyCameraMapMarker.setTransparency(0);
         safetyCamLinearLayout.setVisibility(View.GONE);
@@ -2515,6 +2558,9 @@ class MapFragmentView {
 
         if (mapRoute != null) {
             DataHolder.getMap().removeMapObject(mapRoute);
+        }
+        if (alternativeMapRoute != null) {
+            DataHolder.getMap().removeMapObject(alternativeMapRoute);
         }
         if (!userInputWaypoints.isEmpty()) {
             for (MapMarker mkr : userInputWaypoints) {

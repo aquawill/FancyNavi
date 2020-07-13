@@ -20,6 +20,7 @@ class MapSchemeChanger {
     }
 
     void darkenMap() {
+
         if (navigationManager != null) {
             navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
         }
