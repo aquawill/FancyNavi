@@ -27,6 +27,11 @@ class VoiceActivation {
     private Context context;
     private VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
     private String desiredLangCode;
+
+    public void setDesiredVoiceId(long desiredVoiceId) {
+        this.desiredVoiceId = desiredVoiceId;
+    }
+
     private long desiredVoiceId;
 
     VoiceActivation(AppCompatActivity activity) {
@@ -95,15 +100,17 @@ class VoiceActivation {
                     Log.d(TAG, "Failed to download catalog.");
                 } else {
                     List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
-//                    Log.d(TAG, "# of available voicePackages: " + voicePackages.size());
+                    Log.d(TAG, "# of available voicePackages: " + voicePackages.size());
                     for (VoicePackage lang : voicePackages) {
-                        if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
-                            if (lang.isTts()) {
-                                desiredVoiceId = lang.getId();
-                                break;
+                        if (desiredLangCode != null) {
+                            if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
+                                if (lang.isTts()) {
+                                    desiredVoiceId = lang.getId();
+                                    break;
+                                }
                             }
                         }
-//                        Log.d(TAG, "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+                        Log.d(TAG, "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                     }
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
 //                    localInstalledSkins.clear();

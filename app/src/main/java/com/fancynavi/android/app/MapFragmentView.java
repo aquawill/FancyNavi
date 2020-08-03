@@ -157,6 +157,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.isDragged;
 import static com.fancynavi.android.app.DataHolder.isPipMode;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
@@ -814,10 +815,23 @@ class MapFragmentView {
         }
     };
 
+
     private NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
+//            Log.d(TAG, "onManeuverEvent");
+//            Log.d(TAG, "isVisible: " + isVisible);
+            if (!isVisible) {
+                new NavigationNotificationPusher(maneuverIconId);
+            }
+        }
+    };
+
+    private NavigationManager.NewInstructionEventListener newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
+        @Override
+        public void onNewInstructionEvent() {
+            super.onNewInstructionEvent();
 //            Log.d(TAG, "onManeuverEvent");
 //            Log.d(TAG, "isVisible: " + isVisible);
             if (!isVisible) {
@@ -2293,7 +2307,35 @@ class MapFragmentView {
                         @Override
                         public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                                new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getMap().getCenter(), searchTextBar.getText().toString(), DataHolder.getMap());
+                                String inputString = searchTextBar.getText().toString();
+                                if (inputString.matches("^(-?\\d+(\\.\\d+)?),\\s*(-?\\d+(\\.\\d+)?)$")) {
+                                    double inputLatitude = Double.parseDouble(inputString.split(",")[0]);
+                                    double inputLongitude = Double.parseDouble(inputString.split(",")[1]);
+                                    GeoCoordinate inputGeoCoordinate = new GeoCoordinate(inputLatitude, inputLongitude);
+                                    DataHolder.getMap().setCenter(inputGeoCoordinate, Map.Animation.BOW);
+                                    isDragged = true;
+                                    InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                                    inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
+                                    ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(inputGeoCoordinate);
+                                    reverseGeocodeRequest.addCustomHeader("HouseNumberMode", "Streetlevel");
+                                    reverseGeocodeRequest.execute(new ResultListener<com.here.android.mpa.search.Location>() {
+                                        @Override
+                                        public void onCompleted(com.here.android.mpa.search.Location location, ErrorCode errorCode) {
+                                            if (errorCode == ErrorCode.NONE) {
+                                                if (location != null) {
+                                                    new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), location, DataHolder.getMap());
+                                                } else {
+                                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.unable_to_find_an_address_at) + inputString, Snackbar.LENGTH_INDEFINITE).show();
+                                                }
+                                            } else {
+                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), errorCode.name(), Snackbar.LENGTH_INDEFINITE).show();
+                                            }
+                                        }
+                                    });
+                                } else {
+                                    new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getMap().getCenter(), searchTextBar.getText().toString(), DataHolder.getMap());
+
+                                }
                                 searchTextBar.clearFocus();
                                 InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
                                 inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
@@ -2359,8 +2401,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-                    String desiredVoiceLanguageCode = "CHT";
-                    voiceActivation.setDesiredLangCode(desiredVoiceLanguageCode);
+                    voiceActivation.setDesiredLangCode("CHT");
+//                    voiceActivation.setDesiredVoiceId(206);
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
@@ -2655,7 +2697,7 @@ class MapFragmentView {
                             GeoCoordinate placesSearchResultGeoCoordinate = placeLink.getPosition();
 //                            searchResultString = placesSearchResultTitle + " / " + placesSearchCategoryName;
                             showSelectionFocus(placesSearchResultGeoCoordinate, placesSearchResultTitle);
-                            showResultSnackbar(placesSearchResultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_LONG);
+                            showResultSnackbar(placesSearchResultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_INDEFINITE);
                             searchBarLinearLayout.setVisibility(View.GONE);
                             DataHolder.isDragged = true;
                             map.setCenter(placesSearchResultGeoCoordinate, Map.Animation.LINEAR);
@@ -2673,7 +2715,7 @@ class MapFragmentView {
             }
             searchResultString = location.getAddress().getText();
             this.showSelectionFocus(location.getCoordinate(), searchResultString);
-            showResultSnackbar(location.getCoordinate(), location.getAddress().getText(), view, Snackbar.LENGTH_LONG);
+            showResultSnackbar(location.getCoordinate(), location.getAddress().getText(), view, Snackbar.LENGTH_INDEFINITE);
         }
 
         SearchResultHandler(View view, PointF pointF, Map map) {
@@ -2691,21 +2733,21 @@ class MapFragmentView {
                         String category = location.getInfo().getField(LocationInfo.Field.PLACE_CATEGORY);
                         searchResultString = placeName + " / " + category;
                         showSelectionFocus(location.getCoordinate(), searchResultString);
-                        showResultSnackbar(location.getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
+                        showResultSnackbar(location.getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         break;
                     case "com.here.android.mpa.mapping.TransitAccessObject":
                         TransitAccessObject selectedTransitAccessObject = (TransitAccessObject) selectedMapObjects.get(0);
                         GeoCoordinate transitAccessObjectGeoCoordinate = selectedTransitAccessObject.getCoordinate();
                         searchResultString = selectedTransitAccessObject.getTransitAccessInfo().getName();
                         showSelectionFocus(transitAccessObjectGeoCoordinate, searchResultString);
-                        showResultSnackbar(transitAccessObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_LONG);
+                        showResultSnackbar(transitAccessObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         break;
                     case "com.here.android.mpa.mapping.TransitStopObject":
                         TransitStopObject selectedTransitStopObject = (TransitStopObject) selectedMapObjects.get(0);
                         GeoCoordinate transitStopObjectGeoCoordinate = selectedTransitStopObject.getCoordinate();
                         searchResultString = selectedTransitStopObject.getTransitStopInfo().getOfficialName();
                         showSelectionFocus(transitStopObjectGeoCoordinate, searchResultString);
-                        showResultSnackbar(transitStopObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_LONG);
+                        showResultSnackbar(transitStopObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         break;
                     case "com.here.android.mpa.mapping.TrafficEventObject":
                         TrafficEventObject trafficEventObject = (TrafficEventObject) selectedMapObjects.get(0);
@@ -2714,7 +2756,7 @@ class MapFragmentView {
                         String trafficEventAffectedStreet = trafficEventObject.getTrafficEvent().getFirstAffectedStreet();
                         searchResultString = trafficEventShortText + " / " + trafficEventAffectedStreet;
                         showSelectionFocus(trafficEventObjectGeoCoordinate, searchResultString);
-                        showResultSnackbar(trafficEventObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_LONG);
+                        showResultSnackbar(trafficEventObjectGeoCoordinate, searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         break;
                     case "com.here.android.mpa.mapping.SafetySpotObject":
                         SafetySpotObject safetySpotObject = (SafetySpotObject) selectedMapObjects.get(0);
@@ -2727,14 +2769,14 @@ class MapFragmentView {
                         }
                         searchResultString = DataHolder.getAndroidXMapFragment().getString(R.string.safety_camera_ahead) + safetyCameraSpeedLimitKM + " km/h";
                         showSelectionFocus(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString);
-                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
+                        showResultSnackbar(safetySpotObject.getSafetySpotInfo().getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         break;
                     case "com.here.android.mpa.mapping.MapMarker":
                         MapMarker selectedMapMarker = (MapMarker) selectedMapObjects.get(0);
                         if (selectedMapMarker.getTitle() != null && selectedMapMarker.getDescription() != null) {
                             searchResultString = selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
                             showSelectionFocus(selectedMapMarker.getCoordinate(), searchResultString);
-                            showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_LONG);
+                            showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         }
                         break;
 
