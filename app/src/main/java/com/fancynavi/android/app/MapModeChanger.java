@@ -8,10 +8,10 @@ import com.here.android.mpa.guidance.SafetySpotNotification;
 import java.lang.ref.WeakReference;
 import java.util.EnumSet;
 
+import static com.fancynavi.android.app.DataHolder.emptyMapOnTouchListener;
 import static com.fancynavi.android.app.DataHolder.isNavigating;
-import static com.fancynavi.android.app.MapFragmentView.emptyMapOnTouchListener;
+import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
 import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
-import static com.fancynavi.android.app.MapFragmentView.mapOnTouchListenerForNavigation;
 import static com.fancynavi.android.app.MapFragmentView.navigationListeners;
 
 class MapModeChanger {

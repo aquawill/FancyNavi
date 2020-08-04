@@ -52,7 +52,7 @@ Landscape mode
 
 Traffic Signs along the route.
 
-![](https://i.imgur.com/lYMnF3j.png)
+![](https://i.imgur.com/uzge2iF.jpg)
 
 
 Natively Support PIP mode with HERE Mobile SDK for Android (Premium Edition) V3.16
@@ -62,12 +62,7 @@ Natively Support PIP mode with HERE Mobile SDK for Android (Premium Edition) V3.
 
 Search for places/POI.
 
-![](https://i.imgur.com/d8uHfMu.gif)
-
-
-Route calculation.
-
-![](https://i.imgur.com/pzjsKsm.gif)
+![](https://i.imgur.com/8RkwfT3.png)
 
 
 Draggable waypoints.

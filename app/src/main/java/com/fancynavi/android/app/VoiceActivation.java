@@ -102,6 +102,7 @@ class VoiceActivation {
                     List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
                     Log.d(TAG, "# of available voicePackages: " + voicePackages.size());
                     for (VoicePackage lang : voicePackages) {
+                        Log.d(TAG, "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                         if (desiredLangCode != null) {
                             if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
                                 if (lang.isTts()) {
@@ -110,10 +111,9 @@ class VoiceActivation {
                                 }
                             }
                         }
-                        Log.d(TAG, "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
                     }
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-//                    localInstalledSkins.clear();
+                    localInstalledSkins.clear();
                     Log.d(TAG, "# of local skins: " + localInstalledSkins.size());
                     String languageName = "";
                     for (VoiceSkin voice : localInstalledSkins) {

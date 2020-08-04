@@ -3,6 +3,8 @@ package com.fancynavi.android.app;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.graphics.PointF;
+import android.view.MotionEvent;
+import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -25,7 +27,17 @@ class DataHolder {
     static boolean isRoadView = false;
     static boolean isRouteOverView = false;
     static boolean isNavigating = false;
+    static View.OnTouchListener emptyMapOnTouchListener = (v, event) -> false;
     static boolean isSignShowing = false;
+    static View.OnTouchListener mapOnTouchListenerForNavigation = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            if (isNavigating) {
+                MapFragmentView.intoRouteOverView();
+            }
+            return false;
+        }
+    };
 
     private static Map map;
     private static AppCompatActivity activity;
