@@ -65,6 +65,11 @@ Search for places/POI.
 ![](https://i.imgur.com/8RkwfT3.png)
 
 
+Display MapObjects with HERE Studio/Datahub (https://www.here.com/platform/studio)
+
+![](https://i.imgur.com/lJETVPi.png)
+
+
 Draggable waypoints.
 
 ![](https://i.imgur.com/rFOLoRl.gif)
