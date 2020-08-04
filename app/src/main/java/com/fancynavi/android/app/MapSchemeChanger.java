@@ -1,5 +1,8 @@
 package com.fancynavi.android.app;
 
+import android.graphics.Color;
+import android.widget.TextView;
+
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 
@@ -20,7 +23,10 @@ class MapSchemeChanger {
     }
 
     void darkenMap() {
-
+        TextView guidanceSpeedView = DataHolder.getActivity().findViewById(R.id.guidance_speed_view);
+        TextView speedLabelTextView = DataHolder.getActivity().findViewById(R.id.speed_label_text_view);
+        guidanceSpeedView.setTextColor(Color.argb(255, 255, 255, 255));
+        speedLabelTextView.setTextColor(Color.argb(255, 255, 255, 255));
         if (navigationManager != null) {
             navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.NIGHT);
         }
@@ -68,6 +74,10 @@ class MapSchemeChanger {
     }
 
     void lightenMap() {
+        TextView guidanceSpeedView = DataHolder.getActivity().findViewById(R.id.guidance_speed_view);
+        TextView speedLabelTextView = DataHolder.getActivity().findViewById(R.id.speed_label_text_view);
+        guidanceSpeedView.setTextColor(Color.argb(255, 0, 0, 0));
+        speedLabelTextView.setTextColor(Color.argb(255, 0, 0, 0));
         if (navigationManager != null) {
             navigationManager.setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
         }
