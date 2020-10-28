@@ -22,6 +22,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Environment;
+import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
 import android.util.Rational;
@@ -187,7 +188,7 @@ class MapFragmentView {
     private CustomRasterTileOverlay customRasterTileOverlay;
     private GeoPolyline endGuidanceDirectionalGeoPolyline;
     private MapPolyline endGuidanceDirectionalMapPolyline;
-    private KeyguardManager keyguardManager;
+    private final KeyguardManager keyguardManager;
     private CLE2ProximityRequest cle2ProximityRequest;
     private AndroidXMapFragment androidXMapFragment;
     private LinearLayout distanceMarkerLinearLayout;
@@ -227,7 +228,7 @@ class MapFragmentView {
     private MapMarker safetyCameraMapMarker;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
-    private NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
+    private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
 
         @Override
         public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
@@ -330,18 +331,18 @@ class MapFragmentView {
     private GuidanceNextManeuverPresenter guidanceNextManeuverPresenter;
     private TextView guidanceSpeedView;
     private TextView speedLabelTextView;
-    private ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
-    private ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
+    private final ArrayList<GeoCoordinate> waypointList = new ArrayList<>();
+    private final ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
-    private ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
-    private String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
-    private long simulationSpeedMs = 10; //defines the speed of navigation simulation
+    private final ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
+    private final String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
+    private final long simulationSpeedMs = 10; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
     private GeoCoordinate destinationLocationGeoCoordinate;
     private double proceedingDistance = 0;
 
     /* Navigation Listeners */
-    private TrafficWarner.Listener trafficWarnerListener = new TrafficWarner.Listener() {
+    private final TrafficWarner.Listener trafficWarnerListener = new TrafficWarner.Listener() {
         @Override
         public void onTraffic(TrafficNotification trafficNotification) {
             String warningText = "";
@@ -385,7 +386,7 @@ class MapFragmentView {
         }
     };
 
-    private NavigationManager.PositionListener positionListener = new NavigationManager.PositionListener() {
+    private final NavigationManager.PositionListener positionListener = new NavigationManager.PositionListener() {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
             positionIndicator.setVisible(false);
@@ -400,11 +401,7 @@ class MapFragmentView {
                 DataHolder.getMap().setCenter(geoPosition.getCoordinate(), Map.Animation.LINEAR);
             }
 
-            if (keyguardManager.inKeyguardRestrictedInputMode()) {
-                DataHolder.getActivity().setVisible(false);
-            } else {
-                DataHolder.getActivity().setVisible(true);
-            }
+            DataHolder.getActivity().setVisible(!keyguardManager.inKeyguardRestrictedInputMode());
 
 
             if (DataHolder.getPositioningManager().getRoadElement() != null) {
@@ -597,7 +594,7 @@ class MapFragmentView {
         }
 
     };
-    private NavigationManager.NavigationManagerEventListener navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
+    private final NavigationManager.NavigationManagerEventListener navigationManagerEventListener = new NavigationManager.NavigationManagerEventListener() {
         @Override
         public void onRunningStateChanged() {
         }
@@ -649,7 +646,7 @@ class MapFragmentView {
         }
     };
 
-    private NavigationManager.TrafficRerouteListener trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
+    private final NavigationManager.TrafficRerouteListener trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
         @Override
         public void onTrafficRerouted(RouteResult routeResult) {
             super.onTrafficRerouted(routeResult);
@@ -732,7 +729,7 @@ class MapFragmentView {
 
         }
     };
-    private NavigationManager.RerouteListener rerouteListener = new NavigationManager.RerouteListener() {
+    private final NavigationManager.RerouteListener rerouteListener = new NavigationManager.RerouteListener() {
         @Override
         public void onRerouteBegin() {
             Log.d(TAG, "onRerouteBegin");
@@ -753,7 +750,7 @@ class MapFragmentView {
             }
         }
     };
-    private NavigationManager.RealisticViewListener realisticViewListener = new NavigationManager.RealisticViewListener() {
+    private final NavigationManager.RealisticViewListener realisticViewListener = new NavigationManager.RealisticViewListener() {
         @Override
         public void onRealisticViewNextManeuver(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
         }
@@ -800,14 +797,14 @@ class MapFragmentView {
             new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
         }
     };
-    private ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+    private final ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
         @Override
         public void onGlobalLayout() {
         }
     };
 
 
-    private NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
+    private final NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
@@ -819,7 +816,7 @@ class MapFragmentView {
         }
     };
 
-    private NavigationManager.NewInstructionEventListener newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
+    private final NavigationManager.NewInstructionEventListener newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
         @Override
         public void onNewInstructionEvent() {
             super.onNewInstructionEvent();
@@ -831,7 +828,7 @@ class MapFragmentView {
         }
     };
 
-    private NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
+    private final NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
         @Override
         public void onRoutingZoneUpdated(@NonNull List<RoutingZone> list) {
             Log.d(TAG, "onRoutingZoneUpdated");
@@ -845,7 +842,7 @@ class MapFragmentView {
         }
     };
 
-    private NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
+    private final NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
         @Override
         public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
             super.onSafetySpot(safetySpotNotification);
@@ -872,7 +869,7 @@ class MapFragmentView {
             }
         }
     };
-    private OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
+    private final OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
@@ -954,7 +951,7 @@ class MapFragmentView {
             }
         }
     };
-    private MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
+    private final MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
 
         @Override
         public void onPanStart() {
@@ -1051,9 +1048,7 @@ class MapFragmentView {
 
         @Override
         public boolean onLongPressEvent(PointF pointF) {
-            if (selectedFeatureMapMarker != null) {
-                DataHolder.getMap().removeMapObject(selectedFeatureMapMarker);
-            }
+            searchRequestResultMapContainer.removeAllMapObjects();
             GeoCoordinate touchPointGeoCoordinate = DataHolder.getMap().pixelToGeo(pointF);
             GeoCoordinate coordinate = new GeoCoordinate(touchPointGeoCoordinate);
             InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -1128,9 +1123,9 @@ class MapFragmentView {
     }
 
     static void intoRouteOverView() {
-//        if (DataHolder.getNavigationManager() != null) {
-//            DataHolder.getNavigationManager().pause();
-//        }
+        if (DataHolder.getNavigationManager() != null) {
+            DataHolder.getNavigationManager().pause();
+        }
         DataHolder.isRoadView = false;
         DataHolder.isRouteOverView = true;
         if (laneInformationMapOverlay != null) {
@@ -2468,30 +2463,42 @@ class MapFragmentView {
                 startForegroundService();
             }
         });
+
+
         alertDialogBuilder.setPositiveButton(R.string.simulation, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
-                addNavigationListeners();
-                DataHolder.isNavigating = true;
-                hideTrafficSigns();
-                DataHolder.isSignShowing = false;
-                navigationControlButton.setText(R.string.restart);
-                intoNavigationMode();
-                DataHolder.isRouteOverView = false;
-                NavigationManager.Error error = DataHolder.getNavigationManager().simulate(MapFragmentView.this.route, simulationSpeedMs);
-                trafficWarner = DataHolder.getNavigationManager().getTrafficWarner();
-                trafficWarner.init();
-                trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
-                mapSchemeChanger.navigationMapOn();
-                Log.e("Error: ", "NavigationManager.Error: " + error);
-                navigationControlButton.setVisibility(View.GONE);
-                clearButton.setVisibility(View.GONE);
-                startForegroundService();
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        enterSimulation();
+                    }
+                }, 5000);
+
             }
         });
         AlertDialog alertDialog = alertDialogBuilder.create();
         alertDialog.show();
         alertDialog.getButton(alertDialog.BUTTON_NEGATIVE).setTextColor(DataHolder.getActivity().getResources().getColor(R.color.green));
         alertDialog.getButton(alertDialog.BUTTON_POSITIVE).setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
+    }
+
+    private void enterSimulation() {
+        addNavigationListeners();
+        hideTrafficSigns();
+        intoNavigationMode();
+        navigationControlButton.setText(R.string.restart);
+        DataHolder.isNavigating = true;
+        DataHolder.isSignShowing = false;
+        DataHolder.isRouteOverView = false;
+        trafficWarner = DataHolder.getNavigationManager().getTrafficWarner();
+        trafficWarner.init();
+        trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
+        mapSchemeChanger.navigationMapOn();
+        NavigationManager.Error error = DataHolder.getNavigationManager().simulate(MapFragmentView.this.route, simulationSpeedMs);
+        Log.e("Error: ", "NavigationManager.Error: " + error);
+        navigationControlButton.setVisibility(View.GONE);
+        clearButton.setVisibility(View.GONE);
+        startForegroundService();
     }
 
     private void startNavigationManager() {
@@ -2510,7 +2517,7 @@ class MapFragmentView {
     private void resetMap() {
         guidanceSpeedView.setTextColor(Color.argb(255, 0, 0, 0));
         speedLabelTextView.setTextColor(Color.argb(255, 0, 0, 0));
-
+        clearDistanceMarkerMapOverlay();
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         DataHolder.getMap().setExtrudedBuildingsVisible(true);
         trafficSignMapContainer.removeAllMapObjects();
@@ -2660,11 +2667,7 @@ class MapFragmentView {
 
     class SearchResultHandler {
         String placesSearchResultTitle;
-        private Map map = DataHolder.getMap();
-
-        public SearchResultHandler(View view, String placesSearchResultTitle) {
-            this.placesSearchResultTitle = placesSearchResultTitle;
-        }
+        private final Map map = DataHolder.getMap();
 
         SearchResultHandler(View view, GeoCoordinate geoCoordinate, String inputString, Map map) {
             if (selectedFeatureMapMarker != null) {
@@ -2672,32 +2675,44 @@ class MapFragmentView {
             }
             SearchRequest request = new SearchRequest(inputString);
             request.setSearchCenter(geoCoordinate);
-            ErrorCode error = request.execute(new ResultListener<DiscoveryResultPage>() {
+            request.execute(new ResultListener<DiscoveryResultPage>() {
                 @Override
                 public void onCompleted(DiscoveryResultPage discoveryResultPage, ErrorCode errorCode) {
-                    searchRequestResultMapContainer.removeAllMapObjects();
-                    if (discoveryResultPage.getPlaceLinks().size() > 0) {
-                        List<GeoCoordinate> geoCoordinateList = new ArrayList<>();
-                        List<PlaceLink> discoveryResultPlaceLink = discoveryResultPage.getPlaceLinks();
-                        for (PlaceLink placeLink : discoveryResultPlaceLink) {
-                            Log.d(TAG, placeLink.getTitle());
-                            geoCoordinateList.add(placeLink.getPosition());
-                            placesSearchResultTitle = placeLink.getTitle();
-                            GeoCoordinate placesSearchResultGeoCoordinate = placeLink.getPosition();
-                            if (placesSearchResultGeoCoordinate != null) {
-                                showSelectionFocus(placesSearchResultGeoCoordinate, placesSearchResultTitle, placeLink.getCategory().getName());
-//                                showResultSnackbar(placesSearchResultGeoCoordinate, placesSearchResultTitle, view, Snackbar.LENGTH_INDEFINITE);
-                                searchBarLinearLayout.setVisibility(View.GONE);
+                    if (errorCode == ErrorCode.NONE) {
+                        searchRequestResultMapContainer.removeAllMapObjects();
+                        if (discoveryResultPage.getPlaceLinks().size() > 0) {
+                            List<GeoCoordinate> geoCoordinateList = new ArrayList<>();
+                            List<PlaceLink> discoveryResultPlaceLinks = discoveryResultPage.getPlaceLinks();
+                            for (PlaceLink placeLink : discoveryResultPlaceLinks) {
+                                Log.d(TAG, placeLink.getTitle() + " " + placeLink.getAverageRating());
+                                GeoCoordinate placesSearchResultGeoCoordinate = placeLink.getPosition();
+                                geoCoordinateList.add(placesSearchResultGeoCoordinate);
+                                placesSearchResultTitle = placeLink.getTitle();
+                                if (placesSearchResultGeoCoordinate != null) {
+                                    showSelectionFocus(placesSearchResultGeoCoordinate, placesSearchResultTitle, placeLink.getCategory().getName());
+                                    searchBarLinearLayout.setVisibility(View.GONE);
+                                }
                             }
+                            if (geoCoordinateList.size() > 1) {
+                                GeoBoundingBox searchResultGeoBoundingBox = GeoBoundingBox.getBoundingBoxContainingGeoCoordinates(geoCoordinateList);
+                                GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(searchResultGeoBoundingBox);
+                                searchResultGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getHeightInMeters() * 0.2), (float) (geoBoundingBoxDimensionCalculator.getWidthInMeters() * 0.2));
+                                map.zoomTo(searchResultGeoBoundingBox, Map.Animation.BOW, 0);
+                            } else {
+                                if (discoveryResultPlaceLinks.get(0).getBoundingBox() != null) {
+                                    map.zoomTo(discoveryResultPlaceLinks.get(0).getBoundingBox(), Map.Animation.BOW, 0);
+                                } else {
+                                    map.setCenter(geoCoordinateList.get(0), Map.Animation.BOW, 17, 0, 0);
+                                }
+                            }
+                            DataHolder.isDragged = true;
+                        } else {
+                            Snackbar.make(view, R.string.no_result_returned, Snackbar.LENGTH_SHORT).show();
                         }
-                        GeoBoundingBox searchResultGeoBoundingBox = GeoBoundingBox.getBoundingBoxContainingGeoCoordinates(geoCoordinateList);
-                        GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(searchResultGeoBoundingBox);
-                        searchResultGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getHeightInMeters() * 0.2), (float) (geoBoundingBoxDimensionCalculator.getWidthInMeters() * 0.2));
-                        map.zoomTo(searchResultGeoBoundingBox, Map.Animation.BOW, 0);
-                        DataHolder.isDragged = true;
                     } else {
-                        Snackbar.make(view, R.string.no_result_returned, Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(view, R.string.no_result_returned + " : " + errorCode, Snackbar.LENGTH_SHORT).show();
                     }
+
                 }
             });
         }

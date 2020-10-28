@@ -16,7 +16,7 @@ import static com.fancynavi.android.app.MapFragmentView.navigationListeners;
 
 class MapModeChanger {
 
-    private static NavigationManager.SafetySpotListener simpleSafetySpotListener = new NavigationManager.SafetySpotListener() {
+    private static final NavigationManager.SafetySpotListener simpleSafetySpotListener = new NavigationManager.SafetySpotListener() {
         @Override
         public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
             super.onSafetySpot(safetySpotNotification);
@@ -79,8 +79,8 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.sign_imageView_1).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.sign_imageView_2).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.sign_imageView_3).setAlpha(0);
-        DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.GONE);
-        DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.GONE);
+//        DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.GONE);
+//        DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.map_scale_view).setVisibility(View.GONE);
         DataHolder.getActivity().findViewById(R.id.minimize_map_button).setAlpha(0);
@@ -114,8 +114,8 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.map_scale_view).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(1);
         if (!isNavigating) {
-            DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
-            DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
+//            DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
+//            DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
         }
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(1);

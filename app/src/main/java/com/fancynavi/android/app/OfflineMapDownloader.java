@@ -24,19 +24,19 @@ import java.util.List;
 import static com.fancynavi.android.app.DataHolder.TAG;
 
 class OfflineMapDownloader {
-    private MapLoader mapLoader;
-    private Snackbar offlineDownloadSnackbar;
-    private TextView progressingTextView;
-    private ProgressBar progressBar;
-    private Button cancelButton;
-    private List<Integer> mapIdList = new ArrayList<>();
-    private List<String> mapNameList = new ArrayList<>();
-    private List<String> mapEnglishNameList = new ArrayList<>();
+    private final MapLoader mapLoader;
+    private final Snackbar offlineDownloadSnackbar;
+    private final TextView progressingTextView;
+    private final ProgressBar progressBar;
+    private final Button cancelButton;
+    private final List<Integer> mapIdList = new ArrayList<>();
+    private final List<String> mapNameList = new ArrayList<>();
+    private final List<String> mapEnglishNameList = new ArrayList<>();
     private int progress = -1;
-    private View v;
-    private ConstraintLayout l;
+    private final View v;
+    private final ConstraintLayout l;
 
-    private MapLoader.Listener mapLoaderListener = new MapLoader.Listener() {
+    private final MapLoader.Listener mapLoaderListener = new MapLoader.Listener() {
         public void onUninstallMapPackagesComplete(MapPackage rootMapPackage,
                                                    MapLoader.ResultCode mapLoaderResultCode) {
             progress = -1;
@@ -226,8 +226,8 @@ class OfflineMapDownloader {
         if (bool) {
             l.addView(v);
             DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
-            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
-            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
+//            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
+//            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.traffic_button).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.sat_map_button).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.log_button).setClickable(!bool);
@@ -237,8 +237,8 @@ class OfflineMapDownloader {
         } else {
             l.removeView(v);
             DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
-            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
-            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
+//            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
+//            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.traffic_button).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.sat_map_button).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.log_button).setClickable(!bool);

@@ -65,16 +65,18 @@ Developers should always provide custom values for each of {YOUR_LABEL_NAME} and
             android:name="INTENT_NAME"
             android:value="AndroidSdkTest" />
 
-        <service
-            android:name="com.here.android.mpa.service.MapService"
-            android:label="HereMapService"
-            android:exported="false"
-            android:process="global.Here.Map.Service.v3">
-            <intent-filter>
-                <!--Note, action name should not be changed.-->
-                <action android:name="com.here.android.mpa.service.MapService.v3" />
-            </intent-filter>
-        </service>
+        <!-- Deprecated from 3.16-->
+        <!--        <service-->
+        <!--            android:name="com.here.android.mpa.service.MapService"-->
+        <!--            android:label="HereMapService"-->
+        <!--            android:exported="false"-->
+        <!--            android:process="global.Here.Map.Service.v3">-->
+        <!--            <intent-filter>-->
+        <!--                &lt;!&ndash;Note, action name should not be changed.&ndash;&gt;-->
+        <!--                <action android:name="com.here.android.mpa.service.MapService.v3" />-->
+        <!--            </intent-filter>-->
+        <!--        </service>-->
+
         <!-- HERE advanced positioning. -->
         <service
             android:name="com.here.services.internal.LocationService"

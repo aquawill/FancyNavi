@@ -4,7 +4,7 @@
     android:id="@+id/main_linear_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
+    android:background="@drawable/grad"
     android:orientation="vertical">
 
     <LinearLayout
@@ -302,27 +302,27 @@
             app:layout_constraintTop_toTopOf="@id/mapFragmentView"
             app:layout_constraintVertical_bias="0.5">
 
-            <Button
-                android:id="@+id/zoom_in"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginBottom="4dp"
-                android:layout_weight="1"
-                android:background="#00000000"
-                android:foreground="@drawable/ic_plus"
-                android:paddingBottom="4dp"
-                android:visibility="gone" />
+            <!--            <Button-->
+            <!--                android:id="@+id/zoom_in"-->
+            <!--                android:layout_width="32dp"-->
+            <!--                android:layout_height="32dp"-->
+            <!--                android:layout_marginBottom="4dp"-->
+            <!--                android:layout_weight="1"-->
+            <!--                android:background="#00000000"-->
+            <!--                android:foreground="@drawable/ic_plus"-->
+            <!--                android:paddingBottom="4dp"-->
+            <!--                android:visibility="gone" />-->
 
-            <Button
-                android:id="@+id/zoom_out"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_marginTop="4dp"
-                android:layout_weight="1"
-                android:background="#00000000"
-                android:foreground="@drawable/ic_minus"
-                android:textSize="24sp"
-                android:visibility="gone" />
+            <!--            <Button-->
+            <!--                android:id="@+id/zoom_out"-->
+            <!--                android:layout_width="32dp"-->
+            <!--                android:layout_height="32dp"-->
+            <!--                android:layout_marginTop="4dp"-->
+            <!--                android:layout_weight="1"-->
+            <!--                android:background="#00000000"-->
+            <!--                android:foreground="@drawable/ic_minus"-->
+            <!--                android:textSize="24sp"-->
+            <!--                android:visibility="gone" />-->
         </LinearLayout>
 
         <LinearLayout
