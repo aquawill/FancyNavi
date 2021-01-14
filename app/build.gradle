@@ -47,10 +47,10 @@ repositories {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation 'androidx.appcompat:appcompat:1.0.0'
-    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
-    implementation 'com.google.android.material:material:1.0.0'
-    implementation(name: 'HERE-sdk', ext: 'aar')
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation(name: 'HERE-3.17.2', ext: 'aar')
     implementation(name: 'MSDKUILib-release', ext: 'aar')
     implementation 'com.google.code.gson:gson:2.8.5'
 //    implementation 'com.google.android.gms:play-services-location:17.0.0'

@@ -390,8 +390,6 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(GeoPosition geoPosition) {
             positionIndicator.setVisible(false);
-
-
             GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
             geoPositionGeoCoordinate.setAltitude(1);
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
@@ -869,15 +867,18 @@ class MapFragmentView {
             }
         }
     };
+
     private final OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
             RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
-            if (roadElement.getSpeedLimit() >= 0) {
-                guidanceSpeedLimitView.setVisibility(View.VISIBLE);
-                speedLabelTextView.setVisibility(View.VISIBLE);
-                guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
+            if (roadElement != null) {
+                if (roadElement.getSpeedLimit() >= 0) {
+                    guidanceSpeedLimitView.setVisibility(View.VISIBLE);
+                    speedLabelTextView.setVisibility(View.VISIBLE);
+                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
+                }
             } else {
                 guidanceSpeedLimitView.setVisibility(View.GONE);
                 speedLabelTextView.setVisibility(View.GONE);
@@ -1827,12 +1828,7 @@ class MapFragmentView {
                     /* Entrance */
                     DataHolder.setMap(androidXMapFragment.getMap());
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
-//                        View view = new View(DataHolder.getActivity());
-//                        view.setLayoutParams(new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT));
-//                        view.setBackgroundColor(Color.argb(255, 0, 0, 0));
-//                        view.setElevation(30f);
-//                        view.setVisibility(View.VISIBLE);
-//                        mainLinearLayout.addView(view);
+
                     new OfflineMapDownloader();
 
                     coreRouter = new CoreRouter();

@@ -177,7 +177,7 @@
   <string name="choose_mode">選擇模式</string>
   <string name="checking_offline_map">檢查離線地圖......</string>
   <string name="start_navigation">開始導航</string>
-  <string name="app_name">Fency Navi</string>
+  <string name="app_name">Fancy Navi</string>
   <string name="retry">重試</string>
   <string name="route_calculation_failed">路線計算失敗：</string>
   <string name="alternative_route_to_avoid_congestion">發現避開壅塞路徑可節省</string>
