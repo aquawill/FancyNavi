@@ -1,5 +1,6 @@
 package com.fancynavi.android.app;
 
+import android.util.Log;
 import android.view.View;
 
 import com.here.android.mpa.guidance.NavigationManager;
@@ -96,11 +97,8 @@ class MapModeChanger {
     }
 
     static void intoFullMode() {
+        Log.d("SDK", "into full mode");
         DataHolder.setSimpleMode(false);
-//        if (DataHolder.isOffScreenRendererEnabled()) {
-//            DataHolder.getMapOffScreenRenderer().stop();
-//            DataHolder.setOffScreenRendererEnabled(false);
-//        }
         DataHolder.getActivity().findViewById(R.id.guidance_speed_view).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.sat_map_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_button).setVisibility(View.VISIBLE);
@@ -113,10 +111,6 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.minimize_map_button).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.map_scale_view).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(1);
-        if (!isNavigating) {
-//            DataHolder.getActivity().findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
-//            DataHolder.getActivity().findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
-        }
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(1);
         if (isNavigating) {

@@ -157,6 +157,7 @@ import java.util.Locale;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.DataHolder.isDragged;
+import static com.fancynavi.android.app.DataHolder.isNavigating;
 import static com.fancynavi.android.app.DataHolder.isPipMode;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
@@ -338,6 +339,17 @@ class MapFragmentView {
     private final String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
     private final long simulationSpeedMs = 10; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
+    private final NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
+        @Override
+        public void onManeuverEvent() {
+            super.onManeuverEvent();
+//            Log.d(TAG, "onManeuverEvent");
+//            Log.d(TAG, "isVisible: " + isVisible);
+            if (!isVisible || isPipMode) {
+                new NavigationNotificationPusher(maneuverIconId);
+            }
+        }
+    };
     private GeoCoordinate destinationLocationGeoCoordinate;
     private double proceedingDistance = 0;
 
@@ -800,31 +812,18 @@ class MapFragmentView {
         public void onGlobalLayout() {
         }
     };
-
-
-    private final NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
-        @Override
-        public void onManeuverEvent() {
-            super.onManeuverEvent();
-//            Log.d(TAG, "onManeuverEvent");
-//            Log.d(TAG, "isVisible: " + isVisible);
-            if (!isVisible) {
-                new NavigationNotificationPusher(maneuverIconId);
-            }
-        }
-    };
-
     private final NavigationManager.NewInstructionEventListener newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
         @Override
         public void onNewInstructionEvent() {
             super.onNewInstructionEvent();
 //            Log.d(TAG, "onManeuverEvent");
 //            Log.d(TAG, "isVisible: " + isVisible);
-            if (!isVisible) {
+            if (!isVisible || isPipMode) {
                 new NavigationNotificationPusher(maneuverIconId);
             }
         }
     };
+    private GeoCoordinate lastSecondLocation = null;
 
     private final NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
         @Override
@@ -2124,6 +2123,7 @@ class MapFragmentView {
                             if (isChecked) {
                                 DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, activateHereAdvancedPositioning).getPositioningManager());
                                 DataHolder.getNavigationManager().startTracking();
+
                             } else {
                                 DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.NETWORK, activateHereAdvancedPositioning).getPositioningManager());
                                 guidanceSpeedView.setVisibility(View.INVISIBLE);
@@ -2409,6 +2409,32 @@ class MapFragmentView {
                     guidanceSpeedView = DataHolder.getActivity().findViewById(R.id.guidance_speed_view);
                     guidanceSpeedView.setTypeface(tf);
                     guidanceSpeedView.setVisibility(View.GONE);
+
+//                    Get speed and position every second to refresh guidanceSpeedView
+
+                    final Handler handler = new Handler();
+                    final int delay = 1000; // 1000 milliseconds == 1 second
+                    handler.postDelayed(new Runnable() {
+                        public void run() {
+                            if (!isNavigating) {
+                                GeoPosition thisSecondLocation = DataHolder.getPositioningManager().getLastKnownPosition();
+                                Log.d(TAG, "newLocation getLatitude: " + thisSecondLocation.getCoordinate().getLatitude());
+                                Log.d(TAG, "newLocation getLongitude: " + thisSecondLocation.getCoordinate().getLongitude());
+                                if (lastSecondLocation != null) {
+                                    if (lastSecondLocation.distanceTo(thisSecondLocation.getCoordinate()) > 0) {
+                                        lastSecondLocation = thisSecondLocation.getCoordinate();
+                                        guidanceSpeedView.setText(String.valueOf((int) (thisSecondLocation.getSpeed() * 3.6)));
+                                    } else {
+                                        guidanceSpeedView.setText("0");
+                                    }
+                                } else {
+                                    lastSecondLocation = thisSecondLocation.getCoordinate();
+                                }
+                            }
+                            handler.postDelayed(this, delay);
+                        }
+                    }, delay);
+
                     speedLabelTextView = DataHolder.getActivity().findViewById(R.id.speed_label_text_view);
                     speedLabelTextView.setTypeface(tf);
                     speedLabelTextView.setVisibility(View.GONE);
