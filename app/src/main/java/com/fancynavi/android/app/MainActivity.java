@@ -203,8 +203,8 @@ public class MainActivity extends AppCompatActivity {
     private DisplayMetrics metrics;
     private MapFragmentView mapFragmentView;
     //    private LocationRequest locationRequest;
-    private long UPDATE_INTERVAL = 5 * 1000;
-    private long FASTEST_INTERVAL = 1000;
+    private final long UPDATE_INTERVAL = 5 * 1000;
+    private final long FASTEST_INTERVAL = 1000;
 
     public void hideGuidanceView() {
         View guidanceView = findViewById(R.id.guidance_maneuver_view);
@@ -445,6 +445,7 @@ public class MainActivity extends AppCompatActivity {
         requiredSDKPermissions.add(Manifest.permission.INTERNET);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_WIFI_STATE);
         requiredSDKPermissions.add(Manifest.permission.ACCESS_NETWORK_STATE);
+        requiredSDKPermissions.add(Manifest.permission.MODIFY_AUDIO_SETTINGS);
 //        requiredSDKPermissions.add(Manifest.permission.CAMERA);
 
         ActivityCompat.requestPermissions(this,

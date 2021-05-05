@@ -102,6 +102,7 @@ Developers should always provide custom values for each of {YOUR_LABEL_NAME} and
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <!-- To allow starting foreground services on Android P+ -->
     <!-- https://developer.android.com/preview/behavior-changes#fg-svc -->
     <uses-permission android:name="android.permission.CAMERA" />

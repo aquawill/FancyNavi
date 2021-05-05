@@ -156,6 +156,8 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.getActivity;
+import static com.fancynavi.android.app.DataHolder.getNavigationManager;
 import static com.fancynavi.android.app.DataHolder.isDragged;
 import static com.fancynavi.android.app.DataHolder.isNavigating;
 import static com.fancynavi.android.app.DataHolder.isPipMode;
@@ -996,6 +998,7 @@ class MapFragmentView {
             if (searchResultSnackbar != null) {
                 searchResultSnackbar.dismiss();
             }
+            searchRequestResultMapContainer.removeAllMapObjects();
             InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
             new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), pointF, DataHolder.getMap());
@@ -1663,8 +1666,8 @@ class MapFragmentView {
             for (int i = 0; i < userInputWaypoints.size(); i++) {
                 MapMarker mapMarker = userInputWaypoints.get(i);
                 RouteWaypoint routeWaypoint = new RouteWaypoint(mapMarker.getCoordinate());
-                GeoCoordinate waypointNavigableGeocoordinate = routeWaypoint.getNavigablePosition();
-                waypointList.add(waypointNavigableGeocoordinate);
+                GeoCoordinate waypointNavigableGeoCoordinate = routeWaypoint.getNavigablePosition();
+                waypointList.add(waypointNavigableGeoCoordinate);
                 DataHolder.getMap().removeMapObject(mapMarker);
             }
             if (mapRoute != null) {
@@ -2385,8 +2388,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-                    voiceActivation.setDesiredLangCode("CHT");
-//                    voiceActivation.setDesiredVoiceId(206);
+//                    voiceActivation.setDesiredLangCode("CHT");
+                    voiceActivation.setDesiredVoiceId(217);
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
@@ -2418,8 +2421,8 @@ class MapFragmentView {
                         public void run() {
                             if (!isNavigating) {
                                 GeoPosition thisSecondLocation = DataHolder.getPositioningManager().getLastKnownPosition();
-                                Log.d(TAG, "newLocation getLatitude: " + thisSecondLocation.getCoordinate().getLatitude());
-                                Log.d(TAG, "newLocation getLongitude: " + thisSecondLocation.getCoordinate().getLongitude());
+//                                Log.d(TAG, "newLocation getLatitude: " + thisSecondLocation.getCoordinate().getLatitude());
+//                                Log.d(TAG, "newLocation getLongitude: " + thisSecondLocation.getCoordinate().getLongitude());
                                 if (lastSecondLocation != null) {
                                     if (lastSecondLocation.distanceTo(thisSecondLocation.getCoordinate()) > 0) {
                                         lastSecondLocation = thisSecondLocation.getCoordinate();
@@ -2445,6 +2448,35 @@ class MapFragmentView {
                     startNavigationManager();
                     DataHolder.getNavigationManager().startTracking();
                     downloadOfflineMapButton.setVisibility(View.VISIBLE);
+
+                    /*Custom Route test code*/
+
+//                    RouteWaypoint start = new RouteWaypoint(new GeoCoordinate(25.1599944, 121.4294844));
+//                    RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(25.16081350, 121.38074623));
+//                    List<RouteWaypoint> waypoints = Arrays.asList(start, destination);
+//
+//                    FTCRRouteOptions routeOptions = new FTCRRouteOptions();
+//                    routeOptions.setUseTraffic(true)
+//                            .setTransportMode(FTCRRouteOptions.TransportMode.CAR)
+//                            .setRouteType(FTCRRouteOptions.Type.FASTEST);
+//
+//                    FTCRRouter router = new FTCRRouter();
+//                    FTCRRoutePlan ftcrRoutePlan = new FTCRRoutePlan(waypoints, routeOptions);
+//                    ftcrRoutePlan.setOverlay("OVERLAYTAIPEIPORT");
+//                    router.calculateRoute(ftcrRoutePlan, new FTCRRouter.Listener() {
+//                        @Override
+//                        public void onCalculateRouteFinished(@NonNull List<FTCRRoute> list, @NonNull FTCRRouter.ErrorResponse errorResponse) {
+//                            if (errorResponse.getErrorCode() == RoutingError.NONE && !list.isEmpty()) {
+//                                list.forEach(ftcrRoute -> {
+//                                    ftcrRoute.getGeometry();
+//                                    FTCRMapRoute ftcrMapRoute = new FTCRMapRoute(ftcrRoute);
+//                                    ftcrMapRoute.setZIndex(100);
+//                                    ftcrMapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
+//                                    DataHolder.getMap().addMapObject(ftcrMapRoute);
+//                                });
+//                            }
+//                        }
+//                    });
                 } else {
                     Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.cannot_initialize_map_with_error) + error, Snackbar.LENGTH_LONG).show();
                 }
@@ -2494,7 +2526,7 @@ class MapFragmentView {
                     public void run() {
                         enterSimulation();
                     }
-                }, 5000);
+                }, 1000);
 
             }
         });
@@ -2505,6 +2537,7 @@ class MapFragmentView {
     }
 
     private void enterSimulation() {
+        getActivity().setVolumeControlStream((getNavigationManager().getAudioPlayer().getStreamId()));
         addNavigationListeners();
         hideTrafficSigns();
         intoNavigationMode();
