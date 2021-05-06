@@ -74,6 +74,17 @@ class OfflineMapDownloader {
             progress = -1;
             darkenAllViews(false);
             DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
+            progressingTextView.setVisibility(View.INVISIBLE);
+            cancelButton.setVisibility(View.INVISIBLE);
+            progressBar.setVisibility(View.INVISIBLE);
+            offlineDownloadSnackbar.setText(R.string.download_completed);
+            offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+
+                }
+            });
+            offlineDownloadSnackbar.show();
             Log.d(TAG, "onPerformMapDataUpdateComplete");
 
         }
