@@ -186,7 +186,15 @@ class OfflineMapDownloader {
     };
 
     OfflineMapDownloader() {
+//        https://developer.here.com/documentation/android-premium/dev_guide/topics/maps-offline-maploader.html
         mapLoader = MapLoader.getInstance();
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.ScooterAttributes);
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.TruckAttributes);
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.Terrain3D);
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.RenderBuildingExt);
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.WorldwideExtendedPOI);
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.WorldwidePointAddresses);
+        mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.ADAS);
         progressBar = DataHolder.getActivity().findViewById(R.id.progress_bar);
         cancelButton = DataHolder.getActivity().findViewById(R.id.cancel_button);
         progressingTextView = DataHolder.getActivity().findViewById(R.id.progressing_text_view);

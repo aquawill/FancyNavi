@@ -53,4 +53,5 @@
     <string name="start_foreground_services_text">Navigation will run in background when screen is locked or App is hidden.</string>
     <string name="minute">" minutes"</string>
     <string name="search_places">Search Places...</string>
+    <string name="reverse_geocode">Reverse Geocode: </string>
 </resources>

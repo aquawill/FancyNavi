@@ -224,4 +224,6 @@
   <string name="minute">分鐘</string>
   <string name="detour">繞路</string>
   <string name="search_places">搜尋地點...</string>
+  <string name="reverse_geocode">地址查詢：</string>
+
 </resources>

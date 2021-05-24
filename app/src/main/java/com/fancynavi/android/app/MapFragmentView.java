@@ -1053,10 +1053,9 @@ class MapFragmentView {
         public boolean onLongPressEvent(PointF pointF) {
             searchRequestResultMapContainer.removeAllMapObjects();
             GeoCoordinate touchPointGeoCoordinate = DataHolder.getMap().pixelToGeo(pointF);
-            GeoCoordinate coordinate = new GeoCoordinate(touchPointGeoCoordinate);
             InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
-            ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(coordinate);
+            ReverseGeocodeRequest reverseGeocodeRequest = new ReverseGeocodeRequest(touchPointGeoCoordinate);
             reverseGeocodeRequest.addCustomHeader("HouseNumberMode", "Streetlevel");
             reverseGeocodeRequest.execute(new ResultListener<com.here.android.mpa.search.Location>() {
                 @Override
@@ -1073,7 +1072,7 @@ class MapFragmentView {
                             Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.unable_to_find_an_address_at) + touchPointGeoCoordinate.toString(), Snackbar.LENGTH_LONG).show();
                         }
                     } else {
-                        Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), errorCode.name(), Snackbar.LENGTH_INDEFINITE).show();
+                        Snackbar.make(getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.reverse_geocode) + " " + errorCode.name(), Snackbar.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -1752,31 +1751,33 @@ class MapFragmentView {
                         getTrafficSignsForRoute(route);
 
                         //Check TrafficSigns from route calculation result
-                        switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
-                            case CAR:
-                            case TRUCK:
-                                TollCostOptions tollCostOptions = new TollCostOptions();
-                                tollCostOptions.setCurrency("TWD");
-                                new TollCostRequest(route, tollCostOptions).execute(new TollCostRequest.Listener<TollCostResult>() {
-                                    @Override
-                                    public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
-                                        if (tollCostError.getErrorCode() == TollCostError.ErrorCode.SUCCESS) {
-                                            Log.d(TAG, "getTransportMode: " + route.getRoutePlan().getRouteOptions().getTransportMode());
-                                            Log.d(TAG, "getErrorCode: " + tollCostError.getErrorCode());
-                                            Log.d(TAG, "getErrorMessage: " + tollCostError.getErrorMessage());
-                                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTotalTollCost());
-                                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                            Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
-                                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
-                                        } else {
-                                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                        if (route != null) {
+                            switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
+                                case CAR:
+                                case TRUCK:
+                                    TollCostOptions tollCostOptions = new TollCostOptions();
+                                    tollCostOptions.setCurrency("TWD");
+                                    new TollCostRequest(route, tollCostOptions).execute(new TollCostRequest.Listener<TollCostResult>() {
+                                        @Override
+                                        public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
+                                            if (tollCostError.getErrorCode() == TollCostError.ErrorCode.SUCCESS) {
+                                                Log.d(TAG, "getTransportMode: " + route.getRoutePlan().getRouteOptions().getTransportMode());
+                                                Log.d(TAG, "getErrorCode: " + tollCostError.getErrorCode());
+                                                Log.d(TAG, "getErrorMessage: " + tollCostError.getErrorMessage());
+                                                Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                                Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTotalTollCost());
+                                                Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                                                Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
+                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
+                                            } else {
+                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                                            }
                                         }
-                                    }
-                                });
-                                break;
-                            default:
-                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                                    });
+                                    break;
+                                default:
+                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                            }
                         }
                         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
@@ -2668,7 +2669,7 @@ class MapFragmentView {
         waypointList.clear();
         DataHolder.isDragged = false;
 
-        northUpButton.callOnClick();
+//        northUpButton.callOnClick();
         androidXMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
         switchUiControls(View.GONE);
         northUpButton.setVisibility(View.VISIBLE);
