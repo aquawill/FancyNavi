@@ -2410,7 +2410,7 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-                    voiceActivation.setDesiredLangCode("eng");
+                    voiceActivation.setDesiredLangCode("cht");
 //                    voiceActivation.setDesiredVoiceId(29000);
                     voiceActivation.downloadCatalogAndSkin();
 
