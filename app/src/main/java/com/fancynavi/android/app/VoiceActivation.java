@@ -83,7 +83,7 @@ class VoiceActivation {
                     //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
-                    Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated.");
+                    Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated (" + localVoiceSkin.getOutputType() + ").");
                 }
             }
         });

@@ -66,6 +66,7 @@ import com.here.android.mpa.customlocation2.CLE2PointGeometry;
 import com.here.android.mpa.customlocation2.CLE2ProximityRequest;
 import com.here.android.mpa.customlocation2.CLE2Request;
 import com.here.android.mpa.customlocation2.CLE2Result;
+import com.here.android.mpa.guidance.AudioPlayerDelegate;
 import com.here.android.mpa.guidance.LaneInformation;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.guidance.RoutingZoneNotification;
@@ -345,8 +346,6 @@ class MapFragmentView {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
-//            Log.d(TAG, "onManeuverEvent");
-//            Log.d(TAG, "isVisible: " + isVisible);
             if (!isVisible || isPipMode) {
                 new NavigationNotificationPusher(maneuverIconId);
             }
@@ -612,6 +611,12 @@ class MapFragmentView {
         }
 
         @Override
+        public void onDestinationReached() {
+            super.onDestinationReached();
+            Log.d(TAG, "super.onDestinationReached();");
+        }
+
+        @Override
         public void onNavigationModeChanged() {
         }
 
@@ -818,8 +823,10 @@ class MapFragmentView {
         @Override
         public void onNewInstructionEvent() {
             super.onNewInstructionEvent();
-//            Log.d(TAG, "onManeuverEvent");
-//            Log.d(TAG, "isVisible: " + isVisible);
+//            Log.d(TAG, "getNavigationManager().getNextManeuver().getAction():" + getNavigationManager().getNextManeuver().getAction());
+//            Log.d(TAG, "getNavigationManager().getNextManeuver().getDistanceToNextManeuver():" + getNavigationManager().getNextManeuver().getDistanceToNextManeuver());
+//            Log.d(TAG, "getNavigationManager().getNextManeuver().getTurn():" + getNavigationManager().getNextManeuver().getTurn());
+//            Log.d(TAG, "getNavigationManager().getNextManeuver().getNextRoadName():" + getNavigationManager().getNextManeuver().getNextRoadName());
             if (!isVisible || isPipMode) {
                 new NavigationNotificationPusher(maneuverIconId);
             }
@@ -1564,7 +1571,21 @@ class MapFragmentView {
                 NavigationManager.AudioEvent.GPS
         );
         DataHolder.getNavigationManager().setEnabledAudioEvents(audioEventEnumSet);
+        AudioPlayerDelegate audioPlayerDelegate = new AudioPlayerDelegate() {
+            @Override
+            public boolean playText(String s) {
+                Log.d(TAG, "playText: " + s);
+                return false;
+            }
 
+            @Override
+            public boolean playFiles(String[] strings) {
+                Log.d(TAG, "playFiles: " + strings.toString());
+                return false;
+            }
+        };
+        DataHolder.getNavigationManager().getAudioPlayer().setDelegate(audioPlayerDelegate);
+//        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
@@ -2389,8 +2410,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-//                    voiceActivation.setDesiredLangCode("CHT");
-                    voiceActivation.setDesiredVoiceId(217);
+                    voiceActivation.setDesiredLangCode("eng");
+//                    voiceActivation.setDesiredVoiceId(29000);
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
@@ -2694,6 +2715,7 @@ class MapFragmentView {
         DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneInformationListener());
         DataHolder.getNavigationManager().removeRerouteListener(navigationListeners.getRerouteListener());
         DataHolder.getNavigationManager().removeTrafficRerouteListener(navigationListeners.getTrafficRerouteListener());
+        DataHolder.getNavigationManager().removeNewInstructionEventListener(navigationListeners.getNewInstructionEventListener());
     }
 
     private void addNavigationListeners() {
@@ -2706,7 +2728,9 @@ class MapFragmentView {
         navigationListeners.setTrafficRerouteListener(trafficRerouteListener);
         navigationListeners.setSafetySpotListener(safetySpotListener);
         navigationListeners.setManeuverEventListener(maneuverEventListener);
+        navigationListeners.setNewInstructionEventListener(newInstructionEventListener);
 
+        DataHolder.getNavigationManager().addNewInstructionEventListener(new WeakReference<>(navigationListeners.getNewInstructionEventListener()));
         DataHolder.getNavigationManager().addNavigationManagerEventListener(new WeakReference<>(navigationListeners.getNavigationManagerEventListener()));
         DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
         DataHolder.getNavigationManager().setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
@@ -2719,6 +2743,19 @@ class MapFragmentView {
         DataHolder.getNavigationManager().addRerouteListener(new WeakReference<>(navigationListeners.getRerouteListener()));
         DataHolder.getNavigationManager().addTrafficRerouteListener(new WeakReference<>(navigationListeners.getTrafficRerouteListener()));
         DataHolder.getNavigationManager().addManeuverEventListener(new WeakReference<>(navigationListeners.getManeuverEventListener()));
+        DataHolder.getNavigationManager().addAudioFeedbackListener(new WeakReference<>(new NavigationManager.AudioFeedbackListener() {
+            @Override
+            public void onAudioStart() {
+                super.onAudioStart();
+                Log.d(TAG, "super.onAudioStart();");
+            }
+
+            @Override
+            public void onAudioEnd() {
+                super.onAudioEnd();
+                Log.d(TAG, "super.onAudioEnd();");
+            }
+        }));
     }
 
     class SearchResultHandler {

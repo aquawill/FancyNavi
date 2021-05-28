@@ -13,6 +13,16 @@ class NavigationListeners {
     private NavigationManager.SafetySpotListener safetySpotListener;
     private NavigationManager.ManeuverEventListener maneuverEventListener;
 
+    public NavigationManager.NewInstructionEventListener getNewInstructionEventListener() {
+        return newInstructionEventListener;
+    }
+
+    public void setNewInstructionEventListener(NavigationManager.NewInstructionEventListener newInstructionEventListener) {
+        this.newInstructionEventListener = newInstructionEventListener;
+    }
+
+    private NavigationManager.NewInstructionEventListener newInstructionEventListener;
+
     public NavigationManager.RoutingZoneListener getRoutingZoneListener() {
         return routingZoneListener;
     }
