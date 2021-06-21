@@ -23,9 +23,9 @@ import static com.fancynavi.android.app.DataHolder.TAG;
 
 
 class VoiceActivation {
-    private AppCompatActivity activity;
+    private final AppCompatActivity activity;
     private Context context;
-    private VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
+    private final VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
     private String desiredLangCode;
 
     public void setDesiredVoiceId(long desiredVoiceId) {
@@ -113,7 +113,7 @@ class VoiceActivation {
                         }
                     }
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
-                    localInstalledSkins.clear();
+//                    localInstalledSkins.clear();
                     Log.d(TAG, "# of local skins: " + localInstalledSkins.size());
                     String languageName = "";
                     for (VoiceSkin voice : localInstalledSkins) {
