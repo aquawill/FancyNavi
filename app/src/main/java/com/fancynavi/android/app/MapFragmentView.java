@@ -926,7 +926,7 @@ class MapFragmentView {
                 }
             }
 
-            if (geoPosition.getPositionTechnology() == 8) {
+            if (geoPosition.getPositionTechnology() == 8 || geoPosition.getPositionTechnology() == 0) {
                 guidanceSpeedView.setVisibility(View.VISIBLE);
                 guidanceSpeedLimitView.setVisibility(View.VISIBLE);
                 speedLabelTextView.setVisibility(View.VISIBLE);
@@ -2112,7 +2112,7 @@ class MapFragmentView {
                                     new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
                                 }
                             }
-                            if (DataHolder.isRouteOverView) {
+                            if (DataHolder.isRouteOverView && mapRouteGeoBoundingBox != null) {
                                 DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                             }
                         }
@@ -2160,7 +2160,7 @@ class MapFragmentView {
                             if (isChecked) {
 //                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "開啟硬體GPS", Snackbar.LENGTH_SHORT).show();
                                 DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.GPS_NETWORK, activateHereAdvancedPositioning).getPositioningManager());
-                                DataHolder.getNavigationManager().startTracking();
+//                                DataHolder.getNavigationManager().startTracking();
                             } else {
 //                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), "關閉硬體GPS", Snackbar.LENGTH_SHORT).show();
                                 DataHolder.setPositioningManager(new PositioningManagerActivator(PositioningManager.LocationMethod.NETWORK, activateHereAdvancedPositioning).getPositioningManager());
@@ -2636,7 +2636,7 @@ class MapFragmentView {
                 DataHolder.getNavigationManager().stop();
             }
             if (gpsSwitch.isActivated()) {
-                DataHolder.getNavigationManager().startTracking();
+//                DataHolder.getNavigationManager().startTracking();
             }
         }
         if (DataHolder.getNavigationManager() != null) {
