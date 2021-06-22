@@ -179,7 +179,7 @@ class MapFragmentView {
     static TextView trafficWarningTextView;
     static List<MapOverlay> distanceMarkerMapOverlayList = new ArrayList<>();
     static NavigationListeners navigationListeners;
-    private static GeoBoundingBox mapRouteGeoBoundingBox;
+    static GeoBoundingBox mapRouteGeoBoundingBox;
     private MapState previousMapState = null;
     private GeoJSONTileLoader roadkillGeoJSONTileLoader;
     private MapContainer roadkillGeoJsonTileMapContainer;
@@ -316,8 +316,8 @@ class MapFragmentView {
     private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView progressingTextView;
-    private Route route;
-    private MapRoute mapRoute;
+    static Route route;
+    static MapRoute mapRoute;
     private MapRoute alternativeMapRoute;
     private MapContainer trafficSignMapContainer;
     private boolean foregroundServiceStarted;
@@ -639,7 +639,9 @@ class MapFragmentView {
                 new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
             }
             DataHolder.getMap().setTilt(0);
-            DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, 0f);
+//            if (mapRouteGeoBoundingBox != null) {
+//                DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, 0f);
+//            }
             navigationControlButton.setVisibility(View.VISIBLE);
             clearButton.setVisibility(View.VISIBLE);
             removeNavigationListeners();
@@ -924,7 +926,7 @@ class MapFragmentView {
                 }
             }
 
-            if (locationMethod.equals(PositioningManager.LocationMethod.GPS)) {
+            if (geoPosition.getPositionTechnology() == 8) {
                 guidanceSpeedView.setVisibility(View.VISIBLE);
                 guidanceSpeedLimitView.setVisibility(View.VISIBLE);
                 speedLabelTextView.setVisibility(View.VISIBLE);
@@ -941,7 +943,7 @@ class MapFragmentView {
                 if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 999) {
                     guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
                 }
-            } else if (locationMethod.equals(PositioningManager.LocationMethod.NETWORK)) {
+            } else if (geoPosition.getPositionTechnology() < 8 && geoPosition.getPositionTechnology() > 0) {
                 guidanceSpeedView.setVisibility(View.GONE);
                 guidanceSpeedLimitView.setVisibility(View.GONE);
                 speedLabelTextView.setVisibility(View.GONE);
@@ -1576,6 +1578,7 @@ class MapFragmentView {
         VoiceGuidanceOptions voiceGuidanceOptions = DataHolder.getNavigationManager().getVoiceGuidanceOptions();
         voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(voiceActivation.getDesiredVoiceId()));
         EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
+//                NavigationManager.AudioEvent.SAFETY_SPOT,
                 NavigationManager.AudioEvent.MANEUVER,
                 NavigationManager.AudioEvent.ROUTE,
                 NavigationManager.AudioEvent.SPEED_LIMIT,
@@ -1863,8 +1866,6 @@ class MapFragmentView {
                     /* Entrance */
                     DataHolder.setMap(androidXMapFragment.getMap());
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
-
-                    new OfflineMapDownloader();
 
                     coreRouter = new CoreRouter();
                     navigationListeners = new NavigationListeners();
@@ -2210,7 +2211,9 @@ class MapFragmentView {
                         if (!DataHolder.isRouteOverView) {
                             DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getLastKnownPosition().getCoordinate(), Map.Animation.LINEAR);
                         } else {
-                            DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
+                            if (mapRouteGeoBoundingBox != null) {
+                                DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
+                            }
                         }
                     });
 //                        zoomInButton = DataHolder.getActivity().findViewById(R.id.zoom_in);
@@ -2541,7 +2544,7 @@ class MapFragmentView {
                 navigationControlButton.setText(R.string.restart);
                 intoNavigationMode();
                 DataHolder.isRouteOverView = false;
-                NavigationManager.Error error = DataHolder.getNavigationManager().startNavigation(MapFragmentView.this.route);
+                NavigationManager.Error error = DataHolder.getNavigationManager().startNavigation(MapFragmentView.route);
                 trafficWarner = DataHolder.getNavigationManager().getTrafficWarner();
                 trafficWarner.init();
                 trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
@@ -2584,7 +2587,7 @@ class MapFragmentView {
         trafficWarner.init();
         trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
         mapSchemeChanger.navigationMapOn();
-        NavigationManager.Error error = DataHolder.getNavigationManager().simulate(MapFragmentView.this.route, simulationSpeedMs);
+        NavigationManager.Error error = DataHolder.getNavigationManager().simulate(route, simulationSpeedMs);
         Log.e("Error: ", "NavigationManager.Error: " + error);
         navigationControlButton.setVisibility(View.GONE);
         clearButton.setVisibility(View.GONE);

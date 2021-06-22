@@ -70,8 +70,6 @@ class VoiceActivation {
 
     private void downloadVoice(Context context, final long voiceSkinId) {
         Log.d(TAG, "Downloading voice skin ID: " + voiceSkinId);
-//        Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Downloading voice skin ID: " + voiceSkinId, Snackbar.LENGTH_SHORT).show();
-
         voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
@@ -79,8 +77,6 @@ class VoiceActivation {
                     retryVoiceDownload(context, voiceSkinId);
                     Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.failed_downloading_voice_skin) + voiceSkinId, Snackbar.LENGTH_SHORT).show();
                 } else {
-//                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), "Voice skin " + voiceSkinId + " downloaded and activated.", Snackbar.LENGTH_SHORT).show();
-                    //NavigationManager.getInstance().setVoiceSkin(VoiceCatalog.getInstance().getLocalVoiceSkin(voiceSkinId)); //Deprecated in SDK 3.7
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
                     Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated (" + localVoiceSkin.getOutputType() + ").");
@@ -95,18 +91,19 @@ class VoiceActivation {
 
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
-
                 if (error != VoiceCatalog.Error.NONE) {
                     Log.d(TAG, "Failed to download catalog.");
                 } else {
                     List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
                     Log.d(TAG, "# of available voicePackages: " + voicePackages.size());
-                    for (VoicePackage lang : voicePackages) {
-                        Log.d(TAG, "\tLanguage name: " + lang.getLocalizedLanguage() + "\tLanguage code: " + lang.getMarcCode() + "\tGender: " + lang.getGender() + "\tis TTS: " + lang.isTts() + "\tID: " + lang.getId());
+                    voicePackages.forEach(voicePackage -> {
+                        Log.d(TAG, "\tId: " + voicePackage.getId() + "\tLanguage name: " + voicePackage.getLocalizedLanguage() + "\tLanguage code: " + voicePackage.getMarcCode() + "\tTTS: " + voicePackage.isTts());
+                    });
+                    for (VoicePackage voicePackage : voicePackages) {
                         if (desiredLangCode != null) {
-                            if (lang.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
-                                if (lang.isTts()) {
-                                    desiredVoiceId = lang.getId();
+                            if (voicePackage.getMarcCode().compareToIgnoreCase(desiredLangCode) == 0) {
+                                if (voicePackage.isTts()) {
+                                    desiredVoiceId = voicePackage.getId();
                                     break;
                                 }
                             }

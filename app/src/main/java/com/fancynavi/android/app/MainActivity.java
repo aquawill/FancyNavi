@@ -72,8 +72,11 @@ import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalM
 import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
 import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
 import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
+import static com.fancynavi.android.app.MapFragmentView.mapRoute;
+import static com.fancynavi.android.app.MapFragmentView.mapRouteGeoBoundingBox;
 import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
 import static com.fancynavi.android.app.MapFragmentView.northUpButton;
+import static com.fancynavi.android.app.MapFragmentView.route;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
 
@@ -548,6 +551,9 @@ public class MainActivity extends AppCompatActivity {
         }
         isNavigating = false;
         isRouteOverView = false;
+        mapRoute = null;
+        route = null;
+        mapRouteGeoBoundingBox = null;
         super.onDestroy();
     }
 
