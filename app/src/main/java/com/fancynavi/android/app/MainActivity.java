@@ -308,7 +308,13 @@ public class MainActivity extends AppCompatActivity {
         isVisible = true;
         if (isNavigating) {
             intoGuidanceMode();
+            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+            DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
+            if (DataHolder.getMap() != null) {
+                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+            }
             isDragged = false;
         }
     }
