@@ -1631,7 +1631,10 @@ class MapFragmentView {
 
             @Override
             public boolean playFiles(String[] strings) {
-                Log.d(TAG, "playFiles: " + strings.toString());
+//                Log.d(TAG, "playFiles: " + strings);
+                for (String string : strings) {
+                    Log.d(TAG, "playFiles: " + string);
+                }
                 return false;
             }
         };
@@ -1921,7 +1924,7 @@ class MapFragmentView {
 
                     Geocoder geocoder = new Geocoder(DataHolder.getActivity(), Locale.ENGLISH);
                     DataHolder.isNavigating = false;
-                    GeoCoordinate defaultMapCenter = new GeoCoordinate(25.038137, 121.513936);
+                    GeoCoordinate defaultMapCenter = new GeoCoordinate(25.03304289712915, 121.56442945435184);
                     DataHolder.getMap().setCenter(defaultMapCenter, Map.Animation.NONE);
 
                     if (DataHolder.getLastMapCenter() != null) {
