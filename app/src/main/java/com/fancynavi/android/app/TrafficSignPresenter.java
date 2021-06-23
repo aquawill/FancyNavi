@@ -266,7 +266,7 @@ class TrafficSignPresenter {
                     if (mediaPlayer != null) {
                         mediaPlayer.start();
                     }
-                    textToSpeech.speak(signName, TextToSpeech.QUEUE_FLUSH, null);
+                    textToSpeech.speak(signName, TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                 }
             }
             i++;

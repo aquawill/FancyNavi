@@ -230,8 +230,8 @@ class MapFragmentView {
     private TextView safetyCamTextView;
     private TextView safetyCamSpeedTextView;
     private MapMarker safetyCameraMapMarker;
-    private AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener;
-    private AudioManager audioManager;
+    static AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener;
+    static AudioManager audioManager;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
     private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
@@ -372,24 +372,24 @@ class MapFragmentView {
                             case ON_ROUTE:
                                 if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
                                     warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後為壅塞路段。", TextToSpeech.QUEUE_FLUSH, null);
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後為壅塞路段。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 } else {
                                     warningText = "經過\n壅塞路段";
-                                    textToSpeech.speak("經過壅塞路段。", TextToSpeech.QUEUE_FLUSH, null);
+                                    textToSpeech.speak("經過壅塞路段。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 }
                                 break;
                             case ON_HIGHWAY:
                                 if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
                                     warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 } else {
                                     warningText = "經過\n壅塞路段";
-                                    textToSpeech.speak("經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                    textToSpeech.speak("經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 }
                                 break;
                             case NEAR_DESTINATION:
                                 warningText = "目的地\n附近壅塞";
-                                textToSpeech.speak("目的地附近為壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null);
+                                textToSpeech.speak("目的地附近為壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 break;
                         }
                         showTrafficWarningTextView(trafficWarningTextView, warningText);
@@ -562,7 +562,16 @@ class MapFragmentView {
                     safetyCameraAhead = false;
                     safetyCameraMapMarker.setTransparency(0);
                     MediaPlayer mediaPlayer = MediaPlayer.create(DataHolder.getActivity(), R.raw.hint);
+                    mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                        @Override
+                        public void onCompletion(MediaPlayer mp) {
+                            audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+                        }
+                    });
                     if (mediaPlayer != null) {
+                        int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
+                        audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
+                                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
                         mediaPlayer.start();
                     }
                     safetyCamLinearLayout.setVisibility(View.GONE);
@@ -698,13 +707,13 @@ class MapFragmentView {
                     new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
                 }
 
-                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null);
+                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                 Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
                 trafficReRoutedSnackBar.setDuration(10000);
                 trafficReRoutedSnackBar.setAction(R.string.detour, new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null);
+                        textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                         Log.d(TAG, "traffic rerouted.");
                         route = routeResult.getRoute();
                         resetMapRoute(route);
@@ -843,7 +852,6 @@ class MapFragmentView {
         @Override
         public void onAudioStart() {
             super.onAudioStart();
-            Log.d(TAG, "super.onAudioStart()");
             int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
             audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
@@ -852,7 +860,6 @@ class MapFragmentView {
         @Override
         public void onAudioEnd() {
             super.onAudioEnd();
-            Log.d(TAG, "super.onAudioEnd()");
             audioManager.abandonAudioFocus(onAudioFocusChangeListener);
         }
     };
@@ -896,7 +903,7 @@ class MapFragmentView {
                 } else {
                     safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                 }
-                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.speed_camera_ahead_voice) + safetyCameraSpeedLimitKM + DataHolder.getAndroidXMapFragment().getString(R.string.kilometers), TextToSpeech.QUEUE_FLUSH, null);
+                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.speed_camera_ahead_voice) + safetyCameraSpeedLimitKM + DataHolder.getAndroidXMapFragment().getString(R.string.kilometers), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
             }
         }
     };
@@ -915,7 +922,7 @@ class MapFragmentView {
                 }
             }
 //            https://developer.here.com/documentation/android-premium/3.18/api_reference_java/index.html?com%2Fhere%2Fandroid%2Fmpa%2Fcommon%2FGeoPosition.html
-            Log.d(TAG, "geoPosition.getCoordinate(): " + geoPosition.getCoordinate().getLatitude() + ", " + geoPosition.getCoordinate().getLongitude() + " / geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology() + " / geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
+//            Log.d(TAG, "geoPosition.getCoordinate(): " + geoPosition.getCoordinate().getLatitude() + ", " + geoPosition.getCoordinate().getLongitude() + " / geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology() + " / geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
             RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
             if (roadElement != null) {
                 if (roadElement.getSpeedLimit() >= 0) {
@@ -2457,7 +2464,7 @@ class MapFragmentView {
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
                     voiceActivation.setDesiredLangCode("cht");
-//                    voiceActivation.setDesiredVoiceId(29000);
+//                    voiceActivation.setDesiredVoiceId(31000);
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */

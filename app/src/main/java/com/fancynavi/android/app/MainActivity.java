@@ -28,10 +28,12 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
@@ -67,6 +69,7 @@ import static com.fancynavi.android.app.DataHolder.isNavigating;
 import static com.fancynavi.android.app.DataHolder.isPipMode;
 import static com.fancynavi.android.app.DataHolder.isRouteOverView;
 import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
+import static com.fancynavi.android.app.MapFragmentView.audioManager;
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
 import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
 import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
@@ -76,6 +79,7 @@ import static com.fancynavi.android.app.MapFragmentView.mapRoute;
 import static com.fancynavi.android.app.MapFragmentView.mapRouteGeoBoundingBox;
 import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
 import static com.fancynavi.android.app.MapFragmentView.northUpButton;
+import static com.fancynavi.android.app.MapFragmentView.onAudioFocusChangeListener;
 import static com.fancynavi.android.app.MapFragmentView.route;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
 import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
@@ -238,6 +242,26 @@ public class MainActivity extends AppCompatActivity {
                 if (textToSpeech.isLanguageAvailable(Locale.US) == TextToSpeech.LANG_AVAILABLE) {
                     textToSpeech.setLanguage(Locale.US);
                 }
+                textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                    @Override
+                    public void onStart(String s) {
+                        Log.d(TAG, "onStart: " + s);
+                        int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
+                        audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
+                                AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+                    }
+
+                    @Override
+                    public void onDone(String s) {
+                        Log.d(TAG, "onDone: " + s);
+                        audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+                    }
+
+                    @Override
+                    public void onError(String s) {
+
+                    }
+                });
             }
         });
 

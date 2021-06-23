@@ -74,7 +74,8 @@ class VoiceActivation {
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
                 if (error != VoiceCatalog.Error.NONE) {
-                    retryVoiceDownload(context, voiceSkinId);
+//                    retryVoiceDownload(context, voiceSkinId);
+                    Log.e(TAG, "voiceSkinId " + voiceSkinId + " download error: " + error);
                     Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.failed_downloading_voice_skin) + voiceSkinId, Snackbar.LENGTH_SHORT).show();
                 } else {
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
