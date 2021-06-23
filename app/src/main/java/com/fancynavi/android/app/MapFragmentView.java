@@ -17,6 +17,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
@@ -229,6 +230,8 @@ class MapFragmentView {
     private TextView safetyCamTextView;
     private TextView safetyCamSpeedTextView;
     private MapMarker safetyCameraMapMarker;
+    private AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener;
+    private AudioManager audioManager;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
     private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
@@ -645,7 +648,8 @@ class MapFragmentView {
             navigationControlButton.setVisibility(View.VISIBLE);
             clearButton.setVisibility(View.VISIBLE);
             removeNavigationListeners();
-
+            audioManager = null;
+            onAudioFocusChangeListener = null;
             stopForegroundService();
 
         }
@@ -834,6 +838,25 @@ class MapFragmentView {
             }
         }
     };
+
+    private final NavigationManager.AudioFeedbackListener audioFeedbackListener = new NavigationManager.AudioFeedbackListener() {
+        @Override
+        public void onAudioStart() {
+            super.onAudioStart();
+            Log.d(TAG, "super.onAudioStart()");
+            int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
+            audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
+                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+        }
+
+        @Override
+        public void onAudioEnd() {
+            super.onAudioEnd();
+            Log.d(TAG, "super.onAudioEnd()");
+            audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+        }
+    };
+
     private GeoCoordinate lastSecondLocation = null;
 
     private final NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
@@ -1515,6 +1538,13 @@ class MapFragmentView {
     private void intoNavigationMode() {
         initJunctionView();
         DataHolder.getMap().setExtrudedBuildingsVisible(false);
+        audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
+        onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+            @Override
+            public void onAudioFocusChange(int i) {
+                Log.d(TAG, "onAudioFocusChange: " + i);
+            }
+        };
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             minimizeMapButton = DataHolder.getActivity().findViewById(R.id.minimize_map_button);
@@ -2596,6 +2626,7 @@ class MapFragmentView {
 
     private void startNavigationManager() {
         DataHolder.setNavigationManager(NavigationManager.getInstance());
+
         DataHolder.getNavigationManager().setMap(DataHolder.getMap());
         mapSchemeChanger = new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager());
         navigationListeners.setSafetySpotListener(safetySpotListener);
@@ -2745,6 +2776,7 @@ class MapFragmentView {
         navigationListeners.setSafetySpotListener(safetySpotListener);
         navigationListeners.setManeuverEventListener(maneuverEventListener);
         navigationListeners.setNewInstructionEventListener(newInstructionEventListener);
+        navigationListeners.setAudioFeedbackListener(audioFeedbackListener);
 
         DataHolder.getNavigationManager().addNewInstructionEventListener(new WeakReference<>(navigationListeners.getNewInstructionEventListener()));
         DataHolder.getNavigationManager().addNavigationManagerEventListener(new WeakReference<>(navigationListeners.getNavigationManagerEventListener()));
@@ -2760,19 +2792,7 @@ class MapFragmentView {
         DataHolder.getNavigationManager().addRerouteListener(new WeakReference<>(navigationListeners.getRerouteListener()));
         DataHolder.getNavigationManager().addTrafficRerouteListener(new WeakReference<>(navigationListeners.getTrafficRerouteListener()));
         DataHolder.getNavigationManager().addManeuverEventListener(new WeakReference<>(navigationListeners.getManeuverEventListener()));
-        DataHolder.getNavigationManager().addAudioFeedbackListener(new WeakReference<>(new NavigationManager.AudioFeedbackListener() {
-            @Override
-            public void onAudioStart() {
-                super.onAudioStart();
-                Log.d(TAG, "super.onAudioStart();");
-            }
-
-            @Override
-            public void onAudioEnd() {
-                super.onAudioEnd();
-                Log.d(TAG, "super.onAudioEnd();");
-            }
-        }));
+        DataHolder.getNavigationManager().addAudioFeedbackListener(new WeakReference<>(navigationListeners.getAudioFeedbackListener()));
     }
 
     class SearchResultHandler {

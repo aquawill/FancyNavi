@@ -12,6 +12,15 @@ class NavigationListeners {
     private NavigationManager.TrafficRerouteListener trafficRerouteListener;
     private NavigationManager.SafetySpotListener safetySpotListener;
     private NavigationManager.ManeuverEventListener maneuverEventListener;
+    private NavigationManager.AudioFeedbackListener audioFeedbackListener;
+
+    public NavigationManager.AudioFeedbackListener getAudioFeedbackListener() {
+        return audioFeedbackListener;
+    }
+
+    public void setAudioFeedbackListener(NavigationManager.AudioFeedbackListener audioFeedbackListener) {
+        this.audioFeedbackListener = audioFeedbackListener;
+    }
 
     public NavigationManager.NewInstructionEventListener getNewInstructionEventListener() {
         return newInstructionEventListener;
