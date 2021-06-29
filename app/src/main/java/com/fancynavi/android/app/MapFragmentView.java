@@ -853,14 +853,18 @@ class MapFragmentView {
         public void onAudioStart() {
             super.onAudioStart();
             int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
-            audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
-                    AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+            if (audioManager != null) {
+                audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
+                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+            }
         }
 
         @Override
         public void onAudioEnd() {
             super.onAudioEnd();
-            audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+            if (audioManager != null) {
+                audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+            }
         }
     };
 
@@ -914,10 +918,10 @@ class MapFragmentView {
             currentGeoPosition = geoPosition;
             if (!DataHolder.isRouteOverView && !DataHolder.isDragged && !DataHolder.isNavigating) {
                 if (geoPosition.isValid()) {
-                    Log.d(TAG, "geoPosition.isValid()");
+//                    Log.d(TAG, "geoPosition.isValid()");
                     DataHolder.getMap().setCenter(geoPosition.getCoordinate(), Map.Animation.LINEAR);
                 } else if (lastKnownLocation.isValid()) {
-                    Log.d(TAG, "lastKnownLocation.isValid()");
+//                    Log.d(TAG, "lastKnownLocation.isValid()");
                     DataHolder.getMap().setCenter(lastKnownLocation, Map.Animation.LINEAR);
                 }
             }
@@ -1898,7 +1902,7 @@ class MapFragmentView {
         }
 
         Log.d(TAG, "intentName:" + intentName);
-//        MapSettings.setDiskCacheRootPath(diskCacheRoot);
+
         if (androidXMapFragment != null) androidXMapFragment.init(new OnEngineInitListener() {
             @Override
             public void onEngineInitializationCompleted(Error error) {
@@ -1906,6 +1910,7 @@ class MapFragmentView {
                     /* Entrance */
                     DataHolder.setMap(androidXMapFragment.getMap());
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
+//                    MapSettings.setDiskCacheRootPath(diskCacheRoot);
 
                     coreRouter = new CoreRouter();
                     navigationListeners = new NavigationListeners();
@@ -1967,17 +1972,17 @@ class MapFragmentView {
                                                                 }
                                                             }
                                                         } else if (countryName.equals("Taiwan")) {
-//                                                                if (adminAreaName.equals("Taipei City")) {
-//                                                                    if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-//                                                                        if (customRasterTileOverlay == null) {
-//                                                                            customRasterTileOverlay = new CustomRasterTileOverlay();
-//                                                                            if (customRasterTileOverlay.getTileUrl() == null) {
-//                                                                                customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
-//                                                                            }
-//                                                                            DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-//                                                                        }
-//                                                                    }
-//                                                                }
+                                                            if (adminAreaName.equals("Taipei City")) {
+                                                                if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+                                                                    if (customRasterTileOverlay == null) {
+                                                                        customRasterTileOverlay = new CustomRasterTileOverlay();
+                                                                        if (customRasterTileOverlay.getTileUrl() == null) {
+                                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+                                                                        }
+                                                                        DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+                                                                    }
+                                                                }
+                                                            }
                                                             if (previousMapState.getCenter().distanceTo(mapState.getCenter()) > 0 || previousMapState.getZoomLevel() != mapState.getZoomLevel()) {
                                                                 roadkillGeoJsonTileMapContainer.removeAllMapObjects();
                                                                 previousMapState = mapState;
@@ -2467,7 +2472,7 @@ class MapFragmentView {
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
                     voiceActivation.setDesiredLangCode("cht");
-//                    voiceActivation.setDesiredVoiceId(31000);
+//                    voiceActivation.setDesiredVoiceId(29000); // Recorded Taiwanese Mandarin (ID: 29000)
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */

@@ -56,16 +56,17 @@ class VoiceActivation {
 
     private void retryVoiceDownload(Context context, final long id) {
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(context);
-        alertDialogBuilder.setTitle("Voice Download Failed");
-        alertDialogBuilder.setNegativeButton("Retry", new DialogInterface.OnClickListener() {
+        alertDialogBuilder.setTitle(R.string.voice_download_failed);
+        alertDialogBuilder.setMessage("ID: " + id);
+        alertDialogBuilder.setNegativeButton(R.string.retry, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialoginterface, int i) {
                 downloadVoice(context, id);
             }
         });
         AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
         alertDialog.getButton(alertDialog.BUTTON_NEGATIVE).setTextColor(context.getResources().getColor(R.color.green));
         alertDialog.getButton(alertDialog.BUTTON_POSITIVE).setTextColor(context.getResources().getColor(R.color.red));
-        alertDialog.show();
     }
 
     private void downloadVoice(Context context, final long voiceSkinId) {
@@ -74,13 +75,14 @@ class VoiceActivation {
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
                 if (error != VoiceCatalog.Error.NONE) {
-//                    retryVoiceDownload(context, voiceSkinId);
+                    retryVoiceDownload(context, voiceSkinId);
                     Log.e(TAG, "voiceSkinId " + voiceSkinId + " download error: " + error);
                     Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.failed_downloading_voice_skin) + voiceSkinId, Snackbar.LENGTH_SHORT).show();
                 } else {
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
                     Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated (" + localVoiceSkin.getOutputType() + ").");
+                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + localVoiceSkin.getLanguage() + "/" + localVoiceSkin.getOutputType().name(), Snackbar.LENGTH_SHORT).show();
                 }
             }
         });

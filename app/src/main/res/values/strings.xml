@@ -54,4 +54,5 @@
     <string name="minute">" minutes"</string>
     <string name="search_places">Search Places...</string>
     <string name="reverse_geocode">Reverse Geocode: </string>
+    <string name="voice_download_failed">Navigation Voice Download Failed</string>
 </resources>

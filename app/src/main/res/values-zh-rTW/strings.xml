@@ -225,5 +225,6 @@
   <string name="detour">繞路</string>
   <string name="search_places">搜尋地點...</string>
   <string name="reverse_geocode">地址查詢：</string>
+    <string name="voice_download_failed">導航語音下載失敗</string>
 
 </resources>

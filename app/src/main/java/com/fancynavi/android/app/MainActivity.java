@@ -35,6 +35,7 @@ import android.os.Environment;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -51,7 +52,6 @@ import com.here.android.mpa.customlocation2.CLE2Task;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapOverlay;
-import com.here.odnp.util.Log;
 
 import org.apache.commons.io.FileUtils;
 
@@ -120,10 +120,10 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-            Log.d(TAG, "onSensorChanged");
+//            Log.d(TAG, "onSensorChanged");
             if (event.sensor.getType() == Sensor.TYPE_LIGHT) {
                 lightSensorValue = event.values[0];
-                Log.d(TAG, String.valueOf(lightSensorValue));
+//                Log.d(TAG, String.valueOf(lightSensorValue));
             }
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
                 mGravity = event.values;
@@ -210,8 +210,8 @@ public class MainActivity extends AppCompatActivity {
     private DisplayMetrics metrics;
     private MapFragmentView mapFragmentView;
     //    private LocationRequest locationRequest;
-    private final long UPDATE_INTERVAL = 5 * 1000;
-    private final long FASTEST_INTERVAL = 1000;
+//    private final long UPDATE_INTERVAL = 5 * 1000;
+//    private final long FASTEST_INTERVAL = 1000;
 
     public void hideGuidanceView() {
         View guidanceView = findViewById(R.id.guidance_maneuver_view);
@@ -239,9 +239,12 @@ public class MainActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int i) {
-                if (textToSpeech.isLanguageAvailable(Locale.US) == TextToSpeech.LANG_AVAILABLE) {
-                    textToSpeech.setLanguage(Locale.US);
+                if (textToSpeech.isLanguageAvailable(Locale.TAIWAN) == TextToSpeech.LANG_AVAILABLE) {
+                    textToSpeech.setLanguage(Locale.TAIWAN);
                 }
+                Log.d(TAG, "textToSpeech.getDefaultEngine(): " + textToSpeech.getDefaultEngine());
+                Log.d(TAG, "textToSpeech.getDefaultVoice().getName(): " + textToSpeech.getDefaultVoice().getName());
+                Log.d(TAG, "textToSpeech.getDefaultVoice().getLocale().getCountry(): " + textToSpeech.getDefaultVoice().getLocale().getCountry());
                 textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                     @Override
                     public void onStart(String s) {
@@ -264,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
                 });
             }
         });
+
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getSupportActionBar().hide();
@@ -584,6 +588,7 @@ public class MainActivity extends AppCompatActivity {
         mapRoute = null;
         route = null;
         mapRouteGeoBoundingBox = null;
+        audioManager = null;
         super.onDestroy();
     }
 
