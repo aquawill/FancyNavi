@@ -1924,6 +1924,7 @@ class MapFragmentView {
 
                     DataHolder.getMap().setFleetFeaturesVisible(EnumSet.of(
                             Map.FleetFeature.CONGESTION_ZONES,
+//                            Map.FleetFeature.TRUCK_RESTRICTIONS,
                             Map.FleetFeature.ENVIRONMENTAL_ZONES));
 
                     trafficSignMapContainer = new MapContainer();
