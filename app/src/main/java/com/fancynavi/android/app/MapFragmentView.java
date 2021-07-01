@@ -117,6 +117,8 @@ import com.here.android.mpa.routing.RoutingZone;
 import com.here.android.mpa.routing.RoutingZoneRestriction;
 import com.here.android.mpa.search.DiscoveryResultPage;
 import com.here.android.mpa.search.ErrorCode;
+import com.here.android.mpa.search.GeocodeRequest;
+import com.here.android.mpa.search.GeocodeResult;
 import com.here.android.mpa.search.PlaceLink;
 import com.here.android.mpa.search.ResultListener;
 import com.here.android.mpa.search.ReverseGeocodeRequest;
@@ -2403,8 +2405,11 @@ class MapFragmentView {
                                         }
                                     });
                                 } else {
+                                    Log.d(TAG, "searchTextBar.getText().toString(): " + searchTextBar.getText().toString());
+//                                   /*Place search request*/
                                     new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getMap().getCenter(), searchTextBar.getText().toString(), DataHolder.getMap());
-
+                                    /*Geocode request*/
+//                                    new SearchResultHandler(searchTextBar.getText().toString(), DataHolder.getMap().getCenter(), 99999);
                                 }
                                 searchTextBar.clearFocus();
                                 InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -2471,8 +2476,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-                    voiceActivation.setDesiredLangCode("cht");
-//                    voiceActivation.setDesiredVoiceId(29000); // Recorded Taiwanese Mandarin (ID: 29000)
+//                    voiceActivation.setDesiredLangCode("cht");
+                    voiceActivation.setDesiredVoiceId(30000); // Recorded Taiwanese Mandarin (ID: 29000)
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
@@ -2811,6 +2816,36 @@ class MapFragmentView {
     }
 
     class SearchResultHandler {
+        SearchResultHandler(String inputString, GeoCoordinate center, int radius) {
+            GeocodeRequest geocodeRequest = new GeocodeRequest(inputString);
+            geocodeRequest.setCollectionSize(1);
+            geocodeRequest.setSearchArea(center, radius);
+            geocodeRequest.execute(new ResultListener<List<GeocodeResult>>() {
+                @Override
+                public void onCompleted(List<GeocodeResult> geocodeResults, ErrorCode errorCode) {
+                    if (errorCode == ErrorCode.NONE) {
+                        searchRequestResultMapContainer.removeAllMapObjects();
+                        Log.d(TAG, "GeocodeRequest geocodeResults.size():" + geocodeResults.size());
+                        if (geocodeResults.size() > 0) {
+                            GeocodeResult geocodeResult = geocodeResults.get(0);
+                            Log.d(TAG, geocodeResult.getLocation().getAddress().getText());
+                            if (geocodeResult.getLocation().getCoordinate() != null) {
+                                DataHolder.isDragged = true;
+                                showSelectionFocus(geocodeResult.getLocation().getCoordinate(), geocodeResult.getLocation().getAddress().getText(), geocodeResult.getMatchLevel());
+                                map.setCenter(geocodeResult.getLocation().getCoordinate(), Map.Animation.BOW);
+                            }
+                        } else {
+                            Log.e(TAG, "GeocodeRequest geocodeResults.size():" + geocodeResults.size());
+                        }
+                    } else {
+                        Log.e(TAG, "GeocodeRequest ErrorCode:" + errorCode.name());
+                    }
+
+                }
+            });
+            searchBarLinearLayout.setVisibility(View.GONE);
+        }
+
         String placesSearchResultTitle;
         private final Map map = DataHolder.getMap();
 
