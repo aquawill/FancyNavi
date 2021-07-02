@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static com.fancynavi.android.app.DataHolder.getActivity;
 
-public class PlayVoiceInstructionFiles extends Thread {
+class PlayVoiceInstructionFiles extends Thread {
 
     private final String[] playlist;
 
