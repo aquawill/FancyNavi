@@ -1658,7 +1658,7 @@ class MapFragmentView {
             }
         };
         DataHolder.getNavigationManager().getAudioPlayer().setDelegate(audioPlayerDelegate);
-        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
+//        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
