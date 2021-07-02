@@ -19,6 +19,8 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.media.SoundPool;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -155,8 +157,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.DataHolder.getActivity;
@@ -436,11 +440,11 @@ class MapFragmentView {
                 }
 
                 if (DataHolder.isNavigating) {
-                    try {
-                        Log.d(TAG, "getNavigationManager().getTta: " + getNavigationManager().getTta(Route.TrafficPenaltyMode.OPTIMAL, true).getDuration());
-                    } catch (Exception e) {
-                        Log.d(TAG, "No valid TTA.");
-                    }
+//                    try {
+//                        Log.d(TAG, "getNavigationManager().getTta: " + getNavigationManager().getTta(Route.TrafficPenaltyMode.OPTIMAL, true).getDuration());
+//                    } catch (Exception e) {
+//                        Log.d(TAG, "No valid TTA.");
+//                    }
                     List<RoutingZone> routingZoneList = RoutingZoneRestrictionsChecker.getRoutingZones(DataHolder.getPositioningManager().getRoadElement());
                     String roadName = DataHolder.getPositioningManager().getRoadElement().getRoadName();
                     if (routingZoneList.size() > 0) {
@@ -1517,6 +1521,7 @@ class MapFragmentView {
         /*Map Customization - End*/
     }
 
+
     private void createPosition3dObj() {
 //            DataHolder.getMap().removeMapObject(currentPositionMapLocalModel);
         currentPositionMapLocalModel = new MapLocalModel();
@@ -1620,12 +1625,14 @@ class MapFragmentView {
         VoiceCatalog voiceCatalog = voiceActivation.getVoiceCatalog();
         VoiceGuidanceOptions voiceGuidanceOptions = DataHolder.getNavigationManager().getVoiceGuidanceOptions();
         voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(voiceActivation.getDesiredVoiceId()));
+
+
         EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
 //                NavigationManager.AudioEvent.SAFETY_SPOT,
                 NavigationManager.AudioEvent.MANEUVER,
                 NavigationManager.AudioEvent.ROUTE,
-                NavigationManager.AudioEvent.SPEED_LIMIT,
-                NavigationManager.AudioEvent.GPS
+                NavigationManager.AudioEvent.GPS,
+                NavigationManager.AudioEvent.SPEED_LIMIT
         );
         DataHolder.getNavigationManager().setEnabledAudioEvents(audioEventEnumSet);
         AudioPlayerDelegate audioPlayerDelegate = new AudioPlayerDelegate() {
@@ -1637,20 +1644,66 @@ class MapFragmentView {
 
             @Override
             public boolean playFiles(String[] strings) {
-//                Log.d(TAG, "playFiles: " + strings);
+                int voiceFileIndex = 0;
                 for (String string : strings) {
-                    Log.d(TAG, "playFiles: " + string);
+                    Log.d(TAG, "playFiles: " + voiceFileIndex + " --> " + string);
+                    voiceFileIndex++;
                 }
+//                new Thread(new Runnable() {
+//                    public void run() {
+//                        new PlayVoiceInstructionFiles(strings).play();
+//                    }
+//                }).start();
                 return false;
             }
         };
         DataHolder.getNavigationManager().getAudioPlayer().setDelegate(audioPlayerDelegate);
-//        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
+        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
 
     }
+
+    private int getSoundDuration(String path) {
+        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity(), Uri.fromFile(new File(path)));
+        return mediaPlayer.getDuration();
+    }
+
+    private Integer[] loadRaw(SoundPool soundPool, String path) {
+        int soundId = soundPool.load(path, 1);
+        int duration = getSoundDuration(path);
+        return new Integer[]{soundId, duration};
+    }
+
+    private void playSounds(String[] soundPathList) {
+        SoundPool spool;
+        HashMap<Integer, Integer> soundIdMap = new HashMap<>();
+        spool = new SoundPool.Builder()
+                .setMaxStreams(15)
+                .build();
+        spool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, int sampleId,
+                                       int status) {
+//                spool.play(sampleId, 1, 1, 1, 0, 1);
+            }
+        });
+        for (String soundPath : soundPathList) {
+            Integer[] sound = loadRaw(spool, soundPath);
+            soundIdMap.put(sound[0], sound[1]);
+            Set<Integer> soundIdSet = soundIdMap.keySet();
+            for (Integer soundId : soundIdSet) {
+                spool.play(soundId, 1, 1, 0, 0, 1);
+                try {
+                    Thread.sleep(soundIdMap.get(soundId));
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {
         EnumSet<Map.PedestrianFeature> pedestrianFeatureEnumSet = EnumSet.of(
@@ -1699,9 +1752,9 @@ class MapFragmentView {
             }
         });
         AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
         alertDialog.getButton(alertDialog.BUTTON_NEGATIVE).setTextColor(DataHolder.getActivity().getResources().getColor(R.color.green));
         alertDialog.getButton(alertDialog.BUTTON_POSITIVE).setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
-        alertDialog.show();
     }
 
     private void getTrafficSignsForRoute(Route route) {
@@ -2477,8 +2530,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-//                    voiceActivation.setDesiredLangCode("cht");
-                    voiceActivation.setDesiredVoiceId(30000); // Recorded Taiwanese Mandarin (ID: 29000)
+                    voiceActivation.setDesiredLangCode("cht");
+//                    voiceActivation.setDesiredVoiceId(31000); // Recorded Taiwanese Mandarin (ID: 29000)
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
