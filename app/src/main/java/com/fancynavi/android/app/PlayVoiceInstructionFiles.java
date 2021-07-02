@@ -10,7 +10,7 @@ import java.util.Set;
 
 import static com.fancynavi.android.app.DataHolder.getActivity;
 
-class PlayVoiceInstructionFiles extends Thread {
+class PlayVoiceInstructionFiles {
 
     private final String[] playlist;
 
@@ -40,17 +40,18 @@ class PlayVoiceInstructionFiles extends Thread {
 //            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
 //            }
 //        });
+        Set<Integer> soundIdSet = soundIdMap.keySet();
+
         for (String soundPath : playlist) {
             Integer[] sound = loadRaw(spool, soundPath);
             soundIdMap.put(sound[0], sound[1]);
-            Set<Integer> soundIdSet = soundIdMap.keySet();
-            for (Integer soundId : soundIdSet) {
-                spool.play(soundId, 1, 1, 0, 0, 1);
-                try {
-                    Thread.sleep(soundIdMap.get(soundId));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        }
+        for (Integer soundId : soundIdSet) {
+            spool.play(soundId, 1, 1, 0, 0, 1);
+            try {
+                Thread.sleep(soundIdMap.get(soundId));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
     }

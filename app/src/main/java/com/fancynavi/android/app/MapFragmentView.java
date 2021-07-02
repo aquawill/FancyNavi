@@ -1649,16 +1649,16 @@ class MapFragmentView {
                     Log.d(TAG, "playFiles: " + voiceFileIndex + " --> " + string);
                     voiceFileIndex++;
                 }
-//                new Thread(new Runnable() {
-//                    public void run() {
-//                        new PlayVoiceInstructionFiles(strings).play();
-//                    }
-//                }).start();
+                new Thread(new Runnable() {
+                    public void run() {
+                        new PlayVoiceInstructionFiles(strings).play();
+                    }
+                }).start();
                 return false;
             }
         };
         DataHolder.getNavigationManager().getAudioPlayer().setDelegate(audioPlayerDelegate);
-//        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
+        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
@@ -2530,8 +2530,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-                    voiceActivation.setDesiredLangCode("cht");
-//                    voiceActivation.setDesiredVoiceId(31000); // Recorded Taiwanese Mandarin (ID: 29000)
+//                    voiceActivation.setDesiredLangCode("cht");
+                    voiceActivation.setDesiredVoiceId(31000); // Recorded Taiwanese Mandarin (ID: 29000)
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
