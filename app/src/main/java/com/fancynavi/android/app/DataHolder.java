@@ -16,10 +16,10 @@ import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
 
 class DataHolder {
-    static final String TAG = "HERE_SDK_TEST";
+    static final String TAG = "FANCYNAVI";
     static int FOREGROUND_SERVICE_ID = 9527;
-    static String CHANNEL = "heresdk";
-    static String CHANNEL_NAME = "HRERSDKTEST";
+    static String CHANNEL = "fancynavi";
+    static String CHANNEL_NAME = "FANCYNAVI";
     static boolean simpleMode = false;
     static boolean offScreenRendererEnabled = false;
     static boolean isPipMode;
