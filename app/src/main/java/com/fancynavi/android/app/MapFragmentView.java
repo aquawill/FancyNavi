@@ -1626,7 +1626,6 @@ class MapFragmentView {
         VoiceGuidanceOptions voiceGuidanceOptions = DataHolder.getNavigationManager().getVoiceGuidanceOptions();
         voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(voiceActivation.getDesiredVoiceId()));
 
-
         EnumSet<NavigationManager.AudioEvent> audioEventEnumSet = EnumSet.of(
 //                NavigationManager.AudioEvent.SAFETY_SPOT,
                 NavigationManager.AudioEvent.MANEUVER,
@@ -1649,16 +1648,35 @@ class MapFragmentView {
                     Log.d(TAG, "playFiles: " + voiceFileIndex + " --> " + string);
                     voiceFileIndex++;
                 }
-                new Thread(new Runnable() {
-                    public void run() {
-                        new PlayVoiceInstructionFiles(strings).play();
-                    }
-                }).start();
+//                /* Manually play voice instructions */
+//                new Thread(new Runnable() {
+//                    public void run() {
+//                        PlayVoiceInstructionFiles playVoiceInstructionFiles = new PlayVoiceInstructionFiles(strings);
+//                        playVoiceInstructionFiles.setOnPlayingVoiceInstructionListener(new PlayVoiceInstructionFiles.onPlayingVoiceInstructionListener() {
+//                            @Override
+//                            public void onCompleted() {
+//                                Log.d(TAG, "onCompleted()");
+//                                audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+//                            }
+//
+//                            @Override
+//                            public void onStarted() {
+//                                Log.d(TAG, "onStarted()");
+//                                if (audioManager != null) {
+//                                    int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
+//                                    audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
+//                                            AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+//                                }
+//                            }
+//                        });
+//                        playVoiceInstructionFiles.play();
+//                    }
+//                }).start();
                 return false;
             }
         };
         DataHolder.getNavigationManager().getAudioPlayer().setDelegate(audioPlayerDelegate);
-        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
+//        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
@@ -2530,8 +2548,8 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-//                    voiceActivation.setDesiredLangCode("cht");
-                    voiceActivation.setDesiredVoiceId(31000); // Recorded Taiwanese Mandarin (ID: 29000)
+                    voiceActivation.setDesiredLangCode("cht");
+//                    voiceActivation.setDesiredVoiceId(31000); // Recorded Taiwanese Mandarin (ID: 29000)
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */
@@ -2882,7 +2900,8 @@ class MapFragmentView {
                         Log.d(TAG, "GeocodeRequest geocodeResults.size():" + geocodeResults.size());
                         if (geocodeResults.size() > 0) {
                             GeocodeResult geocodeResult = geocodeResults.get(0);
-                            Log.d(TAG, geocodeResult.getLocation().getAddress().getText());
+                            Log.d(TAG, "geocodeResult.getLocation().getAddress().getText(): " + geocodeResult.getLocation().getAddress().getText());
+                            Log.d(TAG, "geocodeResult.getMatchLevel(): " + geocodeResult.getMatchLevel());
                             if (geocodeResult.getLocation().getCoordinate() != null) {
                                 DataHolder.isDragged = true;
                                 showSelectionFocus(geocodeResult.getLocation().getCoordinate(), geocodeResult.getLocation().getAddress().getText(), geocodeResult.getMatchLevel());
