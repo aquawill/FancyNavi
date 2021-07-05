@@ -48,8 +48,8 @@ class PlayVoiceInstructionFiles {
             Integer[] sound = loadRaw(spool, soundPath);
             soundIdMap.put(sound[0], sound[1]);
         }
+        onPlayingVoiceInstructionListener.onStarted();
         for (Integer soundId : soundIdSet) {
-            onPlayingVoiceInstructionListener.onStarted();
             spool.play(soundId, 1, 1, 0, 0, 1);
             try {
                 Thread.sleep(soundIdMap.get(soundId));
