@@ -236,6 +236,7 @@ class MapFragmentView {
     private TextView safetyCamTextView;
     private TextView safetyCamSpeedTextView;
     private MapMarker safetyCameraMapMarker;
+    private MapScaleView mapScaleView;
     static AudioManager.OnAudioFocusChangeListener onAudioFocusChangeListener;
     static AudioManager audioManager;
     private int speedLimitLinearLayoutHeight;
@@ -922,6 +923,7 @@ class MapFragmentView {
         @Override
         public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
             currentGeoPosition = geoPosition;
+            mapScaleView.updateScale();
             if (!DataHolder.isRouteOverView && !DataHolder.isDragged && !DataHolder.isNavigating) {
                 if (geoPosition.isValid()) {
 //                    Log.d(TAG, "geoPosition.isValid()");
@@ -1087,6 +1089,8 @@ class MapFragmentView {
             DataHolder.isDragged = true;
             DataHolder.setLastMapCenter(DataHolder.getMap().getCenter());
             DataHolder.setLastMapZoom(DataHolder.getMap().getZoomLevel());
+            mapScaleView.updateScale();
+            northUpButton.setRotation(DataHolder.getMap().getMapState().getOrientation() * -1);
             return false;
         }
 
@@ -1100,6 +1104,8 @@ class MapFragmentView {
             DataHolder.isDragged = true;
             DataHolder.setLastMapCenter(DataHolder.getMap().getCenter());
             DataHolder.setLastMapZoom(DataHolder.getMap().getZoomLevel());
+            mapScaleView.updateScale();
+            northUpButton.setRotation(DataHolder.getMap().getMapState().getOrientation() * -1);
             return false;
         }
 
@@ -1987,7 +1993,7 @@ class MapFragmentView {
 
                     coreRouter = new CoreRouter();
                     navigationListeners = new NavigationListeners();
-                    MapScaleView mapScaleView = DataHolder.getActivity().findViewById(R.id.map_scale_view);
+                    mapScaleView = DataHolder.getActivity().findViewById(R.id.map_scale_view);
                     mapScaleView.setMap(DataHolder.getMap());
                     mapScaleView.setColor(R.color.black);
                     DataHolder.getMap().setFadingAnimations(false);
@@ -2021,6 +2027,7 @@ class MapFragmentView {
 
                         @Override
                         public void onMapTransformEnd(MapState mapState) {
+                            Log.d(TAG, "" + mapState.getCenter());
                             if (previousMapState != null) {
 
                                 if (!DataHolder.isNavigating) {
@@ -2046,17 +2053,17 @@ class MapFragmentView {
                                                                 }
                                                             }
                                                         } else if (countryName.equals("Taiwan")) {
-                                                            if (adminAreaName.equals("Taipei City")) {
-                                                                if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
-                                                                    if (customRasterTileOverlay == null) {
-                                                                        customRasterTileOverlay = new CustomRasterTileOverlay();
-                                                                        if (customRasterTileOverlay.getTileUrl() == null) {
-                                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
-                                                                        }
-                                                                        DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
-                                                                    }
-                                                                }
-                                                            }
+//                                                            if (adminAreaName.equals("Taipei City")) {
+//                                                                if (mapState.getZoomLevel() >= 15 && mapState.getZoomLevel() <= 22) {
+//                                                                    if (customRasterTileOverlay == null) {
+//                                                                        customRasterTileOverlay = new CustomRasterTileOverlay();
+//                                                                        if (customRasterTileOverlay.getTileUrl() == null) {
+//                                                                            customRasterTileOverlay.setTileUrl("https://raw.githubusercontent.com/aquawill/taipei_city_parking_layer/master/tiles/%s/%s/%s.png");
+//                                                                        }
+//                                                                        DataHolder.getMap().addRasterTileSource(customRasterTileOverlay);
+//                                                                    }
+//                                                                }
+//                                                            }
                                                             if (previousMapState.getCenter().distanceTo(mapState.getCenter()) > 0 || previousMapState.getZoomLevel() != mapState.getZoomLevel()) {
                                                                 roadkillGeoJsonTileMapContainer.removeAllMapObjects();
                                                                 previousMapState = mapState;

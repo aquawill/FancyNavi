@@ -57,13 +57,14 @@ class MapScaleView extends View implements Map.OnTransformListener {
         }
     }
 
-    private void updateScale() {
-        DecimalFormat df = new DecimalFormat("##.00");
+    void updateScale() {
+        DecimalFormat dfForMeters = new DecimalFormat("##");
+        DecimalFormat dfForKilometers = new DecimalFormat("##.00");
         double scale = m_map.getScaleFromZoomLevel(m_map.getZoomLevel());
         if ((int) floor(scale / 100) < 1000) {
-            m_text = Double.parseDouble(df.format(scale / 100)) + "m";
+            m_text = Double.parseDouble(dfForMeters.format(scale / 100)) + "m";
         } else {
-            m_text = Double.parseDouble(df.format(scale / 100 / 1000)) + "km";
+            m_text = Double.parseDouble(dfForKilometers.format(scale / 100 / 1000)) + "km";
         }
         invalidate();
     }
