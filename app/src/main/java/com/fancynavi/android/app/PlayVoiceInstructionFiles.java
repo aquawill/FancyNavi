@@ -12,6 +12,12 @@ import static com.fancynavi.android.app.DataHolder.getActivity;
 
 class PlayVoiceInstructionFiles {
 
+    private onPlayingVoiceInstructionListener onPlayingVoiceInstructionListener;
+
+    void setonPlayingVoiceInstructionListener(onPlayingVoiceInstructionListener onPlayingVoiceInstructionListener) {
+        this.onPlayingVoiceInstructionListener = onPlayingVoiceInstructionListener;
+    }
+
     private final String[] playlist;
 
 
@@ -35,11 +41,7 @@ class PlayVoiceInstructionFiles {
         spool = new SoundPool.Builder()
                 .setMaxStreams(15)
                 .build();
-//        spool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-//            @Override
-//            public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
-//            }
-//        });
+
         Set<Integer> soundIdSet = soundIdMap.keySet();
 
         for (String soundPath : playlist) {
@@ -47,6 +49,7 @@ class PlayVoiceInstructionFiles {
             soundIdMap.put(sound[0], sound[1]);
         }
         for (Integer soundId : soundIdSet) {
+            onPlayingVoiceInstructionListener.onStarted();
             spool.play(soundId, 1, 1, 0, 0, 1);
             try {
                 Thread.sleep(soundIdMap.get(soundId));
@@ -54,5 +57,13 @@ class PlayVoiceInstructionFiles {
                 e.printStackTrace();
             }
         }
+        onPlayingVoiceInstructionListener.onCompleted();
     }
+
+    interface onPlayingVoiceInstructionListener {
+        void onCompleted();
+
+        void onStarted();
+    }
+
 }
