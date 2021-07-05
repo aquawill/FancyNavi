@@ -14,7 +14,7 @@ class PlayVoiceInstructionFiles {
 
     private onPlayingVoiceInstructionListener onPlayingVoiceInstructionListener;
 
-    void setonPlayingVoiceInstructionListener(onPlayingVoiceInstructionListener onPlayingVoiceInstructionListener) {
+    void setOnPlayingVoiceInstructionListener(onPlayingVoiceInstructionListener onPlayingVoiceInstructionListener) {
         this.onPlayingVoiceInstructionListener = onPlayingVoiceInstructionListener;
     }
 
