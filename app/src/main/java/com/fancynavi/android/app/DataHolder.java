@@ -16,7 +16,7 @@ import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapMarker;
 
 class DataHolder {
-    static final String TAG = "FANCYNAVI";
+    static final String TAG = "HERE_SDK";
     static int FOREGROUND_SERVICE_ID = 9527;
     static String CHANNEL = "fancynavi";
     static String CHANNEL_NAME = "FANCYNAVI";

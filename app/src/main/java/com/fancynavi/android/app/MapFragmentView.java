@@ -2027,9 +2027,8 @@ class MapFragmentView {
 
                         @Override
                         public void onMapTransformEnd(MapState mapState) {
-                            Log.d(TAG, "" + mapState.getCenter());
+//                            Log.d(TAG, "" + mapState.getCenter());
                             if (previousMapState != null) {
-
                                 if (!DataHolder.isNavigating) {
                                     if (mapState.getZoomLevel() > 8) {
                                         GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
