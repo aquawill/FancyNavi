@@ -1743,22 +1743,39 @@ class MapFragmentView {
             case CAR:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
                 routeOptions.setHighwaysAllowed(true);
+                DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
+                DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
+                DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
                 break;
             case TRUCK:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.TRUCK);
                 routeOptions.setHighwaysAllowed(true);
+                EnumSet<Map.FleetFeature> fleetFeatureEnumSet = EnumSet.of(
+                        Map.FleetFeature.CONGESTION_ZONES,
+                        Map.FleetFeature.ENVIRONMENTAL_ZONES,
+                        Map.FleetFeature.TRUCK_RESTRICTIONS);
+                DataHolder.getMap().setFleetFeaturesVisible(fleetFeatureEnumSet);
+                DataHolder.getMap().setMapScheme(Map.Scheme.TRUCK_DAY);
                 break;
             case SCOOTER:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.SCOOTER);
                 routeOptions.setRouteType(RouteOptions.Type.FASTEST);
+                DataHolder.getMap().setMapScheme(Map.Scheme.REDUCED_DAY);
+                DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
+                DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
                 break;
             case BICYCLE:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.BICYCLE);
                 routeOptions.setHighwaysAllowed(false);
+                DataHolder.getMap().setMapScheme(Map.Scheme.HYBRID_DAY);
+                DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
+                DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
                 break;
             case PEDESTRIAN:
                 routeOptions.setTransportMode(RouteOptions.TransportMode.PEDESTRIAN);
                 DataHolder.getMap().setPedestrianFeaturesVisible(pedestrianFeatureEnumSet);
+                DataHolder.getMap().setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
+                DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
                 routeOptions.setHighwaysAllowed(false);
                 break;
         }
@@ -2742,6 +2759,9 @@ class MapFragmentView {
         clearDistanceMarkerMapOverlay();
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         DataHolder.getMap().setExtrudedBuildingsVisible(true);
+        DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
+        DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
+        DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
         trafficSignMapContainer.removeAllMapObjects();
         safetyCameraMapMarker.setTransparency(0);
         safetyCamLinearLayout.setVisibility(View.GONE);
@@ -2755,6 +2775,7 @@ class MapFragmentView {
             trafficWarner.stop();
         }
         mapSchemeChanger.navigationMapOff();
+
         if (searchResultSnackbar != null) {
             searchResultSnackbar.dismiss();
         }

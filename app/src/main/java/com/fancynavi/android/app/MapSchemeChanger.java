@@ -6,11 +6,13 @@ import android.widget.TextView;
 import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 
+import java.util.EnumSet;
+
 import static com.fancynavi.android.app.DataHolder.isNavigating;
 
 class MapSchemeChanger {
 
-    private Map map;
+    private final Map map;
     private NavigationManager navigationManager;
 
     MapSchemeChanger(Map map, NavigationManager navigationManager) {
@@ -85,10 +87,17 @@ class MapSchemeChanger {
     }
 
     void navigationMapOn() {
-        map.setMapScheme(map.getMapScheme().replace("normal.", "carnav."));
+        if (map.getMapScheme() == Map.Scheme.NORMAL_DAY || map.getMapScheme() == Map.Scheme.NORMAL_NIGHT) {
+            map.setMapScheme(map.getMapScheme().replace("normal.", "carnav."));
+        } else if (map.getMapScheme() == Map.Scheme.TRUCK_DAY || map.getMapScheme() == Map.Scheme.TRUCK_NIGHT) {
+            map.setMapScheme(map.getMapScheme().replace("truck.", "trucknav."));
+        }
     }
 
     void navigationMapOff() {
-        map.setMapScheme(map.getMapScheme().replace("carnav.", "normal."));
+        DataHolder.getMap().setExtrudedBuildingsVisible(true);
+        DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
+        DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
+        DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
     }
 }
