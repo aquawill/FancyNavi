@@ -182,7 +182,7 @@ class MapFragmentView {
     static ImageView junctionViewImageView;
     static ImageView signpostImageView;
     static MapLocalModel currentPositionMapLocalModel;
-    static Button northUpButton;
+    static Button compassButton;
     static TextView trafficWarningTextView;
     static List<MapOverlay> distanceMarkerMapOverlayList = new ArrayList<>();
     static NavigationListeners navigationListeners;
@@ -1090,7 +1090,7 @@ class MapFragmentView {
             DataHolder.setLastMapCenter(DataHolder.getMap().getCenter());
             DataHolder.setLastMapZoom(DataHolder.getMap().getZoomLevel());
             mapScaleView.updateScale();
-            northUpButton.setRotation(DataHolder.getMap().getMapState().getOrientation() * -1);
+            compassButton.setRotation(DataHolder.getMap().getMapState().getOrientation() * -1);
             return false;
         }
 
@@ -1105,7 +1105,7 @@ class MapFragmentView {
             DataHolder.setLastMapCenter(DataHolder.getMap().getCenter());
             DataHolder.setLastMapZoom(DataHolder.getMap().getZoomLevel());
             mapScaleView.updateScale();
-            northUpButton.setRotation(DataHolder.getMap().getMapState().getOrientation() * -1);
+            compassButton.setRotation(DataHolder.getMap().getMapState().getOrientation() * -1);
             return false;
         }
 
@@ -1355,7 +1355,7 @@ class MapFragmentView {
 
     private void switchUiControls(int visibility) {
         DataHolder.getActivity().findViewById(R.id.vehicleTypeTableLayout).setVisibility(visibility);
-        northUpButton.setVisibility(visibility);
+        compassButton.setVisibility(visibility);
         carRouteButton.setVisibility(visibility);
         truckRouteButton.setVisibility(visibility);
         scooterRouteButton.setVisibility(visibility);
@@ -2223,7 +2223,7 @@ class MapFragmentView {
                                 positionAccuracyMapCircle.setLineWidth(0);
                                 positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
                             }
-                            northUpButton.setRotation(mapState.getOrientation() * -1);
+                            compassButton.setRotation(mapState.getOrientation() * -1);
 
                         }
                     });
@@ -2335,14 +2335,14 @@ class MapFragmentView {
                     switchGuidanceUiViews(View.GONE);
                     gpsStatusImageView = DataHolder.getActivity().findViewById(R.id.gps_status_image_view);
                     /* Listeners of map buttons */
-                    northUpButton = DataHolder.getActivity().findViewById(R.id.north_up);
-                    northUpButton.setOnClickListener(v -> {
+                    compassButton = DataHolder.getActivity().findViewById(R.id.north_up);
+                    compassButton.setOnClickListener(v -> {
                         if (searchResultSnackbar != null) {
                             searchResultSnackbar.dismiss();
                         }
                         isMapRotating = false;
                         DataHolder.getMap().setOrientation(0);
-                        northUpButton.setRotation(0);
+                        compassButton.setRotation(0);
                         DataHolder.getMap().setTilt(0);
                         DataHolder.getMap().setZoomLevel(16);
                         if (DataHolder.getActivity().isInMultiWindowMode()) {
@@ -2859,7 +2859,7 @@ class MapFragmentView {
 //        northUpButton.callOnClick();
         androidXMapFragment.getMapGesture().addOnGestureListener(customOnGestureListener, 0, false);
         switchUiControls(View.GONE);
-        northUpButton.setVisibility(View.VISIBLE);
+        compassButton.setVisibility(View.VISIBLE);
 
         EnumSet<Map.LayerCategory> poiLayers = EnumSet.of(
                 Map.LayerCategory.POI_ICON,

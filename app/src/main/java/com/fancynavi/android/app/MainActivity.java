@@ -71,6 +71,7 @@ import static com.fancynavi.android.app.DataHolder.isRouteOverView;
 import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
 import static com.fancynavi.android.app.MapFragmentView.audioManager;
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
+import static com.fancynavi.android.app.MapFragmentView.compassButton;
 import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
 import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
 import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
@@ -78,7 +79,6 @@ import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverla
 import static com.fancynavi.android.app.MapFragmentView.mapRoute;
 import static com.fancynavi.android.app.MapFragmentView.mapRouteGeoBoundingBox;
 import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
-import static com.fancynavi.android.app.MapFragmentView.northUpButton;
 import static com.fancynavi.android.app.MapFragmentView.onAudioFocusChangeListener;
 import static com.fancynavi.android.app.MapFragmentView.route;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
@@ -192,11 +192,11 @@ public class MainActivity extends AppCompatActivity {
                         currentPositionMapLocalModel.setYaw(rotatingAngle);
                         if (!isMapRotating) {
                             if (!isDragged) {
-                                northUpButton.setRotation(0);
+                                compassButton.setRotation(0);
                                 DataHolder.getMap().setOrientation(0);
                             }
                         } else {
-                            northUpButton.setRotation(rotatingAngle * -1);
+                            compassButton.setRotation(rotatingAngle * -1);
                             DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getPosition().getCoordinate(), Map.Animation.LINEAR);
                             DataHolder.getMap().setOrientation(rotatingAngle);
                             isDragged = false;
