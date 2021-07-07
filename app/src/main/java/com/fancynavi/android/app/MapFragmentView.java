@@ -1433,11 +1433,11 @@ class MapFragmentView {
             DataHolder.getMap().removeMapObject(selectedFeatureMapMarker);
         }
         GeoCoordinate touchPointGeoCoordinate = DataHolder.getMap().pixelToGeo(p);
-        MapMarker mapMarker = new MapMarker(touchPointGeoCoordinate);
-        mapMarker.setDraggable(true);
-        userInputWaypoints.add(mapMarker);
-        mapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(mapMarker));
-        DataHolder.getMap().addMapObject(mapMarker);
+        MapMarker tourhPointMapMarker = new MapMarker(touchPointGeoCoordinate);
+        tourhPointMapMarker.setDraggable(true);
+        userInputWaypoints.add(tourhPointMapMarker);
+        tourhPointMapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(tourhPointMapMarker));
+        DataHolder.getMap().addMapObject(tourhPointMapMarker);
         DataHolder.getActivity().findViewById(R.id.vehicleTypeTableLayout).setVisibility(View.VISIBLE);
         carRouteButton.setVisibility(View.VISIBLE);
         truckRouteButton.setVisibility(View.VISIBLE);
@@ -3087,14 +3087,14 @@ class MapFragmentView {
             }
         }
 
-        private void showSelectionFocus(GeoCoordinate geoCoordinate, String s1, String s2) {
+        private void showSelectionFocus(GeoCoordinate geoCoordinate, String title, String description) {
             selectedFeatureMapMarker = new MapMarker();
             selectedFeatureMapMarker.setCoordinate(geoCoordinate);
             Image icon = new Image();
             icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(DataHolder.getActivity(), R.drawable.ic_search_result));
             selectedFeatureMapMarker.setIcon(icon);
-            selectedFeatureMapMarker.setTitle(s1);
-            selectedFeatureMapMarker.setDescription(s2);
+            selectedFeatureMapMarker.setTitle(title);
+            selectedFeatureMapMarker.setDescription(description);
             selectedFeatureMapMarker.setAnchorPoint(DataHolder.getMapMarkerAnchorPoint(selectedFeatureMapMarker));
             searchRequestResultMapContainer.addMapObject(selectedFeatureMapMarker);
         }
