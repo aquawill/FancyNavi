@@ -19,8 +19,6 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
-import android.media.SoundPool;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
@@ -157,10 +155,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.DataHolder.getActivity;
@@ -1686,48 +1682,7 @@ class MapFragmentView {
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
         routeShapePointGeoCoordinateList = route.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
-
     }
-
-    private int getSoundDuration(String path) {
-        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity(), Uri.fromFile(new File(path)));
-        return mediaPlayer.getDuration();
-    }
-
-    private Integer[] loadRaw(SoundPool soundPool, String path) {
-        int soundId = soundPool.load(path, 1);
-        int duration = getSoundDuration(path);
-        return new Integer[]{soundId, duration};
-    }
-
-    private void playSounds(String[] soundPathList) {
-        SoundPool spool;
-        HashMap<Integer, Integer> soundIdMap = new HashMap<>();
-        spool = new SoundPool.Builder()
-                .setMaxStreams(15)
-                .build();
-        spool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            @Override
-            public void onLoadComplete(SoundPool soundPool, int sampleId,
-                                       int status) {
-//                spool.play(sampleId, 1, 1, 1, 0, 1);
-            }
-        });
-        for (String soundPath : soundPathList) {
-            Integer[] sound = loadRaw(spool, soundPath);
-            soundIdMap.put(sound[0], sound[1]);
-            Set<Integer> soundIdSet = soundIdMap.keySet();
-            for (Integer soundId : soundIdSet) {
-                spool.play(soundId, 1, 1, 0, 0, 1);
-                try {
-                    Thread.sleep(soundIdMap.get(soundId));
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
 
     private RouteOptions prepareRouteOptions(RouteOptions.TransportMode transportMode) {
         EnumSet<Map.PedestrianFeature> pedestrianFeatureEnumSet = EnumSet.of(
