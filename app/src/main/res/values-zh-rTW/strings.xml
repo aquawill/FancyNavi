@@ -211,7 +211,7 @@
   <string name="download_offline_map_for">下載離線地圖：</string>
   <string name="download">下載</string>
   <string name="no_offline_map_at">此處無離線地圖：</string>
-  <string name="check">檢查</string>
+  <string name="check">檢查地圖更新</string>
   <string name="required_permission">需要權限：</string>
   <string name="not_granted">未取得</string>
   <string name="here_sdk_v">HERE SDK 版本：</string>

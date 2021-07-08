@@ -35,6 +35,7 @@ class OfflineMapDownloader {
     private int progress = -1;
     private final View v;
     private final ConstraintLayout l;
+    private boolean isMapLoaderOperating = false;
 
     private final MapLoader.Listener mapLoaderListener = new MapLoader.Listener() {
         public void onUninstallMapPackagesComplete(MapPackage rootMapPackage,
@@ -62,7 +63,7 @@ class OfflineMapDownloader {
                 offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-
+                        DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
                     }
                 });
                 offlineDownloadSnackbar.show();
@@ -71,6 +72,7 @@ class OfflineMapDownloader {
 
         public void onPerformMapDataUpdateComplete(MapPackage rootMapPackage,
                                                    MapLoader.ResultCode mapLoaderResultCode) {
+            isMapLoaderOperating = false;
             progress = -1;
             darkenAllViews(false);
             DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
@@ -81,7 +83,7 @@ class OfflineMapDownloader {
             offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-
+                    DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
                 }
             });
             offlineDownloadSnackbar.show();
@@ -151,15 +153,17 @@ class OfflineMapDownloader {
                                 progressingTextView.setText(R.string.downloading_start);
                                 cancelButton.setVisibility(View.VISIBLE);
                                 progressBar.setVisibility(View.VISIBLE);
+                                isMapLoaderOperating = true;
                             } else {
                                 Log.d(TAG, "installMapPackages() failed.");
-
+                                isMapLoaderOperating = false;
                             }
                         }
                     });
                     offlineDownloadSnackbar.show();
                 } else {
                     offlineDownloadSnackbar.setText(R.string.no_available_map_update);
+                    isMapLoaderOperating = false;
 //                    offlineDownloadSnackbar.setText("No available map update.\nRemove map of " + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + " ?");
 //                    offlineDownloadSnackbar.setAction("REMOVE", new View.OnClickListener(
 //
@@ -176,10 +180,12 @@ class OfflineMapDownloader {
                         }
                     });
                     offlineDownloadSnackbar.show();
+                    DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
                 }
             } else {
                 offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.error) + mapLoaderResultCode.name());
                 offlineDownloadSnackbar.show();
+                isMapLoaderOperating = false;
             }
 
         }
@@ -213,12 +219,11 @@ class OfflineMapDownloader {
         offlineDownloadSnackbar.addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
             @Override
             public void onDismissed(Snackbar transientBottomBar, int event) {
-                Log.d(TAG, "" + progress);
-                if (progress == -1) {
+                Log.d(TAG, "progress: " + progress);
+                if (!isMapLoaderOperating) {
                     DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
                 }
                 super.onDismissed(transientBottomBar, event);
-
             }
 
             @Override
@@ -268,6 +273,8 @@ class OfflineMapDownloader {
     }
 
     void downloadOfflineMapPackageOnMapCenter(GeoCoordinate geoCoordinate) {
+        Log.d(TAG, "checking offline map at: " + geoCoordinate);
+        isMapLoaderOperating = true;
         mapLoader.addMapPackageAtCoordinateListener(new MapLoader.MapPackageAtCoordinateListener() {
             @Override
             public void onGetMapPackageAtCoordinateComplete(@Nullable MapPackage mapPackage, @Nullable GeoCoordinate geoCoordinate, MapLoader.ResultCode resultCode) {
@@ -286,18 +293,17 @@ class OfflineMapDownloader {
                         mapEnglishNameList.add(rootMapPackageEnglishTitle);
                         Log.d(TAG, "MapPackageOnMapCenter:" + rootMapPackageTitle + " | " + rootMapPackageEnglishTitle + " | id: " + mapPackageId + " | size: " + mapPackageSize);
                         Log.d(TAG, "mapPackage.getInstallationState(): " + mapPackage.getInstallationState().name());
+                        isMapLoaderOperating = false;
                         switch (mapPackage.getInstallationState()) {
                             case INSTALLED:
                                 offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.map_of) + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + DataHolder.getAndroidXMapFragment().getString(R.string.installed_check_for_updates));
                                 offlineDownloadSnackbar.setAction(R.string.check, new View.OnClickListener() {
-
                                     @Override
                                     public void onClick(View v) {
                                         progress = 0;
                                         mapLoader.checkForMapDataUpdate();
                                     }
                                 });
-
                                 offlineDownloadSnackbar.show();
                                 break;
                             case PARTIALLY_INSTALLED:
@@ -306,7 +312,6 @@ class OfflineMapDownloader {
                             case NOT_INSTALLED:
                                 offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.download_offline_map_for) + rootMapPackageTitle + "/" + rootMapPackageEnglishTitle + " (" + Math.round((float) mapPackageSize / 1024) + "MB)?");
                                 offlineDownloadSnackbar.setAction(R.string.download, new View.OnClickListener() {
-
                                     @Override
                                     public void onClick(View v) {
                                         progress = 0;
@@ -339,6 +344,7 @@ class OfflineMapDownloader {
                             }
                         });
                         offlineDownloadSnackbar.show();
+                        isMapLoaderOperating = false;
                     }
                 } else {
                     offlineDownloadSnackbar.setText(R.string.error + resultCode.name());
@@ -349,6 +355,7 @@ class OfflineMapDownloader {
                         }
                     });
                     offlineDownloadSnackbar.show();
+                    isMapLoaderOperating = false;
                 }
             }
         });

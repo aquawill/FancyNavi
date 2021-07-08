@@ -39,7 +39,7 @@
     <string name="download_offline_map_for">Download Offline Map for\n</string>
     <string name="download">DOWNLOAD</string>
     <string name="no_offline_map_at">No offline map at\n</string>
-    <string name="check">CHECK</string>
+    <string name="check">Check Map Update</string>
     <string name="speed_camera_ahead_voice">"Safety camera ahead with speed limit: "</string>
     <string name="kilometers">kilometers</string>
     <string name="required_permission">Required permission </string>
