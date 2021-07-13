@@ -413,9 +413,15 @@ class MapFragmentView {
             GeoCoordinate geoPositionGeoCoordinateOnGround = geoPosition.getCoordinate();
             geoPositionGeoCoordinateOnGround.setAltitude(0);
 
-
-            DataHolder.getActivity().setVisible(!keyguardManager.inKeyguardRestrictedInputMode());
-
+            /* Manual control map movement and rotation during navigation */
+//            DataHolder.getMap().setZoomLevel(17);
+//            DataHolder.getMap().setCenter(geoPositionGeoCoordinate, Map.Animation.LINEAR);
+//            DataHolder.getActivity().setVisible(!keyguardManager.inKeyguardRestrictedInputMode());
+//            Double horizontalOffset = new ShiftMapCenter().getTransformCenterOffset(DataHolder.getMap())[0];
+//            float orientationWithPerspectiveOffset = (float) (geoPosition.getHeading() - ((horizontalOffset - 0.5) * 60));
+//            DataHolder.getMap().setOrientation(orientationWithPerspectiveOffset);
+//            Log.d(TAG, "orientationWithPerspectiveOffset:" + orientationWithPerspectiveOffset);
+//            Log.d(TAG, "geoPosition.getHeading():" + geoPosition.getHeading());
 
             if (DataHolder.getPositioningManager().getRoadElement() != null) {
                 RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
@@ -649,9 +655,9 @@ class MapFragmentView {
             signpostImageView.setVisibility(View.GONE);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
             if (DataHolder.getActivity().isInMultiWindowMode()) {
-                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
             } else {
-                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
             }
             DataHolder.getMap().setTilt(0);
 //            if (mapRouteGeoBoundingBox != null) {
@@ -707,7 +713,7 @@ class MapFragmentView {
                     DataHolder.getMap().addMapObject(alternativeMapRoute);
                     DataHolder.getMap().setTilt(0);
                     trafficSignMapContainer.setVisible(false);
-                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.5f);
+                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.5f);
                 }
 
                 textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
@@ -736,9 +742,9 @@ class MapFragmentView {
                         DataHolder.getMap().setTilt(60);
                         trafficSignMapContainer.setVisible(true);
                         if (DataHolder.getActivity().isInMultiWindowMode()) {
-                            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                         } else {
-                            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
                         }
                     }
                 });
@@ -794,7 +800,7 @@ class MapFragmentView {
         public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
             int screenOrientation = DataHolder.getAndroidXMapFragment().getResources().getConfiguration().orientation;
             if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                new ShiftMapCenter(DataHolder.getMap(), 0.7f, 0.75f);
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.7f, 0.75f);
             }
             junctionViewImageView.requestLayout();
             signpostImageView.requestLayout();
@@ -829,7 +835,7 @@ class MapFragmentView {
         public void onRealisticViewHide() {
             junctionViewImageView.setVisibility(View.GONE);
             signpostImageView.setVisibility(View.GONE);
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
         }
     };
     private final ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -1202,7 +1208,7 @@ class MapFragmentView {
         }
         trafficWarningTextView.setVisibility(View.INVISIBLE);
         DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
-        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+        new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
         DataHolder.getMap().setTilt(0);
         DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, 0f);
         navigationControlButton.setVisibility(View.VISIBLE);
@@ -1618,6 +1624,8 @@ class MapFragmentView {
         } else {
             DataHolder.getMap().setTilt(60);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+            /* Activate this line if you want to control map movement and rotation manually during navigation */
+//            DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
             MapModeChanger.intoFullMode();
         }
         DataHolder.getNavigationManager().startNavigation(route);
@@ -1839,11 +1847,19 @@ class MapFragmentView {
 
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
-//                Log.d(TAG, "Route Calculation Ended.");
-//                Log.d(TAG, routingError.toString());
                 androidXMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
+                        for (RoutingZone routingZone : routeResults.get(0).getRoute().getRoutingZones()) {
+                            Log.d(TAG, "routingZone.getId(): " + routingZone.getId());
+                            Log.d(TAG, "routingZone.getType().name(): " + routingZone.getType().name());
+                            Log.d(TAG, "routingZone.getName(): " + routingZone.getName());
+                            for (RoutingZoneRestriction routingZoneRestriction : routingZone.getRestrictions()) {
+                                for (RouteOptions.TransportMode transportMode : routingZoneRestriction.getTransportTypes()) {
+                                    Log.d(TAG, "transportMode.name(): " + transportMode.name());
+                                }
+                            }
+                        }
                         trafficSignMapContainer.removeAllMapObjects();
                         route = routeResults.get(0).getRoute();
                         DataHolder.isRouteOverView = true;
@@ -1960,6 +1976,7 @@ class MapFragmentView {
                 if (error == Error.NONE) {
                     /* Entrance */
                     DataHolder.setMap(androidXMapFragment.getMap());
+//                    DataHolder.getMap().setProjectionMode(Map.Projection.MERCATOR);
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
 //                    MapSettings.setDiskCacheRootPath(diskCacheRoot);
 
@@ -2198,15 +2215,15 @@ class MapFragmentView {
                         public void onSizeChanged(int i, int i1) {
                             if (!DataHolder.isNavigating) {
                                 if (DataHolder.getActivity().isInMultiWindowMode()) {
-                                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+                                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
                                 } else {
-                                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                                 }
                             } else {
                                 if (DataHolder.getActivity().isInMultiWindowMode()) {
-                                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                                 } else {
-                                    new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
                                 }
                             }
                             if (DataHolder.isRouteOverView && mapRouteGeoBoundingBox != null) {
@@ -2276,9 +2293,9 @@ class MapFragmentView {
                     signImageView3 = DataHolder.getActivity().findViewById(R.id.sign_imageView_3);
 
                     if (DataHolder.getActivity().isInMultiWindowMode()) {
-                        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+                        new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
                     } else {
-                        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                        new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                     }
                     DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
                     DataHolder.getMap().setMapDisplayLanguage(TRADITIONAL_CHINESE);
@@ -2301,9 +2318,9 @@ class MapFragmentView {
                         DataHolder.getMap().setTilt(0);
                         DataHolder.getMap().setZoomLevel(16);
                         if (DataHolder.getActivity().isInMultiWindowMode()) {
-                            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+                            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
                         } else {
-                            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                         }
                         if (!DataHolder.isRouteOverView) {
                             DataHolder.getMap().setCenter(DataHolder.getPositioningManager().getLastKnownPosition().getCoordinate(), Map.Animation.LINEAR);
@@ -2783,9 +2800,9 @@ class MapFragmentView {
         switchGuidanceUiPresenters(false);
 
         if (DataHolder.getActivity().isInMultiWindowMode()) {
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
         } else {
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
         }
 
         DataHolder.getMap().setTilt(0);

@@ -88,7 +88,7 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.download_button).setAlpha(0);
-        new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.7f);
+        new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
         DataHolder.getAndroidXMapFragment().setOnTouchListener(emptyMapOnTouchListener);
         if (laneInformationMapOverlay != null) {
             DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
@@ -114,11 +114,11 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(1);
         if (isNavigating) {
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
         }
     }
 }

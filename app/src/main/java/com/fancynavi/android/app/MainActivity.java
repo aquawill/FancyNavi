@@ -336,12 +336,12 @@ public class MainActivity extends AppCompatActivity {
         isVisible = true;
         if (isNavigating) {
             intoGuidanceMode();
-            new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
             if (DataHolder.getMap() != null) {
-                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
             }
             isDragged = false;
         }
@@ -432,10 +432,10 @@ public class MainActivity extends AppCompatActivity {
         if (DataHolder.getNavigationManager() != null) {
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
             if (isInMultiWindowMode()) {
-                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                 MapModeChanger.intoSimpleMode();
             } else {
-                new ShiftMapCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
                 MapModeChanger.intoFullMode();
             }
             DataHolder.getMap().setTilt(60);
@@ -592,21 +592,14 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-//        LinearLayout mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
+        Log.d(TAG, "newConfig.orientation: " + newConfig.orientation);
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            findViewById(R.id.zoom_in).setVisibility(View.GONE);
-//            findViewById(R.id.zoom_out).setVisibility(View.GONE);
             findViewById(R.id.guidance_maneuver_view).setVisibility(View.GONE);
             findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.GONE);
-//            mainLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
-//            findViewById(R.id.zoom_in).setVisibility(View.VISIBLE);
-//            findViewById(R.id.zoom_out).setVisibility(View.VISIBLE);
-//            mainLinearLayout.setOrientation(LinearLayout.VERTICAL);
             if (isNavigating) {
                 findViewById(R.id.guidance_maneuver_view).setVisibility(View.VISIBLE);
                 findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.VISIBLE);
