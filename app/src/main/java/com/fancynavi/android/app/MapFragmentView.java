@@ -984,9 +984,10 @@ class MapFragmentView {
                 }
                 gpsStatusImageView.setImageResource(R.drawable.ic_gps_fixed_white_24dp);
                 gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.green));
-                if (geoPosition.getSpeed() >= 0 && geoPosition.getSpeed() <= 999) {
+                if (geoPosition.isValid()) {
                     guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
                 }
+
             } else if (geoPosition.getPositionTechnology() < 8 && geoPosition.getPositionTechnology() > 0) {
                 guidanceSpeedView.setVisibility(View.GONE);
                 guidanceSpeedLimitView.setVisibility(View.GONE);

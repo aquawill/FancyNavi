@@ -13,6 +13,24 @@ class NavigationListeners {
     private NavigationManager.SafetySpotListener safetySpotListener;
     private NavigationManager.ManeuverEventListener maneuverEventListener;
     private NavigationManager.AudioFeedbackListener audioFeedbackListener;
+    private NavigationManager.GpsSignalListener gpsSignalListener;
+    private NavigationManager.SchoolZoneListener schoolZoneListener;
+
+    public NavigationManager.SchoolZoneListener getSchoolZoneListener() {
+        return schoolZoneListener;
+    }
+
+    public void setSchoolZoneListener(NavigationManager.SchoolZoneListener schoolZoneListener) {
+        this.schoolZoneListener = schoolZoneListener;
+    }
+
+    public NavigationManager.GpsSignalListener getGpsSignalListener() {
+        return gpsSignalListener;
+    }
+
+    public void setGpsSignalListener(NavigationManager.GpsSignalListener gpsSignalListener) {
+        this.gpsSignalListener = gpsSignalListener;
+    }
 
     public NavigationManager.AudioFeedbackListener getAudioFeedbackListener() {
         return audioFeedbackListener;
