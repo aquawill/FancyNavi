@@ -1,5 +1,16 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.getActivity;
+import static com.fancynavi.android.app.DataHolder.getNavigationManager;
+import static com.fancynavi.android.app.DataHolder.isDragged;
+import static com.fancynavi.android.app.DataHolder.isNavigating;
+import static com.fancynavi.android.app.DataHolder.isPipMode;
+import static com.fancynavi.android.app.MainActivity.isMapRotating;
+import static com.fancynavi.android.app.MainActivity.isVisible;
+import static com.fancynavi.android.app.MainActivity.textToSpeech;
+import static java.util.Locale.TRADITIONAL_CHINESE;
+
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
 import android.app.PictureInPictureParams;
@@ -53,6 +64,7 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
+import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
@@ -157,17 +169,6 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
-
-import static com.fancynavi.android.app.DataHolder.TAG;
-import static com.fancynavi.android.app.DataHolder.getActivity;
-import static com.fancynavi.android.app.DataHolder.getNavigationManager;
-import static com.fancynavi.android.app.DataHolder.isDragged;
-import static com.fancynavi.android.app.DataHolder.isNavigating;
-import static com.fancynavi.android.app.DataHolder.isPipMode;
-import static com.fancynavi.android.app.MainActivity.isMapRotating;
-import static com.fancynavi.android.app.MainActivity.isVisible;
-import static com.fancynavi.android.app.MainActivity.textToSpeech;
-import static java.util.Locale.TRADITIONAL_CHINESE;
 
 
 class MapFragmentView {
@@ -1851,16 +1852,21 @@ class MapFragmentView {
                 androidXMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
-                        for (RoutingZone routingZone : routeResults.get(0).getRoute().getRoutingZones()) {
-                            Log.d(TAG, "routingZone.getId(): " + routingZone.getId());
-                            Log.d(TAG, "routingZone.getType().name(): " + routingZone.getType().name());
-                            Log.d(TAG, "routingZone.getName(): " + routingZone.getName());
-                            for (RoutingZoneRestriction routingZoneRestriction : routingZone.getRestrictions()) {
-                                for (RouteOptions.TransportMode transportMode : routingZoneRestriction.getTransportTypes()) {
-                                    Log.d(TAG, "transportMode.name(): " + transportMode.name());
+                        switch ((routeResults.get(0).getRoute().getRoutePlan().getRouteOptions().getTransportMode())) {
+                            case CAR:
+                            case TRUCK:
+                                for (RoutingZone routingZone : routeResults.get(0).getRoute().getRoutingZones()) {
+                                    Log.d(TAG, "routingZone.getId(): " + routingZone.getId());
+                                    Log.d(TAG, "routingZone.getType().name(): " + routingZone.getType().name());
+                                    Log.d(TAG, "routingZone.getName(): " + routingZone.getName());
+                                    for (RoutingZoneRestriction routingZoneRestriction : routingZone.getRestrictions()) {
+                                        for (RouteOptions.TransportMode transportMode : routingZoneRestriction.getTransportTypes()) {
+                                            Log.d(TAG, "transportMode.name(): " + transportMode.name());
+                                        }
+                                    }
                                 }
-                            }
                         }
+
                         trafficSignMapContainer.removeAllMapObjects();
                         route = routeResults.get(0).getRoute();
                         DataHolder.isRouteOverView = true;
@@ -1979,7 +1985,7 @@ class MapFragmentView {
                     DataHolder.setMap(androidXMapFragment.getMap());
 //                    DataHolder.getMap().setProjectionMode(Map.Projection.MERCATOR);
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
-//                    MapSettings.setDiskCacheRootPath(diskCacheRoot);
+                    MapSettings.setDiskCacheRootPath(diskCacheRoot);
 
                     coreRouter = new CoreRouter();
                     navigationListeners = new NavigationListeners();
@@ -2579,7 +2585,7 @@ class MapFragmentView {
                                 GeoPosition thisSecondLocation = DataHolder.getPositioningManager().getLastKnownPosition();
 //                                Log.d(TAG, "newLocation getLatitude: " + thisSecondLocation.getCoordinate().getLatitude());
 //                                Log.d(TAG, "newLocation getLongitude: " + thisSecondLocation.getCoordinate().getLongitude());
-                                if (lastSecondLocation != null) {
+                                if (lastSecondLocation != null && thisSecondLocation.getCoordinate().isValid()) {
                                     if (lastSecondLocation.distanceTo(thisSecondLocation.getCoordinate()) > 0) {
                                         lastSecondLocation = thisSecondLocation.getCoordinate();
                                         guidanceSpeedView.setText(String.valueOf((int) (thisSecondLocation.getSpeed() * 3.6)));
@@ -2607,8 +2613,8 @@ class MapFragmentView {
 
                     /*Custom Route test code*/
 
-//                    RouteWaypoint start = new RouteWaypoint(new GeoCoordinate(25.1599944, 121.4294844));
-//                    RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(25.16081350, 121.38074623));
+//                    RouteWaypoint start = new RouteWaypoint(new GeoCoordinate(43.080341960303485, 12.355455933138728));
+//                    RouteWaypoint destination = new RouteWaypoint(new GeoCoordinate(43.08029372595563, 12.35537241209641));
 //                    List<RouteWaypoint> waypoints = Arrays.asList(start, destination);
 //
 //                    FTCRRouteOptions routeOptions = new FTCRRouteOptions();
@@ -2618,17 +2624,21 @@ class MapFragmentView {
 //
 //                    FTCRRouter router = new FTCRRouter();
 //                    FTCRRoutePlan ftcrRoutePlan = new FTCRRoutePlan(waypoints, routeOptions);
-//                    ftcrRoutePlan.setOverlay("OVERLAYTAIPEIPORT");
+////                    ftcrRoutePlan.setOverlay("OVERLAYTAIPEIPORT");
 //                    router.calculateRoute(ftcrRoutePlan, new FTCRRouter.Listener() {
 //                        @Override
 //                        public void onCalculateRouteFinished(@NonNull List<FTCRRoute> list, @NonNull FTCRRouter.ErrorResponse errorResponse) {
+//                            Log.d(TAG, "errorResponse.getMessage(): " + errorResponse.getMessage());
 //                            if (errorResponse.getErrorCode() == RoutingError.NONE && !list.isEmpty()) {
 //                                list.forEach(ftcrRoute -> {
-//                                    ftcrRoute.getGeometry();
-//                                    FTCRMapRoute ftcrMapRoute = new FTCRMapRoute(ftcrRoute);
-//                                    ftcrMapRoute.setZIndex(100);
-//                                    ftcrMapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
-//                                    DataHolder.getMap().addMapObject(ftcrMapRoute);
+//                                    Log.d(TAG, "ftcrRoute.getLength()): " + ftcrRoute.getLength());
+//                                    if (ftcrRoute.getLength() > 0) {
+//                                        FTCRMapRoute ftcrMapRoute = new FTCRMapRoute(ftcrRoute);
+//                                        ftcrMapRoute.setZIndex(100);
+//                                        ftcrMapRoute.setColor(Color.argb(255, 243, 174, 255)); //F3AEFF
+//                                        DataHolder.getMap().addMapObject(ftcrMapRoute);
+//                                        DataHolder.getMap().zoomTo(ftcrRoute.getBoundingBox(), Map.Animation.BOW, 0);
+//                                    }
 //                                });
 //                            }
 //                        }

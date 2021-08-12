@@ -1,5 +1,7 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+
 import android.graphics.Color;
 import android.util.Log;
 import android.view.View;
@@ -20,8 +22,6 @@ import com.here.android.mpa.odml.MapPackage;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import static com.fancynavi.android.app.DataHolder.TAG;
 
 class OfflineMapDownloader {
     private final MapLoader mapLoader;
@@ -137,6 +137,7 @@ class OfflineMapDownloader {
                                              MapLoader.ResultCode mapLoaderResultCode) {
             Log.d(TAG, "updateAvailable: " + updateAvailable);
             Log.d(TAG, "mapLoaderResultCode: " + mapLoaderResultCode.name());
+            Log.d(TAG, "currentMapVersion: " + currentMapVersion);
             if (mapLoaderResultCode == MapLoader.ResultCode.OPERATION_SUCCESSFUL) {
                 if (updateAvailable) {
                     offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.update_available) + currentMapVersion + " --> " + newestMapVersion);
