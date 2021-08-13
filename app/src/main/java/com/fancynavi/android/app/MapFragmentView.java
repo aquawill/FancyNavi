@@ -393,14 +393,12 @@ class MapFragmentView {
                                 break;
                             case NEAR_DESTINATION:
                                 warningText = "目的地\n附近壅塞";
-                                textToSpeech.speak("目的地附近為壅塞路段，請小心駕駛。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                                textToSpeech.speak("目的地附近為壅塞路段，請注意路況。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 break;
                         }
                         showTrafficWarningTextView(trafficWarningTextView, warningText);
                     }
                 }
-
-
             }
         }
     };
