@@ -55,4 +55,9 @@
     <string name="search_places">Search Places...</string>
     <string name="reverse_geocode">Reverse Geocode: </string>
     <string name="voice_download_failed">Navigation Voice Download Failed</string>
+    <string name="downloading_voice_skin_id">\"Downloading voice skin ID: \"</string>
+    <string name="start_navi">Start Navi</string>
+    <string name="stop_navi">Stop Navi</string>
+    <string name="start_guidance">Start Guidance</string>
+    <string name="yes">Yes</string>
 </resources>

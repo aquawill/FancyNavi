@@ -165,15 +165,15 @@ class OfflineMapDownloader {
                 } else {
                     offlineDownloadSnackbar.setText(R.string.no_available_map_update);
                     isMapLoaderOperating = false;
-//                    offlineDownloadSnackbar.setText("No available map update.\nRemove map of " + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + " ?");
-//                    offlineDownloadSnackbar.setAction("REMOVE", new View.OnClickListener(
-//
-//                    ) {
-//                        @Override
-//                        public void onClick(View v) {
-//                            mapLoader.uninstallMapPackages(mapIdList);
-//                        }
-//                    });
+                    offlineDownloadSnackbar.setText("No available map update.\nRemove map of " + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + " ?");
+                    offlineDownloadSnackbar.setAction("REMOVE", new View.OnClickListener(
+
+                    ) {
+                        @Override
+                        public void onClick(View v) {
+                            mapLoader.uninstallMapPackages(mapIdList);
+                        }
+                    });
                     offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
@@ -193,7 +193,7 @@ class OfflineMapDownloader {
     };
 
     OfflineMapDownloader() {
-//        https://developer.here.com/documentation/android-premium/dev_guide/topics/maps-offline-maploader.html
+//        https://developer.here.com/documentatifon/android-premium/dev_guide/topics/maps-offline-maploader.html
         mapLoader = MapLoader.getInstance();
         mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.ScooterAttributes);
         mapLoader.selectDataGroup(MapPackage.SelectableDataGroup.TruckAttributes);

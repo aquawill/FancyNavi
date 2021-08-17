@@ -16,6 +16,27 @@
 
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.isDragged;
+import static com.fancynavi.android.app.DataHolder.isNavigating;
+import static com.fancynavi.android.app.DataHolder.isPipMode;
+import static com.fancynavi.android.app.DataHolder.isRouteOverView;
+import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
+import static com.fancynavi.android.app.MapFragmentView.audioManager;
+import static com.fancynavi.android.app.MapFragmentView.clearButton;
+import static com.fancynavi.android.app.MapFragmentView.compassButton;
+import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
+import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
+import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
+import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
+import static com.fancynavi.android.app.MapFragmentView.mapRoute;
+import static com.fancynavi.android.app.MapFragmentView.mapRouteGeoBoundingBox;
+import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
+import static com.fancynavi.android.app.MapFragmentView.onAudioFocusChangeListener;
+import static com.fancynavi.android.app.MapFragmentView.route;
+import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
+import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
+
 import android.Manifest;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
@@ -62,27 +83,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
-
-import static com.fancynavi.android.app.DataHolder.TAG;
-import static com.fancynavi.android.app.DataHolder.isDragged;
-import static com.fancynavi.android.app.DataHolder.isNavigating;
-import static com.fancynavi.android.app.DataHolder.isPipMode;
-import static com.fancynavi.android.app.DataHolder.isRouteOverView;
-import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
-import static com.fancynavi.android.app.MapFragmentView.audioManager;
-import static com.fancynavi.android.app.MapFragmentView.clearButton;
-import static com.fancynavi.android.app.MapFragmentView.compassButton;
-import static com.fancynavi.android.app.MapFragmentView.currentPositionMapLocalModel;
-import static com.fancynavi.android.app.MapFragmentView.distanceMarkerMapOverlayList;
-import static com.fancynavi.android.app.MapFragmentView.junctionViewImageView;
-import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
-import static com.fancynavi.android.app.MapFragmentView.mapRoute;
-import static com.fancynavi.android.app.MapFragmentView.mapRouteGeoBoundingBox;
-import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
-import static com.fancynavi.android.app.MapFragmentView.onAudioFocusChangeListener;
-import static com.fancynavi.android.app.MapFragmentView.route;
-import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
-import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
 
 //import com.google.android.gms.location.FusedLocationProviderClient;
 //import com.google.android.gms.location.LocationCallback;
@@ -239,9 +239,10 @@ public class MainActivity extends AppCompatActivity {
         textToSpeech = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int i) {
-                if (textToSpeech.isLanguageAvailable(Locale.TAIWAN) == TextToSpeech.LANG_AVAILABLE) {
-                    textToSpeech.setLanguage(Locale.TAIWAN);
-                }
+//                if (textToSpeech.isLanguageAvailable(Locale.TAIWAN) == TextToSpeech.LANG_AVAILABLE) {
+//                    textToSpeech.setLanguage(Locale.TAIWAN);
+//                }
+                textToSpeech.setLanguage(Locale.getDefault());
                 Log.d(TAG, "textToSpeech.getDefaultEngine(): " + textToSpeech.getDefaultEngine());
                 Log.d(TAG, "textToSpeech.getDefaultVoice().getName(): " + textToSpeech.getDefaultVoice().getName());
                 Log.d(TAG, "textToSpeech.getDefaultVoice().getLocale().getCountry(): " + textToSpeech.getDefaultVoice().getLocale().getCountry());

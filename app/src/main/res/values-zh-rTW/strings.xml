@@ -1,20 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~ Copyright (C) 2017-2018 HERE Europe B.V.
-  ~
-  ~ Licensed under the Apache License, Version 2.0 (the "License");
-  ~ you may not use this file except in compliance with the License.
-  ~ You may obtain a copy of the License at
-  ~
-  ~     http://www.apache.org/licenses/LICENSE-2.0
-  ~
-  ~ Unless required by applicable law or agreed to in writing, software
-  ~ distributed under the License is distributed on an "AS IS" BASIS,
-  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  ~ See the License for the specific language governing permissions and
-  ~ limitations under the License.
-  -->
-
 <resources>
   <string name="msdkui_allow_car_pool">允許高承載車道</string>
   <string name="msdkui_allow_car_shuttle">允許汽車裝載列車</string>
@@ -180,15 +164,15 @@
   <string name="app_name">Fancy Navi</string>
   <string name="retry">重試</string>
   <string name="route_calculation_failed">路線計算失敗：</string>
-  <string name="alternative_route_to_avoid_congestion">發現避開壅塞路徑可節省</string>
-  <string name="alternative_route_applied">路徑已避開壅塞路段，請小心駕駛。</string>
+  <string name="alternative_route_to_avoid_congestion">發現避開壅塞路線可節省</string>
+  <string name="alternative_route_applied">路線已避開壅塞路段，請小心駕駛。</string>
   <string name="found_better_route">發現更佳路線，是否使用？</string>
   <string name="reset">取消</string>
   <string name="gpx_logging">紀錄GPS軌跡：</string>
   <string name="cannot_initialize_map_with_error">錯誤！無法初始化地圖 ：</string>
   <string name="no_result_returned">查無結果</string>
   <string name="safety_camera_ahead">測速照相：</string>
-  <string name="add_waypoint">增加路徑點</string>
+  <string name="add_waypoint">增加途經點</string>
   <string name="yes">是</string>
   <string name="speed_camera_ahead_voice">前方有測速照相，速限：</string>
   <string name="kilometers">公里</string>
@@ -214,7 +198,7 @@
   <string name="check">檢查地圖更新</string>
   <string name="required_permission">需要權限：</string>
   <string name="not_granted">未取得</string>
-  <string name="here_sdk_v">HERE SDK 版本：</string>
+  <string name="here_sdk_v">HERE SDK 版本號：</string>
   <string name="clear_cache">清除離線暫存</string>
   <string name="toll_fee">通行費：</string>
   <string name="cancel">取消</string>
@@ -226,5 +210,6 @@
   <string name="search_places">搜尋地點...</string>
   <string name="reverse_geocode">地址查詢：</string>
     <string name="voice_download_failed">導航語音下載失敗</string>
+  <string name="downloading_voice_skin_id">下載導航語音ID：</string>
 
 </resources>

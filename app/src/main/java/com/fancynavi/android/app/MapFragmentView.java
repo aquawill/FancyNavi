@@ -9,7 +9,6 @@ import static com.fancynavi.android.app.DataHolder.isPipMode;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
-import static java.util.Locale.TRADITIONAL_CHINESE;
 
 import android.app.AlertDialog;
 import android.app.KeyguardManager;
@@ -2303,7 +2302,7 @@ class MapFragmentView {
                         new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
                     }
                     DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
-                    DataHolder.getMap().setMapDisplayLanguage(TRADITIONAL_CHINESE);
+                    DataHolder.getMap().setMapDisplayLanguage(Locale.getDefault());
                     DataHolder.getMap().setSafetySpotsVisible(true);
                     DataHolder.getMap().setExtrudedBuildingsVisible(true);
                     DataHolder.getMap().setLandmarksVisible(true);
@@ -2548,8 +2547,15 @@ class MapFragmentView {
                     /* Download voice */
                     voiceActivation = new VoiceActivation(DataHolder.getActivity());
                     voiceActivation.setContext(DataHolder.getActivity());
-                    voiceActivation.setDesiredLangCode("cht");
-//                    voiceActivation.setDesiredVoiceId(31000); // Recorded Taiwanese Mandarin (ID: 29000)
+                    String currentISO3Country = Locale.getDefault().getISO3Country();
+                    Log.d(TAG, "Locale.getDefault().getISO3Country(): " + currentISO3Country);
+                    if (currentISO3Country.equals("TWN")) {
+                        voiceActivation.setDesiredVoiceId(217);
+                    } else if (currentISO3Country.equals("CHN")) {
+                        voiceActivation.setDesiredVoiceId(31000);
+                    } else {
+                        voiceActivation.setDesiredVoiceId(206);
+                    }
                     voiceActivation.downloadCatalogAndSkin();
 
                     /* adding rotatable position indicator to the map */

@@ -1,5 +1,7 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -14,8 +16,6 @@ import com.here.android.mpa.guidance.VoicePackage;
 import com.here.android.mpa.guidance.VoiceSkin;
 
 import java.util.List;
-
-import static com.fancynavi.android.app.DataHolder.TAG;
 
 /**
  * Created by aquawill on 2019-05-01.
@@ -71,6 +71,7 @@ class VoiceActivation {
 
     private void downloadVoice(Context context, final long voiceSkinId) {
         Log.d(TAG, "Downloading voice skin ID: " + voiceSkinId);
+        Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.downloading_voice_skin_id) + voiceSkinId, Snackbar.LENGTH_SHORT).show();
         voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
@@ -82,7 +83,7 @@ class VoiceActivation {
                     VoiceSkin localVoiceSkin = voiceCatalog.getLocalVoiceSkin(voiceSkinId);
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
                     Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated (" + localVoiceSkin.getOutputType() + ").");
-                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + localVoiceSkin.getLanguage() + "/" + localVoiceSkin.getOutputType().name(), Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + "ID: " + localVoiceSkin.getId() + " / " + localVoiceSkin.getLanguage() + " / " + localVoiceSkin.getOutputType().name(), Snackbar.LENGTH_SHORT).show();
                 }
             }
         });
@@ -116,9 +117,11 @@ class VoiceActivation {
 //                    localInstalledSkins.clear();
                     Log.d(TAG, "# of local skins: " + localInstalledSkins.size());
                     String languageName = "";
+                    long voiceId = 0L;
                     for (VoiceSkin voice : localInstalledSkins) {
                         Log.d(TAG, "ID: " + voice.getId() + " Language: " + voice.getLanguage());
                         languageName = voice.getLanguage();
+                        voiceId = voice.getId();
                         if (voice.getId() == desiredVoiceId) {
                             localVoiceSkinExisted[0] = true;
                         }
@@ -127,7 +130,7 @@ class VoiceActivation {
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
                     } else {
-                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + languageName, Snackbar.LENGTH_SHORT).show();
+                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + "ID: " + voiceId + " / " + languageName, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }
