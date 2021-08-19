@@ -1,5 +1,10 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.emptyMapOnTouchListener;
+import static com.fancynavi.android.app.DataHolder.isNavigating;
+import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
+import static com.fancynavi.android.app.MapFragmentView.navigationListeners;
+
 import android.util.Log;
 import android.view.View;
 
@@ -8,12 +13,6 @@ import com.here.android.mpa.guidance.SafetySpotNotification;
 
 import java.lang.ref.WeakReference;
 import java.util.EnumSet;
-
-import static com.fancynavi.android.app.DataHolder.emptyMapOnTouchListener;
-import static com.fancynavi.android.app.DataHolder.isNavigating;
-import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
-import static com.fancynavi.android.app.MapFragmentView.laneInformationMapOverlay;
-import static com.fancynavi.android.app.MapFragmentView.navigationListeners;
 
 class MapModeChanger {
 
@@ -116,7 +115,7 @@ class MapModeChanger {
         if (isNavigating) {
             new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+//            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
             new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
         }

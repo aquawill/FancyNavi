@@ -6,6 +6,7 @@ import static com.fancynavi.android.app.DataHolder.getNavigationManager;
 import static com.fancynavi.android.app.DataHolder.isDragged;
 import static com.fancynavi.android.app.DataHolder.isNavigating;
 import static com.fancynavi.android.app.DataHolder.isPipMode;
+import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
 import static com.fancynavi.android.app.MainActivity.isMapRotating;
 import static com.fancynavi.android.app.MainActivity.isVisible;
 import static com.fancynavi.android.app.MainActivity.textToSpeech;
@@ -1324,6 +1325,7 @@ class MapFragmentView {
                 guidanceStreetLabelView.setCurrentStreetData(guidanceStreetLabelData);
             }
         });
+        guidanceStreetLabelView.setOnTouchListener(mapOnTouchListenerForNavigation);
     }
 
     private void initGuidanceManeuverView(Context context, NavigationManager navigationManager, Route route) {

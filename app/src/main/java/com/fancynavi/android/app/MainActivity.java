@@ -21,7 +21,6 @@ import static com.fancynavi.android.app.DataHolder.isDragged;
 import static com.fancynavi.android.app.DataHolder.isNavigating;
 import static com.fancynavi.android.app.DataHolder.isPipMode;
 import static com.fancynavi.android.app.DataHolder.isRouteOverView;
-import static com.fancynavi.android.app.DataHolder.mapOnTouchListenerForNavigation;
 import static com.fancynavi.android.app.MapFragmentView.audioManager;
 import static com.fancynavi.android.app.MapFragmentView.clearButton;
 import static com.fancynavi.android.app.MapFragmentView.compassButton;
@@ -339,7 +338,7 @@ public class MainActivity extends AppCompatActivity {
             intoGuidanceMode();
             new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+//            DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
         } else {
             if (DataHolder.getMap() != null) {
                 new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
@@ -455,9 +454,9 @@ public class MainActivity extends AppCompatActivity {
                     DataHolder.getMap().addMapOverlay(o);
                 }
             }
-            if (!DataHolder.isSimpleMode()) {
-                DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
-            }
+//            if (!DataHolder.isSimpleMode()) {
+//                DataHolder.getAndroidXMapFragment().setOnTouchListener(mapOnTouchListenerForNavigation);
+//            }
         }
     }
 
