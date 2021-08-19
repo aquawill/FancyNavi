@@ -124,13 +124,11 @@ class VoiceActivation {
                         voiceId = voice.getId();
                         if (voice.getId() == desiredVoiceId) {
                             localVoiceSkinExisted[0] = true;
+                            Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + "ID: " + voiceId + " / " + languageName, Snackbar.LENGTH_SHORT).show();
                         }
                     }
-                    Log.d(TAG, "" + voiceCatalog.getLocalVoiceSkin(desiredVoiceId));
                     if (!localVoiceSkinExisted[0]) {
                         downloadVoice(context, desiredVoiceId);
-                    } else {
-                        Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + "ID: " + voiceId + " / " + languageName, Snackbar.LENGTH_SHORT).show();
                     }
                 }
             }

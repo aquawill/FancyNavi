@@ -373,26 +373,28 @@ class MapFragmentView {
                     if (trafficNotificationInfoDistance < 1000 && trafficNotificationInfoDistance > 0) {
                         switch (trafficNotificationInfoType) {
                             case ON_ROUTE:
+                            case NEAR_STOPOVER:
+                            case NEAR_START:
                                 if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
-                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後為壅塞路段。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_road_congestion_display);
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 } else {
-                                    warningText = "經過\n壅塞路段";
-                                    textToSpeech.speak("經過壅塞路段。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                                    warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
+                                    textToSpeech.speak(warningText, TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 }
                                 break;
                             case ON_HIGHWAY:
                                 if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
-                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + "m 後\n壅塞路段";
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + "公尺後經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_road_congestion_display);
+                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_congestion_please_drive_carefully), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 } else {
-                                    warningText = "經過\n壅塞路段";
-                                    textToSpeech.speak("經過壅塞路段，請耐心駕駛。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                                    warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
+                                    textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.passing_congestion_please_drive_patiently), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 }
                                 break;
                             case NEAR_DESTINATION:
-                                warningText = "目的地\n附近壅塞";
-                                textToSpeech.speak("目的地附近為壅塞路段，請注意路況。", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                                warningText = DataHolder.getAndroidXMapFragment().getString(R.string.congestion_around_destination_display);
+                                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.attention_congestion_around_destination), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                                 break;
                         }
                         showTrafficWarningTextView(trafficWarningTextView, warningText);
@@ -914,7 +916,7 @@ class MapFragmentView {
                 } else {
                     safetyCameraSpeedLimitKM = (int) (Math.round((safetyCameraSpeedLimit * 3.6)));
                 }
-                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.speed_camera_ahead_voice) + safetyCameraSpeedLimitKM + DataHolder.getAndroidXMapFragment().getString(R.string.kilometers), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.speed_camera_ahead_voice) + safetyCameraSpeedLimitKM + DataHolder.getAndroidXMapFragment().getString(R.string.kilometers_per_hour), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
             }
         }
     };
@@ -1517,6 +1519,7 @@ class MapFragmentView {
             map.setMapScheme(customizedColorScheme);
             map.setLandmarksVisible(false);
             map.setExtrudedBuildingsVisible(false);
+            DataHolder.getMap().setLandmarksVisible(false);
             map.setCartoMarkersVisible(false);
 
 
@@ -1563,6 +1566,7 @@ class MapFragmentView {
     private void intoNavigationMode() {
         initJunctionView();
         DataHolder.getMap().setExtrudedBuildingsVisible(false);
+        DataHolder.getMap().setLandmarksVisible(false);
         audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
         onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
             @Override
@@ -2746,6 +2750,7 @@ class MapFragmentView {
         clearDistanceMarkerMapOverlay();
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         DataHolder.getMap().setExtrudedBuildingsVisible(true);
+        DataHolder.getMap().setLandmarksVisible(true);
         DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
         DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
         DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));

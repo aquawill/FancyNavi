@@ -1,5 +1,8 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.isSignShowing;
+import static com.fancynavi.android.app.MainActivity.textToSpeech;
+
 import android.content.Context;
 import android.content.res.Configuration;
 import android.media.MediaPlayer;
@@ -12,9 +15,6 @@ import com.here.android.mpa.common.RoadElement;
 import com.here.android.mpa.common.TrafficSign;
 
 import java.util.List;
-
-import static com.fancynavi.android.app.DataHolder.isSignShowing;
-import static com.fancynavi.android.app.MainActivity.textToSpeech;
 
 class TrafficSignPresenter {
 
@@ -138,7 +138,7 @@ class TrafficSignPresenter {
 
         int numberOfTrafficSigns = trafficSigns.size();
         int i = 0;
-        String signName = "注意。";
+        String signName = context.getString(R.string.attention);
         ImageView targetSignImageView = null;
         while (i < numberOfTrafficSigns) {
             TrafficSign trafficSign = trafficSigns.get(i);
@@ -157,107 +157,107 @@ class TrafficSignPresenter {
                 switch (trafficSign.type) {
                     case 1:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_1);
-                        signName = signName.concat("禁止超車。");
+                        signName = signName.concat(context.getString(R.string.start_of_no_overtaking));
                         break;
                     case 6:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_6);
-                        signName = signName.concat("右側來車。");
+                        signName = signName.concat(context.getString(R.string.lane_merge_right));
                         break;
                     case 7:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_7);
-                        signName = signName.concat("左側來車。");
+                        signName = signName.concat(context.getString(R.string.lane_merge_left));
                         break;
                     case 9:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_9);
-                        signName = signName.concat("有柵門鐵路平交道。");
+                        signName = signName.concat(context.getString(R.string.railway_crossing_protected));
                         break;
                     case 10:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_10);
-                        signName = signName.concat("無柵門鐵路平交道。");
+                        signName = signName.concat(context.getString(R.string.railway_crossing_unprotected));
                         break;
                     case 11:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
-                        signName = signName.concat("路寬縮減。");
+                        signName = signName.concat(context.getString(R.string.road_narrows));
                         break;
                     case 12:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);
-                        signName = signName.concat("左彎。");
+                        signName = signName.concat(context.getString(R.string.sharp_curve_left));
                         break;
                     case 13:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_13);
-                        signName = signName.concat("右彎。");
+                        signName = signName.concat(context.getString(R.string.sharp_curve_right));
                         break;
                     case 14:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_14);
-                        signName = signName.concat("連續彎路先向左。");
+                        signName = signName.concat(context.getString(R.string.winding_road_starting_left));
                         break;
                     case 15:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_15);
-                        signName = signName.concat("連續彎路先向右。");
+                        signName = signName.concat(context.getString(R.string.winding_road_starting_right));
                         break;
                     case 18:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_18);
-                        signName = signName.concat("險升坡。");
+                        signName = signName.concat(context.getString(R.string.steep_hill_upwards));
                         break;
                     case 19:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_19);
-                        signName = signName.concat("險降坡。");
+                        signName = signName.concat(context.getString(R.string.steep_hill_downwards));
                         break;
                     case 20:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_20);
-                        signName = signName.concat("停車再開。");
+                        signName = signName.concat(context.getString(R.string.stop_sign));
                         break;
                     case 21:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_21);
-                        signName = signName.concat("注意強風。");
+                        signName = signName.concat(context.getString(R.string.lateral_wind));
                         break;
                     case 22:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_22);
-                        signName = signName.concat("危險。");
+                        signName = signName.concat(context.getString(R.string.general_warning));
                         break;
                     case 23:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_23);
-                        signName = signName.concat("路面高突。");
+                        signName = signName.concat(context.getString(R.string.risk_of_grounding));
                         break;
                     case 27:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_27);
-                        signName = signName.concat("當心動物。");
+                        signName = signName.concat(context.getString(R.string.animal_crossing));
                         break;
                     case 29:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_29);
-                        signName = signName.concat("路滑。");
+                        signName = signName.concat(context.getString(R.string.slippery_road));
                         break;
                     case 30:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_30);
-                        signName = signName.concat("注意落石。");
+                        signName = signName.concat(context.getString(R.string.falling_rocks));
                         break;
                     case 31:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_31);
-                        signName = signName.concat("當心兒童。");
+                        signName = signName.concat(context.getString(R.string.school_zone));
                         break;
                     case 32:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_32);
-                        signName = signName.concat("當心輕軌。");
+                        signName = signName.concat(context.getString(R.string.tramway_crossing));
                         break;
                     case 34:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_34);
-                        signName = signName.concat("易肇事路段。");
+                        signName = signName.concat(context.getString(R.string.accident_hazard));
                         break;
                     case 36:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_36);
-                        signName = signName.concat("禁止會車。");
+                        signName = signName.concat(context.getString(R.string.yield_to_oncoming_traffic));
                         break;
                     case 41:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_41);
-                        signName = signName.concat("當心行人。");
+                        signName = signName.concat(context.getString(R.string.pedestrian_crossing));
                         break;
                     case 42:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_42);
-                        signName = signName.concat("讓路。");
+                        signName = signName.concat(context.getString(R.string.yield));
                         break;
                     case 59:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_59);
-                        signName = signName.concat("當心腳踏車。");
+                        signName = signName.concat(context.getString(R.string.bicycle_crossing));
                         break;
                 }
                 if (!isSignShowing) {
