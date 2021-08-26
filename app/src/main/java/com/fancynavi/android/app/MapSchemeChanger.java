@@ -1,5 +1,7 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.isNavigating;
+
 import android.graphics.Color;
 import android.widget.TextView;
 
@@ -7,8 +9,6 @@ import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 
 import java.util.EnumSet;
-
-import static com.fancynavi.android.app.DataHolder.isNavigating;
 
 class MapSchemeChanger {
 
@@ -87,9 +87,9 @@ class MapSchemeChanger {
     }
 
     void navigationMapOn() {
-        if (map.getMapScheme() == Map.Scheme.NORMAL_DAY || map.getMapScheme() == Map.Scheme.NORMAL_NIGHT) {
+        if (map.getMapScheme().equals(Map.Scheme.NORMAL_DAY) || map.getMapScheme().equals(Map.Scheme.NORMAL_NIGHT)) {
             map.setMapScheme(map.getMapScheme().replace("normal.", "carnav."));
-        } else if (map.getMapScheme() == Map.Scheme.TRUCK_DAY || map.getMapScheme() == Map.Scheme.TRUCK_NIGHT) {
+        } else if (map.getMapScheme().equals(Map.Scheme.TRUCK_DAY) || map.getMapScheme().equals(Map.Scheme.TRUCK_NIGHT)) {
             map.setMapScheme(map.getMapScheme().replace("truck.", "trucknav."));
         }
     }

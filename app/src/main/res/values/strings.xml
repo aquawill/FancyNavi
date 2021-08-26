@@ -67,7 +67,7 @@
     <string name="lane_merge_left">Lane Merge Left ahead</string>
     <string name="railway_crossing_protected">Railway Crossing Protected ahead</string>
     <string name="railway_crossing_unprotected">Railway Crossing Unprotected ahead</string>
-    <string name="road_narrows">Road Narrow aheads</string>
+    <string name="road_narrow">Road Narrow ahead</string>
     <string name="sharp_curve_left">Sharp Curve Left ahead</string>
     <string name="sharp_curve_right">Sharp Curve Right ahead</string>
     <string name="winding_road_starting_left">Winding Road starting Left ahead</string>
@@ -95,4 +95,5 @@
     <string name="passing_congestion_please_drive_patiently">Congestion Ahead, Please Drive Patiently.</string>
     <string name="congestion_around_destination_display">Congestion\nAround\nDestination</string>
     <string name="attention_congestion_around_destination">Attention, Congestion Around Destination</string>
+    <string name="mph">MPH</string>
 </resources>

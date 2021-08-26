@@ -218,7 +218,7 @@
     <string name="lane_merge_left">左侧来车</string>
     <string name="railway_crossing_protected">有栅门铁路平交道</string>
     <string name="railway_crossing_unprotected">无栅门铁路平交道</string>
-    <string name="road_narrows">路宽缩减</string>
+    <string name="road_narrow">路宽缩减</string>
     <string name="sharp_curve_left">左拐</string>
     <string name="sharp_curve_right">右拐</string>
     <string name="winding_road_starting_left">连续弯路先向左</string>

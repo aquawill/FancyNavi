@@ -139,6 +139,11 @@ import com.here.android.mpa.tce.TollCostError;
 import com.here.android.mpa.tce.TollCostOptions;
 import com.here.android.mpa.tce.TollCostRequest;
 import com.here.android.mpa.tce.TollCostResult;
+import com.here.msdkui.common.measurements.Converter;
+import com.here.msdkui.common.measurements.LengthConverter;
+import com.here.msdkui.common.measurements.MeasurementUnit;
+import com.here.msdkui.common.measurements.SpeedConverter;
+import com.here.msdkui.common.measurements.UnitSystem;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalView;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewData;
 import com.here.msdkui.guidance.GuidanceEstimatedArrivalViewListener;
@@ -184,6 +189,107 @@ class MapFragmentView {
     static List<MapOverlay> distanceMarkerMapOverlayList = new ArrayList<>();
     static NavigationListeners navigationListeners;
     static GeoBoundingBox mapRouteGeoBoundingBox;
+    private final OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
+        @Override
+        public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
+            currentGeoPosition = geoPosition;
+            mapScaleView.updateScale();
+            if (!DataHolder.isRouteOverView && !DataHolder.isDragged && !DataHolder.isNavigating) {
+                if (geoPosition.isValid()) {
+//                    Log.d(TAG, "geoPosition.isValid()");
+                    DataHolder.getMap().setCenter(geoPosition.getCoordinate(), Map.Animation.LINEAR);
+                } else if (lastKnownLocation.isValid()) {
+//                    Log.d(TAG, "lastKnownLocation.isValid()");
+                    DataHolder.getMap().setCenter(lastKnownLocation, Map.Animation.LINEAR);
+                }
+            }
+//            https://developer.here.com/documentation/android-premium/3.18/api_reference_java/index.html?com%2Fhere%2Fandroid%2Fmpa%2Fcommon%2FGeoPosition.html
+//            Log.d(TAG, "geoPosition.getCoordinate(): " + geoPosition.getCoordinate().getLatitude() + ", " + geoPosition.getCoordinate().getLongitude() + " / geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology() + " / geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
+            RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
+            if (roadElement != null) {
+                if (roadElement.getSpeedLimit() >= 0) {
+                    guidanceSpeedLimitView.setVisibility(View.VISIBLE);
+                    speedLabelTextView.setVisibility(View.VISIBLE);
+                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
+                }
+            } else {
+                guidanceSpeedLimitView.setVisibility(View.GONE);
+                speedLabelTextView.setVisibility(View.GONE);
+            }
+            GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
+            geoPositionGeoCoordinate.setAltitude(1);
+            currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
+            if (DataHolder.isNavigating) {
+                currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
+            }
+            if (!DataHolder.isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
+                positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinate);
+                float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
+                if (radius > 0) {
+                    positionAccuracyMapCircle.setRadius(radius);
+                }
+            }
+            if (DataHolder.isNavigating) {
+                if (endGuidanceDirectionalGeoPolyline != null) {
+                    endGuidanceDirectionalGeoPolyline.clear();
+                    endGuidanceDirectionalGeoPolyline.add(destinationLocationGeoCoordinate);
+                    endGuidanceDirectionalGeoPolyline.add(geoPositionGeoCoordinate);
+                    endGuidanceDirectionalMapPolyline.setGeoPolyline(endGuidanceDirectionalGeoPolyline);
+                }
+            }
+
+            if (geoPosition.getPositionTechnology() == 8 || geoPosition.getPositionTechnology() == 0) {
+                guidanceSpeedView.setVisibility(View.VISIBLE);
+                guidanceSpeedLimitView.setVisibility(View.VISIBLE);
+                speedLabelTextView.setVisibility(View.VISIBLE);
+                positionIndicator.setVisible(false);
+                currentPositionMapLocalModel.setVisible(true);
+                positionAccuracyMapCircle.setVisible(true);
+                if (!DataHolder.isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
+                    positionAccuracyMapCircle.setLineWidth(16);
+                    positionAccuracyMapCircle.setLineColor(Color.argb(64, 0, 255, 0));
+                    positionAccuracyMapCircle.setFillColor(Color.argb(32, 0, 255, 0));
+                }
+                gpsStatusImageView.setImageResource(R.drawable.ic_gps_fixed_white_24dp);
+                gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.green));
+                if (geoPosition.isValid()) {
+                    if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+                        guidanceSpeedView.setText(String.valueOf((int) new SpeedConverter().convert(geoPosition.getSpeed(), MeasurementUnit.METERS_PER_SECOND, MeasurementUnit.MILES_PER_HOUR).getValue()));
+                    } else {
+                        guidanceSpeedView.setText(String.valueOf((int) new SpeedConverter().convert(geoPosition.getSpeed(), MeasurementUnit.METERS_PER_SECOND, MeasurementUnit.KILOMETERS_PER_HOUR).getValue()));
+                    }
+                }
+
+            } else if (geoPosition.getPositionTechnology() < 8 && geoPosition.getPositionTechnology() > 0) {
+                guidanceSpeedView.setVisibility(View.GONE);
+                guidanceSpeedLimitView.setVisibility(View.GONE);
+                speedLabelTextView.setVisibility(View.GONE);
+                positionIndicator.setVisible(true);
+                currentPositionMapLocalModel.setVisible(false);
+                positionAccuracyMapCircle.setVisible(false);
+                if (!DataHolder.isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
+                    positionAccuracyMapCircle.setLineWidth(16);
+                    positionAccuracyMapCircle.setLineColor(Color.argb(64, 255, 255, 0));
+                    positionAccuracyMapCircle.setFillColor(Color.argb(32, 255, 255, 0));
+                }
+                gpsStatusImageView.setImageResource(R.drawable.ic_gps_not_fixed_white_24dp);
+                gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.yellow));
+            }
+        }
+
+        @Override
+        public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
+//            Log.d(TAG, "locationMethod: " + locationMethod.toString());
+//            Log.d(TAG, "locationStatus: " + locationStatus.toString());
+            if (locationStatus.equals(PositioningManager.LocationStatus.OUT_OF_SERVICE) || locationStatus.equals(PositioningManager.LocationStatus.TEMPORARILY_UNAVAILABLE)) {
+                gpsStatusImageView.setImageResource(R.drawable.ic_gps_off_white_24dp);
+                gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.red));
+                guidanceSpeedView.setVisibility(View.GONE);
+                speedLabelTextView.setVisibility(View.GONE);
+//                gpsSwitch.setEnabled(false);
+            }
+        }
+    };
     private MapState previousMapState = null;
     private GeoJSONTileLoader roadkillGeoJSONTileLoader;
     private MapContainer roadkillGeoJsonTileMapContainer;
@@ -921,104 +1027,7 @@ class MapFragmentView {
             }
         }
     };
-
-    private final OnPositionChangedListener positionChangedListener = new OnPositionChangedListener() {
-        @Override
-        public void onPositionUpdated(PositioningManager.LocationMethod locationMethod, GeoPosition geoPosition, boolean b) {
-            currentGeoPosition = geoPosition;
-            mapScaleView.updateScale();
-            if (!DataHolder.isRouteOverView && !DataHolder.isDragged && !DataHolder.isNavigating) {
-                if (geoPosition.isValid()) {
-//                    Log.d(TAG, "geoPosition.isValid()");
-                    DataHolder.getMap().setCenter(geoPosition.getCoordinate(), Map.Animation.LINEAR);
-                } else if (lastKnownLocation.isValid()) {
-//                    Log.d(TAG, "lastKnownLocation.isValid()");
-                    DataHolder.getMap().setCenter(lastKnownLocation, Map.Animation.LINEAR);
-                }
-            }
-//            https://developer.here.com/documentation/android-premium/3.18/api_reference_java/index.html?com%2Fhere%2Fandroid%2Fmpa%2Fcommon%2FGeoPosition.html
-//            Log.d(TAG, "geoPosition.getCoordinate(): " + geoPosition.getCoordinate().getLatitude() + ", " + geoPosition.getCoordinate().getLongitude() + " / geoPosition.getPositionTechnology(): " + geoPosition.getPositionTechnology() + " / geoPosition.getPositionSource(): " + geoPosition.getPositionSource());
-            RoadElement roadElement = DataHolder.getPositioningManager().getRoadElement();
-            if (roadElement != null) {
-                if (roadElement.getSpeedLimit() >= 0) {
-                    guidanceSpeedLimitView.setVisibility(View.VISIBLE);
-                    speedLabelTextView.setVisibility(View.VISIBLE);
-                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
-                }
-            } else {
-                guidanceSpeedLimitView.setVisibility(View.GONE);
-                speedLabelTextView.setVisibility(View.GONE);
-            }
-            GeoCoordinate geoPositionGeoCoordinate = geoPosition.getCoordinate();
-            geoPositionGeoCoordinate.setAltitude(1);
-            currentPositionMapLocalModel.setAnchor(geoPositionGeoCoordinate);
-            if (DataHolder.isNavigating) {
-                currentPositionMapLocalModel.setYaw((float) geoPosition.getHeading());
-            }
-            if (!DataHolder.isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
-                positionAccuracyMapCircle.setCenter(geoPositionGeoCoordinate);
-                float radius = (geoPosition.getLatitudeAccuracy() + geoPosition.getLongitudeAccuracy()) / 2;
-                if (radius > 0) {
-                    positionAccuracyMapCircle.setRadius(radius);
-                }
-            }
-            if (DataHolder.isNavigating) {
-                if (endGuidanceDirectionalGeoPolyline != null) {
-                    endGuidanceDirectionalGeoPolyline.clear();
-                    endGuidanceDirectionalGeoPolyline.add(destinationLocationGeoCoordinate);
-                    endGuidanceDirectionalGeoPolyline.add(geoPositionGeoCoordinate);
-                    endGuidanceDirectionalMapPolyline.setGeoPolyline(endGuidanceDirectionalGeoPolyline);
-                }
-            }
-
-            if (geoPosition.getPositionTechnology() == 8 || geoPosition.getPositionTechnology() == 0) {
-                guidanceSpeedView.setVisibility(View.VISIBLE);
-                guidanceSpeedLimitView.setVisibility(View.VISIBLE);
-                speedLabelTextView.setVisibility(View.VISIBLE);
-                positionIndicator.setVisible(false);
-                currentPositionMapLocalModel.setVisible(true);
-                positionAccuracyMapCircle.setVisible(true);
-                if (!DataHolder.isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
-                    positionAccuracyMapCircle.setLineWidth(16);
-                    positionAccuracyMapCircle.setLineColor(Color.argb(64, 0, 255, 0));
-                    positionAccuracyMapCircle.setFillColor(Color.argb(32, 0, 255, 0));
-                }
-                gpsStatusImageView.setImageResource(R.drawable.ic_gps_fixed_white_24dp);
-                gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.green));
-                if (geoPosition.isValid()) {
-                    guidanceSpeedView.setText((int) (geoPosition.getSpeed() * 3.6) + "");
-                }
-
-            } else if (geoPosition.getPositionTechnology() < 8 && geoPosition.getPositionTechnology() > 0) {
-                guidanceSpeedView.setVisibility(View.GONE);
-                guidanceSpeedLimitView.setVisibility(View.GONE);
-                speedLabelTextView.setVisibility(View.GONE);
-                positionIndicator.setVisible(true);
-                currentPositionMapLocalModel.setVisible(false);
-                positionAccuracyMapCircle.setVisible(false);
-                if (!DataHolder.isNavigating && DataHolder.getMap().getZoomLevel() >= 17) {
-                    positionAccuracyMapCircle.setLineWidth(16);
-                    positionAccuracyMapCircle.setLineColor(Color.argb(64, 255, 255, 0));
-                    positionAccuracyMapCircle.setFillColor(Color.argb(32, 255, 255, 0));
-                }
-                gpsStatusImageView.setImageResource(R.drawable.ic_gps_not_fixed_white_24dp);
-                gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.yellow));
-            }
-        }
-
-        @Override
-        public void onPositionFixChanged(PositioningManager.LocationMethod locationMethod, PositioningManager.LocationStatus locationStatus) {
-//            Log.d(TAG, "locationMethod: " + locationMethod.toString());
-//            Log.d(TAG, "locationStatus: " + locationStatus.toString());
-            if (locationStatus.equals(PositioningManager.LocationStatus.OUT_OF_SERVICE) || locationStatus.equals(PositioningManager.LocationStatus.TEMPORARILY_UNAVAILABLE)) {
-                gpsStatusImageView.setImageResource(R.drawable.ic_gps_off_white_24dp);
-                gpsStatusImageView.setImageTintList(DataHolder.getActivity().getResources().getColorStateList(R.color.red));
-                guidanceSpeedView.setVisibility(View.GONE);
-                speedLabelTextView.setVisibility(View.GONE);
-//                gpsSwitch.setEnabled(false);
-            }
-        }
-    };
+    private String routeLengthInLocalUnit;
     private final MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
 
         @Override
@@ -1332,11 +1341,19 @@ class MapFragmentView {
         guidanceManeuverView = DataHolder.getActivity().findViewById(R.id.guidance_maneuver_view);
         guidanceManeuverPresenter = new GuidanceManeuverPresenter(context, navigationManager, route);
         guidanceManeuverView.setVisibility(View.GONE);
+        if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+            guidanceManeuverView.setUnitSystem(UnitSystem.IMPERIAL_US);
+        } else if (UnitLocale.getDefault() == UnitLocale.Imperial) {
+            guidanceManeuverView.setUnitSystem(UnitSystem.IMPERIAL_UK);
+        } else {
+            guidanceManeuverView.setUnitSystem(UnitSystem.METRIC);
+        }
         guidanceManeuverPresenter.addListener(new GuidanceManeuverListener() {
             @Override
             public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
                 guidanceManeuverView.setManeuverData(guidanceManeuverData);
                 maneuverIconId = guidanceManeuverData.getIconId();
+
             }
 
             @Override
@@ -1349,6 +1366,13 @@ class MapFragmentView {
         guidanceNextManeuverView = DataHolder.getActivity().findViewById(R.id.guidance_next_maneuver_view);
         guidanceNextManeuverPresenter = new GuidanceNextManeuverPresenter(context, navigationManager, route);
         guidanceNextManeuverView.setVisibility(View.GONE);
+        if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+            guidanceNextManeuverView.setUnitSystem(UnitSystem.IMPERIAL_US);
+        } else if (UnitLocale.getDefault() == UnitLocale.Imperial) {
+            guidanceNextManeuverView.setUnitSystem(UnitSystem.IMPERIAL_UK);
+        } else {
+            guidanceNextManeuverView.setUnitSystem(UnitSystem.METRIC);
+        }
         guidanceNextManeuverPresenter.addListener(new GuidanceNextManeuverListener() {
             @Override
             public void onDataChanged(GuidanceNextManeuverData guidanceNextManeuverData) {
@@ -1898,15 +1922,18 @@ class MapFragmentView {
                         mapRouteGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getHeightInMeters() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getWidthInMeters() * 0.6));
                         DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
                         navigationControlButton.setText(R.string.start_navigation);
-                        String routeLength;
-                        if (route.getLength() > 999) {
-                            routeLength = route.getLength() / 1000 + "." + route.getLength() % 1000 + " km";
+
+                        Log.d(TAG, "DataHolder.getNavigationManager().getDistanceUnit(): " + DataHolder.getNavigationManager().getDistanceUnit().name());
+                        if (UnitLocale.getDefault() == UnitLocale.ImperialUs || UnitLocale.getDefault() == UnitLocale.Imperial) {
+                            routeLengthInLocalUnit = Converter.round(new LengthConverter().convert(route.getLength(), MeasurementUnit.METER, MeasurementUnit.MILE).getValue(), 2) + " mi";
                         } else {
-                            routeLength = route.getLength() + " m";
+                            routeLengthInLocalUnit = Converter.round(new LengthConverter().convert(route.getLength(), MeasurementUnit.METER, MeasurementUnit.KILOMETER).getValue(), 2) + " km";
                         }
-                        getTrafficSignsForRoute(route);
+                        Log.d(TAG, "route.getLength():" + route.getLength() + " m");
+                        Log.d(TAG, "routeLengthInLocalUnit:" + routeLengthInLocalUnit);
 
                         //Check TrafficSigns from route calculation result
+                        getTrafficSignsForRoute(route);
                         if (route != null) {
                             switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
                                 case CAR:
@@ -1924,15 +1951,15 @@ class MapFragmentView {
                                                 Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTotalTollCost());
                                                 Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
                                                 Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
-                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
+                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
                                             } else {
-                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit, Snackbar.LENGTH_LONG).show();
                                             }
                                         }
                                     });
                                     break;
                                 default:
-                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLength, Snackbar.LENGTH_LONG).show();
+                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit, Snackbar.LENGTH_LONG).show();
                             }
                         }
                         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
@@ -2006,7 +2033,7 @@ class MapFragmentView {
                     trafficSignMapContainer = new MapContainer();
                     DataHolder.getMap().addMapObject(trafficSignMapContainer);
 
-                    Geocoder geocoder = new Geocoder(DataHolder.getActivity(), Locale.ENGLISH);
+                    Geocoder androidGeocoder = new Geocoder(DataHolder.getActivity(), Locale.ENGLISH);
                     DataHolder.isNavigating = false;
                     GeoCoordinate defaultMapCenter = new GeoCoordinate(25.03304289712915, 121.56442945435184);
                     DataHolder.getMap().setCenter(defaultMapCenter, Map.Animation.NONE);
@@ -2032,7 +2059,7 @@ class MapFragmentView {
                                     if (mapState.getZoomLevel() > 8) {
                                         GeoCoordinate mapCenterGeoCoordinate = DataHolder.getMap().getCenter();
                                         try {
-                                            List<Address> addresses = geocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
+                                            List<Address> addresses = androidGeocoder.getFromLocation(mapCenterGeoCoordinate.getLatitude(), mapCenterGeoCoordinate.getLongitude(), 1);
                                             if (addresses.size() > 0) {
                                                 for (Address address : addresses) {
                                                     String countryName = address.getCountryName();
@@ -2425,7 +2452,6 @@ class MapFragmentView {
                             mapSchemeChanger.satelliteMapOff();
                         }
                     });
-
                     searchButton = DataHolder.getActivity().findViewById(R.id.search_button);
                     downloadOfflineMapButton = DataHolder.getActivity().findViewById(R.id.download_button);
                     offlineMapDownloader = new OfflineMapDownloader();
@@ -2583,6 +2609,7 @@ class MapFragmentView {
                     Typeface tf = Typeface.createFromAsset(DataHolder.getActivity().getAssets(), "fonts/SFDigitalReadout-Medium.ttf");
                     guidanceSpeedView = DataHolder.getActivity().findViewById(R.id.guidance_speed_view);
                     guidanceSpeedView.setTypeface(tf);
+
                     guidanceSpeedView.setVisibility(View.GONE);
 
 //                    Get speed and position every second to refresh guidanceSpeedView
@@ -2598,7 +2625,11 @@ class MapFragmentView {
                                 if (lastSecondLocation != null && thisSecondLocation.getCoordinate().isValid()) {
                                     if (lastSecondLocation.distanceTo(thisSecondLocation.getCoordinate()) > 0) {
                                         lastSecondLocation = thisSecondLocation.getCoordinate();
-                                        guidanceSpeedView.setText(String.valueOf((int) (thisSecondLocation.getSpeed() * 3.6)));
+                                        if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+                                            guidanceSpeedView.setText(String.valueOf((int) new SpeedConverter().convert(thisSecondLocation.getSpeed(), MeasurementUnit.METERS_PER_SECOND, MeasurementUnit.MILES_PER_HOUR).getValue()));
+                                        } else {
+                                            guidanceSpeedView.setText(String.valueOf((int) new SpeedConverter().convert(thisSecondLocation.getSpeed(), MeasurementUnit.METERS_PER_SECOND, MeasurementUnit.KILOMETERS_PER_HOUR).getValue()));
+                                        }
                                     } else {
                                         guidanceSpeedView.setText("0");
                                     }
@@ -2612,6 +2643,11 @@ class MapFragmentView {
 
                     speedLabelTextView = DataHolder.getActivity().findViewById(R.id.speed_label_text_view);
                     speedLabelTextView.setTypeface(tf);
+                    if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+                        speedLabelTextView.setText(R.string.mph);
+                    } else {
+                        speedLabelTextView.setText(R.string.kph);
+                    }
                     speedLabelTextView.setVisibility(View.GONE);
                     guidanceSpeedLimitView = DataHolder.getActivity().findViewById(R.id.guidance_speed_limit_view);
 
@@ -2734,8 +2770,16 @@ class MapFragmentView {
 
     private void startNavigationManager() {
         DataHolder.setNavigationManager(NavigationManager.getInstance());
-
         DataHolder.getNavigationManager().setMap(DataHolder.getMap());
+
+        if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+            DataHolder.getNavigationManager().setDistanceUnit(NavigationManager.UnitSystem.IMPERIAL_US);
+        } else if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
+            DataHolder.getNavigationManager().setDistanceUnit(NavigationManager.UnitSystem.IMPERIAL);
+        } else {
+            DataHolder.getNavigationManager().setDistanceUnit(NavigationManager.UnitSystem.METRIC);
+        }
+
         mapSchemeChanger = new MapSchemeChanger(DataHolder.getMap(), DataHolder.getNavigationManager());
         navigationListeners.setSafetySpotListener(safetySpotListener);
         navigationListeners.setPositionListener(positionListener);

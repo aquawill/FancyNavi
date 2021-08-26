@@ -177,7 +177,7 @@ class TrafficSignPresenter {
                         break;
                     case 11:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_11);
-                        signName = signName.concat(context.getString(R.string.road_narrows));
+                        signName = signName.concat(context.getString(R.string.road_narrow));
                         break;
                     case 12:
                         targetSignImageView.setImageResource(R.drawable.traffic_sign_type_12);
