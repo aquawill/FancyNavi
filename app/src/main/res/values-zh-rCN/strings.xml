@@ -239,8 +239,8 @@
     <string name="pedestrian_crossing">当心行人</string>
     <string name="yield">让路</string>
     <string name="bicycle_crossing">当心脚踏车</string>
-    <string name="meters_to_road_congestion">公尺后为壅堵路段</string>
-    <string name="meters_to_road_congestion_display">m 后\n壅堵路段</string>
+    <string name="distance_to_road_congestion">后为壅堵路段</string>
+    <string name="distance_to_road_congestion_display"> 后\n壅堵路段</string>
     <string name="passing_road_congestion">前方\n壅堵路段</string>
     <string name="meters_to_congestion_please_drive_carefully">米后为壅堵路段，请耐心驾驶。</string>
     <string name="passing_congestion_please_drive_patiently">前方壅堵路段，请耐心驾驶。</string>

@@ -139,8 +139,6 @@ import com.here.android.mpa.tce.TollCostError;
 import com.here.android.mpa.tce.TollCostOptions;
 import com.here.android.mpa.tce.TollCostRequest;
 import com.here.android.mpa.tce.TollCostResult;
-import com.here.msdkui.common.measurements.Converter;
-import com.here.msdkui.common.measurements.LengthConverter;
 import com.here.msdkui.common.measurements.MeasurementUnit;
 import com.here.msdkui.common.measurements.SpeedConverter;
 import com.here.msdkui.common.measurements.UnitSystem;
@@ -476,36 +474,42 @@ class MapFragmentView {
                 TrafficNotificationInfo.Type trafficNotificationInfoType = trafficNotificationInfo.getType();
                 TrafficEvent.Severity trafficEventSeverity = trafficNotificationInfo.getSeverity();
                 if (trafficEventSeverity == TrafficEvent.Severity.VERY_HIGH || trafficEventSeverity == TrafficEvent.Severity.BLOCKING) {
-                    long trafficNotificationInfoDistance = trafficNotificationInfo.getDistanceInMeters();
-                    if (trafficNotificationInfoDistance < 1000 && trafficNotificationInfoDistance > 0) {
-                        switch (trafficNotificationInfoType) {
-                            case ON_ROUTE:
-                            case NEAR_STOPOVER:
-                            case NEAR_START:
-                                if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
-                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_road_congestion_display);
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                                } else {
-                                    warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
-                                    textToSpeech.speak(warningText, TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                                }
-                                break;
-                            case ON_HIGHWAY:
-                                if ((trafficNotificationInfoDistance / 100) * 100 > 0) {
-                                    warningText = (trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_road_congestion_display);
-                                    textToSpeech.speak((trafficNotificationInfoDistance / 100) * 100 + DataHolder.getAndroidXMapFragment().getString(R.string.meters_to_congestion_please_drive_carefully), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                                } else {
-                                    warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
-                                    textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.passing_congestion_please_drive_patiently), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                                }
-                                break;
-                            case NEAR_DESTINATION:
-                                warningText = DataHolder.getAndroidXMapFragment().getString(R.string.congestion_around_destination_display);
-                                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.attention_congestion_around_destination), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                                break;
-                        }
-                        showTrafficWarningTextView(trafficWarningTextView, warningText);
+                    long trafficNotificationInfoDistanceInMeters = trafficNotificationInfo.getDistanceInMeters();
+                    String trafficNotificationInfoDistanceInLocalFormat;
+                    if (UnitLocale.getDefault() == UnitLocale.ImperialUs || UnitLocale.getDefault() == UnitLocale.Imperial) {
+                        trafficNotificationInfoDistanceInLocalFormat = DistanceFormatter.formatLengthMetersToMileYard(trafficNotificationInfoDistanceInMeters, 1);
+                    } else {
+                        trafficNotificationInfoDistanceInLocalFormat = DistanceFormatter.formatLengthMetersToKilometers(trafficNotificationInfoDistanceInMeters, 1);
                     }
+
+                    switch (trafficNotificationInfoType) {
+                        case ON_ROUTE:
+                        case NEAR_STOPOVER:
+                        case NEAR_START:
+                            if ((trafficNotificationInfoDistanceInMeters / 500) * 500 > 0) {
+                                warningText = trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion_display);
+                                textToSpeech.speak(trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                            } else {
+                                warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
+                                textToSpeech.speak(warningText, TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                            }
+                            break;
+                        case ON_HIGHWAY:
+                            if ((trafficNotificationInfoDistanceInMeters / 500) * 500 > 0) {
+                                warningText = trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion_display);
+                                textToSpeech.speak(trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                            } else {
+                                warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
+                                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.passing_congestion_please_drive_patiently), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                            }
+                            break;
+                        case NEAR_DESTINATION:
+                            warningText = DataHolder.getAndroidXMapFragment().getString(R.string.congestion_around_destination_display);
+                            textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.attention_congestion_around_destination), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                            break;
+                    }
+                    showTrafficWarningTextView(trafficWarningTextView, warningText);
+
                 }
             }
         }
@@ -1925,9 +1929,9 @@ class MapFragmentView {
 
                         Log.d(TAG, "DataHolder.getNavigationManager().getDistanceUnit(): " + DataHolder.getNavigationManager().getDistanceUnit().name());
                         if (UnitLocale.getDefault() == UnitLocale.ImperialUs || UnitLocale.getDefault() == UnitLocale.Imperial) {
-                            routeLengthInLocalUnit = Converter.round(new LengthConverter().convert(route.getLength(), MeasurementUnit.METER, MeasurementUnit.MILE).getValue(), 2) + " mi";
+                            routeLengthInLocalUnit = DistanceFormatter.formatLengthMetersToMileYard(route.getLength(), 2);
                         } else {
-                            routeLengthInLocalUnit = Converter.round(new LengthConverter().convert(route.getLength(), MeasurementUnit.METER, MeasurementUnit.KILOMETER).getValue(), 2) + " km";
+                            routeLengthInLocalUnit = DistanceFormatter.formatLengthMetersToKilometers(route.getLength(), 2);
                         }
                         Log.d(TAG, "route.getLength():" + route.getLength() + " m");
                         Log.d(TAG, "routeLengthInLocalUnit:" + routeLengthInLocalUnit);
@@ -3116,7 +3120,7 @@ class MapFragmentView {
                         selectedMapMarker.setSvgIconScaling(2f);
                         Log.d(TAG, selectedMapMarker.getTitle() + " " + selectedMapMarker.getDescription());
                         if (selectedMapMarker.getTitle() != null && selectedMapMarker.getDescription() != null) {
-                            searchResultString = selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
+                            searchResultString = "路殺熱點：" + selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
 //                            showSelectionFocus(selectedMapMarker.getCoordinate(), selectedMapMarker.getTitle(), selectedMapMarker.getDescription());
                             showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         }

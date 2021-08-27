@@ -88,8 +88,8 @@
     <string name="pedestrian_crossing">Pedestrian Crossing ahead</string>
     <string name="yield">Yield ahead</string>
     <string name="bicycle_crossing">Bicycle Crossing ahead</string>
-    <string name="meters_to_road_congestion"> Meters To Road Congestion</string>
-    <string name="meters_to_road_congestion_display">m To\nCongestion</string>
+    <string name="distance_to_road_congestion"> To Road Congestion</string>
+    <string name="distance_to_road_congestion_display"> To\nCongestion</string>
     <string name="passing_road_congestion">Congestion_Ahead</string>
     <string name="meters_to_congestion_please_drive_carefully">Meters To Congestion, Please Drive Carefully</string>
     <string name="passing_congestion_please_drive_patiently">Congestion Ahead, Please Drive Patiently.</string>
