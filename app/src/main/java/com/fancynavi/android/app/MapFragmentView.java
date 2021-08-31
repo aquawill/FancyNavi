@@ -57,6 +57,10 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.here.android.mpa.cluster.BasicClusterStyle;
+import com.here.android.mpa.cluster.ClusterLayer;
+import com.here.android.mpa.cluster.ClusterTheme;
+import com.here.android.mpa.cluster.ClusterViewObject;
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -431,6 +435,7 @@ class MapFragmentView {
     static MapRoute mapRoute;
     private MapRoute alternativeMapRoute;
     private MapContainer trafficSignMapContainer;
+    private ClusterLayer trafficSignClusterLayer;
     private boolean foregroundServiceStarted;
     private CoreRouter coreRouter;
     //HERE SDK UI KIT components
@@ -1457,7 +1462,8 @@ class MapFragmentView {
         mapRoute.setUpcomingColor(Color.LTGRAY);
         mapRoute.setTrafficEnabled(true);
         DataHolder.getMap().addMapObject(mapRoute);
-        getTrafficSignsForRoute(route);
+        new Thread(() -> getTrafficSignsForRoute(route)).start();
+
     }
 
     private void touchToAddWaypoint(PointF p) {
@@ -1597,6 +1603,7 @@ class MapFragmentView {
         initJunctionView();
         DataHolder.getMap().setExtrudedBuildingsVisible(false);
         DataHolder.getMap().setLandmarksVisible(false);
+        DataHolder.getMap().removeClusterLayer(trafficSignClusterLayer);
         audioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);
         onAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
             @Override
@@ -1813,6 +1820,7 @@ class MapFragmentView {
                             icon.setBitmap(iconBitmap);
                             MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
                             trafficSignMapContainer.addMapObject(trafficSignMapMarker);
+                            trafficSignClusterLayer.addMarker(trafficSignMapMarker);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -1937,7 +1945,7 @@ class MapFragmentView {
                         Log.d(TAG, "routeLengthInLocalUnit:" + routeLengthInLocalUnit);
 
                         //Check TrafficSigns from route calculation result
-                        getTrafficSignsForRoute(route);
+                        new Thread(() -> getTrafficSignsForRoute(route)).start();
                         if (route != null) {
                             switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
                                 case CAR:
@@ -2037,6 +2045,29 @@ class MapFragmentView {
                     trafficSignMapContainer = new MapContainer();
                     DataHolder.getMap().addMapObject(trafficSignMapContainer);
 
+                    /*Cluster layer for traffic signs*/
+                    trafficSignClusterLayer = new ClusterLayer();
+//                    Image clusterIconImage = new Image();
+//                    Bitmap trafficSignClusterBackground = BitmapFactory.decodeResource(DataHolder.getActivity().getResources(), R.drawable.empty_sign_black_background);
+//                    float aspectRatio = (float) trafficSignClusterBackground.getHeight() / (float) trafficSignClusterBackground.getWidth();
+//                    Bitmap iconBitmap = Bitmap.createScaledBitmap(trafficSignClusterBackground, 128, (int) (128 * aspectRatio), false);
+//                    clusterIconImage.setBitmap(iconBitmap);
+                    trafficSignClusterLayer.setClusterCreateListener(new ClusterLayer.ClusterCreateListener() {
+                        @Override
+                        public void onClusterCreated(@NonNull ClusterViewObject clusterViewObject) {
+                            clusterViewObject.getMarkers().forEach(it -> it.setZIndex(200));
+                        }
+                    });
+                    BasicClusterStyle basicClusterStyle = new BasicClusterStyle();
+                    basicClusterStyle.setFillColor(Color.DKGRAY);
+                    basicClusterStyle.setStrokeColor(Color.BLACK);
+                    basicClusterStyle.setFontColor(Color.WHITE);
+                    ClusterTheme clusterTheme = new ClusterTheme();
+                    clusterTheme.setStyle(basicClusterStyle);
+                    trafficSignClusterLayer.setTheme(clusterTheme);
+                    DataHolder.getMap().addClusterLayer(trafficSignClusterLayer);
+                    /*Cluster layer for traffic signs*/
+
                     Geocoder androidGeocoder = new Geocoder(DataHolder.getActivity(), Locale.ENGLISH);
                     DataHolder.isNavigating = false;
                     GeoCoordinate defaultMapCenter = new GeoCoordinate(25.03304289712915, 121.56442945435184);
@@ -2068,6 +2099,13 @@ class MapFragmentView {
                                                 for (Address address : addresses) {
                                                     String countryName = address.getCountryName();
                                                     String adminAreaName = address.getAdminArea();
+                                                    if (mapState.getZoomLevel() >= 12) {
+                                                        DataHolder.getMap().removeClusterLayer(trafficSignClusterLayer);
+                                                        trafficSignMapContainer.setVisible(true);
+                                                    } else {
+                                                        DataHolder.getMap().addClusterLayer(trafficSignClusterLayer);
+                                                        trafficSignMapContainer.setVisible(false);
+                                                    }
                                                     if (countryName != null && adminAreaName != null) {
                                                         if (countryName.equals("China") || countryName.equals("中国")) {
                                                             if (mapState.getZoomLevel() >= 6 && mapState.getZoomLevel() <= 22) {
@@ -2232,7 +2270,9 @@ class MapFragmentView {
                                 previousMapState = mapState;
                             }
 
-                            if (DataHolder.isNavigating || DataHolder.getMap().getZoomLevel() < 17) {
+                            if (DataHolder.isNavigating || DataHolder.getMap().
+
+                                    getZoomLevel() < 17) {
                                 positionAccuracyMapCircle.setLineWidth(0);
                                 positionAccuracyMapCircle.setFillColor(Color.argb(0, 0, 0, 0));
                             }

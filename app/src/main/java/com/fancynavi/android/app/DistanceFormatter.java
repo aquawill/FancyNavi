@@ -12,7 +12,7 @@ class DistanceFormatter {
         double miles = Converter.round(inches / 63360, decimalPlaces);
         int yard = (int) inches / 36;
         if (miles > 1) {
-            return String.format("%.2f %s", miles, DataHolder.getActivity().getResources().getString(R.string.msdkui_unit_mile));
+            return String.format("%.0f %s", miles, DataHolder.getActivity().getResources().getString(R.string.msdkui_unit_mile));
         } else {
             return String.format("%d %s", yard, DataHolder.getActivity().getResources().getString(R.string.msdkui_unit_yard));
         }
@@ -21,7 +21,7 @@ class DistanceFormatter {
     @SuppressLint("DefaultLocale")
     static String formatLengthMetersToKilometers(double meters, int decimalPlaces) {
         if ((meters / 1000) > 1) {
-            return String.format("%.2f %s", meters / 1000, DataHolder.getActivity().getResources().getString(R.string.msdkui_unit_kilometer));
+            return String.format("%.0f %s", meters / 1000, DataHolder.getActivity().getResources().getString(R.string.msdkui_unit_kilometer));
         } else {
             return String.format("%d %s", (int) meters, DataHolder.getActivity().getResources().getString(R.string.msdkui_unit_meter));
         }

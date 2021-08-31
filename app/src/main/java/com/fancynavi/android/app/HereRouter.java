@@ -1,5 +1,9 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.TAG;
+import static com.fancynavi.android.app.DataHolder.getPositioningManager;
+import static com.fancynavi.android.app.MapFragmentView.currentGeoPosition;
+
 import android.content.Context;
 import android.util.Log;
 
@@ -15,18 +19,14 @@ import com.here.android.mpa.routing.RouteWaypoint;
 
 import java.util.ArrayList;
 
-import static com.fancynavi.android.app.DataHolder.TAG;
-import static com.fancynavi.android.app.DataHolder.getPositioningManager;
-import static com.fancynavi.android.app.MapFragmentView.currentGeoPosition;
-
 class HereRouter {
-    private AppCompatActivity m_activity;
+    private final AppCompatActivity m_activity;
     private Context context;
     private RoutePlan routePlan;
     private RouteOptions routeOptions;
     private ArrayList<GeoCoordinate> waypoints = new ArrayList<>();
-    private ArrayList<MapMarker> inputWaypointIcons = new ArrayList<>();
-    private ArrayList<MapMarker> outputWaypointIcons = new ArrayList<>();
+    private final ArrayList<MapMarker> inputWaypointIcons = new ArrayList<>();
+    private final ArrayList<MapMarker> outputWaypointIcons = new ArrayList<>();
 
     HereRouter(AppCompatActivity m_activity, RouteOptions routeOptions) {
         this.m_activity = m_activity;
@@ -90,6 +90,7 @@ class HereRouter {
             GeoCoordinate coord = waypoints.get(i);
             RouteWaypoint routeWaypoint = new RouteWaypoint(coord);
             MapMarker waypointMapMarker = new MapMarker();
+            waypointMapMarker.setZIndex(300);
             waypointMapMarker.setDraggable(true);
             waypointMapMarker.setTitle(String.valueOf(i));
 
