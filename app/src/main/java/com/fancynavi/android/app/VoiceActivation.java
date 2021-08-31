@@ -91,12 +91,13 @@ class VoiceActivation {
 
     void downloadCatalogAndSkin() {
         final Boolean[] localVoiceSkinExisted = {false};
+        Log.d(TAG, "getDesiredVoiceId(): " + getDesiredVoiceId());
         VoiceCatalog.getInstance().downloadCatalog(new VoiceCatalog.OnDownloadDoneListener() {
 
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
                 if (error != VoiceCatalog.Error.NONE) {
-                    Log.d(TAG, "Failed to download catalog.");
+                    Log.d(TAG, "Failed to download catalog: " + error.name());
                 } else {
                     List<VoicePackage> voicePackages = VoiceCatalog.getInstance().getCatalogList();
                     Log.d(TAG, "# of available voicePackages: " + voicePackages.size());
