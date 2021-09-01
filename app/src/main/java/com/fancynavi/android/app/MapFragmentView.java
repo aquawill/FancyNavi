@@ -1827,7 +1827,9 @@ class MapFragmentView {
                             icon.setBitmap(iconBitmap);
                             MapMarker trafficSignMapMarker = new MapMarker(trafficSignGeoCoordinate).setIcon(icon);
                             trafficSignMapContainer.addMapObject(trafficSignMapMarker);
-                            trafficSignClusterLayer.addMarker(trafficSignMapMarker);
+                            if (!isNavigating) {
+                                trafficSignClusterLayer.addMarker(trafficSignMapMarker);
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
