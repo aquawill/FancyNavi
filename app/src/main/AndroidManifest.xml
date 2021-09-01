@@ -2,6 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.fancynavi.android.app">
 
+    <!-- For apps that interact with a text-to-speech (TTS) engine need to add the following queries element to their manifest files for devices running Android 11 or higher -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:fullBackupContent="true"
@@ -16,8 +23,8 @@
             android:name="com.fancynavi.android.app.MainActivity"
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation"
             android:launchMode="singleTask"
-            android:screenOrientation="fullSensor"
             android:resizeableActivity="true"
+            android:screenOrientation="fullSensor"
             android:supportsPictureInPicture="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -26,8 +33,10 @@
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="fancynavi.com"
                     android:scheme="http" />
