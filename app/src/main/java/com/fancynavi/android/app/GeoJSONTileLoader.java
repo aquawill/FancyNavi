@@ -34,9 +34,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 class GeoJSONTileLoader {
-    private MapContainer resultMapContainer;
-    private String baseUrl;
-    private RequestQueue requestQueue;
+    private final MapContainer resultMapContainer;
+    private final String baseUrl;
+    private final RequestQueue requestQueue;
     private List<PointResult> pointResultList;
     private List<LineStringResult> lineStringResultList;
     private List<PolygonResult> polygonResultList;
@@ -186,7 +186,7 @@ class GeoJSONTileLoader {
         int tileXEnds = southEastTileNumber[1];
         int tileYEnds = southEastTileNumber[2];
         int tileZ = southEastTileNumber[0];
-        getTiles(tileXBegins, tileXEnds, tileYBegins, tileYEnds, tileZ);
+        new Thread(() -> getTiles(tileXBegins, tileXEnds, tileYBegins, tileYEnds, tileZ)).start();
     }
 
     private int[] getTileNumber(final double lat, final double lon, final int z) {
@@ -202,10 +202,10 @@ class GeoJSONTileLoader {
     }
 
     static class PointResult {
-        private String id;
-        private String url;
-        private GeoCoordinate geoCoordinate;
-        private JSONObject properties;
+        private final String id;
+        private final String url;
+        private final GeoCoordinate geoCoordinate;
+        private final JSONObject properties;
 
         PointResult(String id, String url, GeoCoordinate geoCoordinate, JSONObject properties) {
             this.id = id;
@@ -232,10 +232,10 @@ class GeoJSONTileLoader {
     }
 
     static class LineStringResult {
-        private String id;
-        private String url;
-        private GeoPolyline geoPolyline;
-        private JSONObject properties;
+        private final String id;
+        private final String url;
+        private final GeoPolyline geoPolyline;
+        private final JSONObject properties;
 
         LineStringResult(String id, String url, GeoPolyline geoPolyline, JSONObject properties) {
             this.id = id;
@@ -262,10 +262,10 @@ class GeoJSONTileLoader {
     }
 
     static class PolygonResult {
-        private String id;
-        private String url;
-        private GeoPolygon geoPolygon;
-        private JSONObject properties;
+        private final String id;
+        private final String url;
+        private final GeoPolygon geoPolygon;
+        private final JSONObject properties;
 
         PolygonResult(String id, String url, GeoPolygon geoPolygon, JSONObject properties) {
             this.id = id;

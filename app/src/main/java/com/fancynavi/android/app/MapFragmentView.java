@@ -1350,13 +1350,6 @@ class MapFragmentView {
         guidanceManeuverView = DataHolder.getActivity().findViewById(R.id.guidance_maneuver_view);
         guidanceManeuverPresenter = new GuidanceManeuverPresenter(context, navigationManager, route);
         guidanceManeuverView.setVisibility(View.GONE);
-        if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
-            guidanceManeuverView.setUnitSystem(UnitSystem.IMPERIAL_US);
-        } else if (UnitLocale.getDefault() == UnitLocale.Imperial) {
-            guidanceManeuverView.setUnitSystem(UnitSystem.IMPERIAL_UK);
-        } else {
-            guidanceManeuverView.setUnitSystem(UnitSystem.METRIC);
-        }
         guidanceManeuverPresenter.addListener(new GuidanceManeuverListener() {
             @Override
             public void onDataChanged(@Nullable GuidanceManeuverData guidanceManeuverData) {
@@ -1375,13 +1368,6 @@ class MapFragmentView {
         guidanceNextManeuverView = DataHolder.getActivity().findViewById(R.id.guidance_next_maneuver_view);
         guidanceNextManeuverPresenter = new GuidanceNextManeuverPresenter(context, navigationManager, route);
         guidanceNextManeuverView.setVisibility(View.GONE);
-        if (UnitLocale.getDefault() == UnitLocale.ImperialUs) {
-            guidanceNextManeuverView.setUnitSystem(UnitSystem.IMPERIAL_US);
-        } else if (UnitLocale.getDefault() == UnitLocale.Imperial) {
-            guidanceNextManeuverView.setUnitSystem(UnitSystem.IMPERIAL_UK);
-        } else {
-            guidanceNextManeuverView.setUnitSystem(UnitSystem.METRIC);
-        }
         guidanceNextManeuverPresenter.addListener(new GuidanceNextManeuverListener() {
             @Override
             public void onDataChanged(GuidanceNextManeuverData guidanceNextManeuverData) {
@@ -1407,7 +1393,22 @@ class MapFragmentView {
             bikeRouteButton.setAlpha(1.0f);
             pedsRouteButton.setAlpha(1.0f);
         }
+    }
 
+    private void switchUILocale(UnitLocale unitLocale) {
+        if (unitLocale == UnitLocale.ImperialUs) {
+            guidanceManeuverView.setUnitSystem(UnitSystem.IMPERIAL_US);
+            guidanceNextManeuverView.setUnitSystem(UnitSystem.IMPERIAL_US);
+            guidanceSpeedLimitView.setUnitSystem(UnitSystem.IMPERIAL_US);
+        } else if (unitLocale == UnitLocale.Imperial) {
+            guidanceManeuverView.setUnitSystem(UnitSystem.IMPERIAL_UK);
+            guidanceNextManeuverView.setUnitSystem(UnitSystem.IMPERIAL_UK);
+            guidanceSpeedLimitView.setUnitSystem(UnitSystem.IMPERIAL_UK);
+        } else {
+            guidanceManeuverView.setUnitSystem(UnitSystem.METRIC);
+            guidanceNextManeuverView.setUnitSystem(UnitSystem.METRIC);
+            guidanceSpeedLimitView.setUnitSystem(UnitSystem.METRIC);
+        }
     }
 
     private void switchGuidanceUiViews(int visibility) {
@@ -1639,10 +1640,8 @@ class MapFragmentView {
         switchUiControls(View.GONE);
         initGuidanceManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
         initGuidanceNextManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
-//        initGuidanceEstimatedArrivalView(DataHolder.getNavigationManager());
         initGuidanceStreetLabelView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
-//        initGuidanceSpeedView(DataHolder.getNavigationManager(), DataHolder.getPositioningManager());
-        initGuidanceManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
+        switchUILocale(UnitLocale.getDefault());
         switchGuidanceUiViews(View.VISIBLE);
         switchGuidanceUiPresenters(true);
 
@@ -1802,6 +1801,14 @@ class MapFragmentView {
     }
 
     private void getTrafficSignsForRoute(Route route) {
+        trafficSignClusterLayer.removeMarkers(trafficSignClusterLayer.getMarkers());
+        if (DataHolder.getMap().getZoomLevel() >= 12) {
+            DataHolder.getMap().removeClusterLayer(trafficSignClusterLayer);
+            trafficSignMapContainer.setVisible(true);
+        } else {
+            DataHolder.getMap().addClusterLayer(trafficSignClusterLayer);
+            trafficSignMapContainer.setVisible(false);
+        }
         List<RouteElement> routeElementList = route.getRouteElements().getElements();
         for (RouteElement routeElement : routeElementList) {
             RoadElement roadElementOfCalculatedRoute = routeElement.getRoadElement();
@@ -2838,12 +2845,14 @@ class MapFragmentView {
         guidanceSpeedView.setTextColor(Color.argb(255, 0, 0, 0));
         speedLabelTextView.setTextColor(Color.argb(255, 0, 0, 0));
         clearDistanceMarkerMapOverlay();
+        trafficSignClusterLayer.removeMarkers(trafficSignClusterLayer.getMarkers());
         CLE2DataManager.getInstance().newPurgeLocalStorageTask().start();
         DataHolder.getMap().setExtrudedBuildingsVisible(true);
         DataHolder.getMap().setLandmarksVisible(true);
         DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
         DataHolder.getMap().setFleetFeaturesVisible(EnumSet.noneOf(Map.FleetFeature.class));
         DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
+        DataHolder.getMap().removeClusterLayer(trafficSignClusterLayer);
         trafficSignMapContainer.removeAllMapObjects();
         safetyCameraMapMarker.setTransparency(0);
         safetyCamLinearLayout.setVisibility(View.GONE);
