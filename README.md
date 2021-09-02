@@ -34,6 +34,7 @@
 31. Implement GeoJSONTileLoader.java to load GeoJSON geometries in EPSG:4326 tiling scheme.
 32. Offline map download/update.
 33. Portrait/Landscape mode switching.
+34. Preload VoiceSkin.
 
 
 ## Dependencies:
