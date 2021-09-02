@@ -212,6 +212,7 @@
   <string name="reverse_geocode">地址查詢：</string>
   <string name="voice_download_failed">導航語音下載失敗</string>
   <string name="downloading_voice_skin_id">下載導航語音ID：</string>
+  <string name="extracting_voice_skin_id">"解壓縮導航語音ID：</string>
   <string name="attention">注意 - 前方</string>
   <string name="start_of_no_overtaking">禁止超車</string>
   <string name="lane_merge_right">右側來車</string>

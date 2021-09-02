@@ -27,6 +27,8 @@ class VoiceActivation {
     private Context context;
     private final VoiceCatalog voiceCatalog = VoiceCatalog.getInstance();
     private String desiredLangCode;
+    private Snackbar voiceDownloadSnackbar;
+    private int progress;
 
     public void setDesiredVoiceId(long desiredVoiceId) {
         this.desiredVoiceId = desiredVoiceId;
@@ -71,7 +73,22 @@ class VoiceActivation {
 
     private void downloadVoice(Context context, final long voiceSkinId) {
         Log.d(TAG, "Downloading voice skin ID: " + voiceSkinId);
-        Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.downloading_voice_skin_id) + voiceSkinId, Snackbar.LENGTH_SHORT).show();
+        VoiceCatalog.getInstance().setOnProgressEventListener(new VoiceCatalog.OnProgressListener() {
+            @Override
+            public void onProgress(int i) {
+                Log.d(TAG, "OnProgressListener onProgress:" + i);
+                voiceDownloadSnackbar.setText(String.format("%s%d - %d%s", context.getString(R.string.downloading_voice_skin_id), voiceSkinId, i, "%"));
+            }
+        });
+        VoiceCatalog.getInstance().setUncompressProgressEventListener(new VoiceCatalog.UncompressProgressListener() {
+            @Override
+            public void onProgress(int i) {
+                Log.d(TAG, "UncompressProgressListener onProgress:" + i);
+                voiceDownloadSnackbar.setText(String.format("%s%d - %d%s", context.getString(R.string.extracting_voice_skin_id), voiceSkinId, i, "%"));
+            }
+        });
+        voiceDownloadSnackbar = Snackbar.make(activity.findViewById(R.id.mapFragmentView), context.getString(R.string.downloading_voice_skin_id) + voiceSkinId, Snackbar.LENGTH_INDEFINITE);
+        voiceDownloadSnackbar.show();
         voiceCatalog.downloadVoice(voiceSkinId, new VoiceCatalog.OnDownloadDoneListener() {
             @Override
             public void onDownloadDone(VoiceCatalog.Error error) {
@@ -84,6 +101,8 @@ class VoiceActivation {
                     NavigationManager.getInstance().getVoiceGuidanceOptions().setVoiceSkin(localVoiceSkin);
                     Log.d(TAG, "Voice skin " + voiceSkinId + " downloaded and activated (" + localVoiceSkin.getOutputType() + ").");
                     Snackbar.make(activity.findViewById(R.id.mapFragmentView), activity.getString(R.string.voice_activated) + "ID: " + localVoiceSkin.getId() + " / " + localVoiceSkin.getLanguage() + " / " + localVoiceSkin.getOutputType().name(), Snackbar.LENGTH_SHORT).show();
+                    VoiceCatalog.getInstance().setUncompressProgressEventListener(null);
+                    VoiceCatalog.getInstance().setOnProgressEventListener(null);
                 }
             }
         });
@@ -114,6 +133,7 @@ class VoiceActivation {
                             }
                         }
                     }
+
                     List<VoiceSkin> localInstalledSkins = VoiceCatalog.getInstance().getLocalVoiceSkins();
 //                    localInstalledSkins.clear();
                     Log.d(TAG, "# of local skins: " + localInstalledSkins.size());

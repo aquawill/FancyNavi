@@ -212,6 +212,7 @@
     <string name="reverse_geocode">地址查询：</string>
     <string name="voice_download_failed">导航语音下载失败</string>
     <string name="downloading_voice_skin_id">下载导航语音ID：</string>
+    <string name="extracting_voice_skin_id">"解压缩导航语音ID："</string>
     <string name="attention">注意 - 前方</string>
     <string name="start_of_no_overtaking">禁止超车</string>
     <string name="lane_merge_right">右侧来车</string>

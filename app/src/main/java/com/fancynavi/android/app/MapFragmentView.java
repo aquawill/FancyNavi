@@ -169,6 +169,7 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -454,7 +455,6 @@ class MapFragmentView {
     private final ArrayList<MapMarker> userInputWaypoints = new ArrayList<>();
     private ArrayList<MapMarker> wayPointIcons = new ArrayList<>();
     private final ArrayList<MapMarker> placeSearchResultIcons = new ArrayList<>();
-    private final String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
     private final long simulationSpeedMs = 10; //defines the speed of navigation simulation
     private GeoCoordinate lastKnownLocation;
     private final NavigationManager.ManeuverEventListener maneuverEventListener = new NavigationManager.ManeuverEventListener() {
@@ -2015,7 +2015,20 @@ class MapFragmentView {
         DataHolder.setAndroidXMapFragment(getMapFragment());
         androidXMapFragment = DataHolder.getAndroidXMapFragment();
         androidXMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
-        // Set path of isolated disk cache
+
+        /* Use app default cache path */
+        String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
+//        String diskCacheRoot = DataHolder.getActivity().getExternalCacheDir().getParent() + File.separator + "files" + File.separator + ".here-maps";
+        Log.d(TAG, "defaultCachePath: " + diskCacheRoot);
+        MapSettings.setDiskCacheRootPath(diskCacheRoot);
+
+        /* Preload voice skins of zh_TW, zh_CN and en_US */
+        try {
+            InputStream inputStream = DataHolder.getActivity().getAssets().open("voices/voices-download.zip");
+            Unzip.unzip(inputStream, new File(diskCacheRoot + File.separator + "voices-download"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         // Retrieve intent name from manifest
         String intentName = "";
         try {
@@ -2036,7 +2049,6 @@ class MapFragmentView {
                     DataHolder.setMap(androidXMapFragment.getMap());
 //                    DataHolder.getMap().setProjectionMode(Map.Projection.MERCATOR);
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
-                    MapSettings.setDiskCacheRootPath(diskCacheRoot);
 
                     coreRouter = new CoreRouter();
                     navigationListeners = new NavigationListeners();
