@@ -251,6 +251,7 @@ class OfflineMapDownloader {
         if (bool) {
             l.addView(v);
             DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.download_button).setClickable(!bool);
 //            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
 //            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.traffic_button).setClickable(!bool);
@@ -262,6 +263,7 @@ class OfflineMapDownloader {
         } else {
             l.removeView(v);
             DataHolder.getActivity().findViewById(R.id.search_button).setClickable(!bool);
+            DataHolder.getActivity().findViewById(R.id.download_button).setClickable(!bool);
 //            DataHolder.getActivity().findViewById(R.id.zoom_out).setClickable(!bool);
 //            DataHolder.getActivity().findViewById(R.id.zoom_in).setClickable(!bool);
             DataHolder.getActivity().findViewById(R.id.traffic_button).setClickable(!bool);
