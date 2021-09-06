@@ -213,7 +213,7 @@ class MapFragmentView {
                 if (roadElement.getSpeedLimit() >= 0) {
                     guidanceSpeedLimitView.setVisibility(View.VISIBLE);
                     speedLabelTextView.setVisibility(View.VISIBLE);
-                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), roadElement.getSpeedLimit()));
+                    guidanceSpeedLimitView.setCurrentSpeedData(new GuidanceSpeedData(geoPosition.getSpeed(), (double) roadElement.getSpeedLimit()));
                 }
             } else {
                 guidanceSpeedLimitView.setVisibility(View.GONE);
