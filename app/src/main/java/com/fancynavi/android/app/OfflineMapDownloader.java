@@ -164,24 +164,28 @@ class OfflineMapDownloader {
                     offlineDownloadSnackbar.show();
                 } else {
                     offlineDownloadSnackbar.setText(R.string.no_available_map_update);
+                    offlineDownloadSnackbar.setAction(null, null);
                     isMapLoaderOperating = false;
-                    offlineDownloadSnackbar.setText("No available map update.\nRemove map of " + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + " ?");
-                    offlineDownloadSnackbar.setAction("REMOVE", new View.OnClickListener(
-
-                    ) {
-                        @Override
-                        public void onClick(View v) {
-                            mapLoader.uninstallMapPackages(mapIdList);
-                        }
-                    });
-                    offlineDownloadSnackbar.setAction("", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-
-                        }
-                    });
+//                    offlineDownloadSnackbar.setText("No available map update.\nRemove map of " + mapNameList.get(0) + " ?");
+//                    offlineDownloadSnackbar.setAction("REMOVE", new View.OnClickListener() {
+//                        @Override
+//                        public void onClick(View v) {
+//                            mapLoader.uninstallMapPackages(mapIdList);
+//                        }
+//                    });
                     offlineDownloadSnackbar.show();
-                    DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
+                    offlineDownloadSnackbar.addCallback(new BaseTransientBottomBar.BaseCallback<Snackbar>() {
+                        @Override
+                        public void onDismissed(Snackbar transientBottomBar, int event) {
+                            DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.VISIBLE);
+                        }
+
+                        @Override
+                        public void onShown(Snackbar transientBottomBar) {
+                            super.onShown(transientBottomBar);
+                            DataHolder.getActivity().findViewById(R.id.download_button).setVisibility(View.INVISIBLE);
+                        }
+                    });
                 }
             } else {
                 offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.error) + mapLoaderResultCode.name());
@@ -299,7 +303,7 @@ class OfflineMapDownloader {
                         isMapLoaderOperating = false;
                         switch (mapPackage.getInstallationState()) {
                             case INSTALLED:
-                                offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.map_of) + mapNameList.get(0) + "/" + mapEnglishNameList.get(0) + DataHolder.getAndroidXMapFragment().getString(R.string.installed_check_for_updates));
+                                offlineDownloadSnackbar.setText(DataHolder.getAndroidXMapFragment().getString(R.string.map_of) + " " + mapNameList.get(0) + " " + DataHolder.getAndroidXMapFragment().getString(R.string.installed_check_for_updates));
                                 offlineDownloadSnackbar.setAction(R.string.check, new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {

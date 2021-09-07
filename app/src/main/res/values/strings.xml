@@ -35,7 +35,7 @@
     <string name="downloading_start">Downloading: 0%</string>
     <string name="no_available_map_update">No available map update.</string>
     <string name="map_of">Map of </string>
-    <string name="installed_check_for_updates"> instal led.\nCheck for updates?</string>
+    <string name="installed_check_for_updates"> installed.\nCheck for updates?</string>
     <string name="download_offline_map_for">Download Offline Map for\n</string>
     <string name="download">DOWNLOAD</string>
     <string name="no_offline_map_at">No offline map at\n</string>
