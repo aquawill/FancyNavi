@@ -347,71 +347,6 @@ class MapFragmentView {
     static AudioManager audioManager;
     private int speedLimitLinearLayoutHeight;
     private View speedLimitLinearLayout;
-    private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
-
-        @Override
-        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
-            super.onLaneInformation(list, roadElement);
-            isLaneDisplaying = false;
-            if (laneInformationMapOverlay != null) {
-                DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
-            }
-            laneDcmLinearLayout = new LinearLayout(DataHolder.getActivity());
-            laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-            laneDcmLinearLayout.setVisibility(View.VISIBLE);
-            laneInfoLinearLayoutOverlay = new LinearLayout(DataHolder.getActivity());
-            laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
-            laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
-            if (list.size() > 0) {
-                for (LaneInformation laneInformation : list) {
-                    LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
-                    EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
-                    int laneDirectionCategory = 0;
-                    ImageView laneDcmImageView = new ImageView(DataHolder.getActivity());
-                    for (LaneInformation.Direction direction : directions) {
-                        laneDirectionCategory += direction.value();
-                    }
-
-                    Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, DataHolder.getActivity());
-                    laneDcmImageView.setImageDrawable(laneDcmIcon);
-                    isLaneDisplaying = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
-                    laneDcmImageView.setCropToPadding(false);
-
-                    if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
-                        laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
-                    } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
-                        laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
-                    } else {
-                        laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
-                    }
-                    int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, DataHolder.getActivity());
-                    laneDcmLinearLayout.addView(laneDcmImageView);
-                    laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
-                }
-                laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
-                ImageView downArrowImageView = new ImageView(DataHolder.getActivity());
-                downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
-                laneInfoLinearLayoutOverlay.addView(downArrowImageView);
-
-                laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
-                    }
-                });
-                laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
-
-                if (!DataHolder.isRouteOverView && isLaneDisplaying) {
-                    try {
-                        DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    };
     private VoiceActivation voiceActivation;
     private LinearLayout mainLinearLayout;
     private boolean activateHereAdvancedPositioning;
@@ -516,6 +451,81 @@ class MapFragmentView {
                     showTrafficWarningTextView(trafficWarningTextView, warningText);
 
                 }
+            }
+        }
+    };
+
+    private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
+
+        @Override
+        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
+            super.onLaneInformation(list, roadElement);
+            switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
+                case TRUCK:
+                case CAR:
+                    isLaneDisplaying = false;
+                    if (laneInformationMapOverlay != null) {
+                        DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
+                    }
+                    laneDcmLinearLayout = new LinearLayout(DataHolder.getActivity());
+                    laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+                    laneDcmLinearLayout.setVisibility(View.VISIBLE);
+                    laneInfoLinearLayoutOverlay = new LinearLayout(DataHolder.getActivity());
+                    laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
+                    laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
+                    if (list.size() > 0) {
+                        for (LaneInformation laneInformation : list) {
+                            LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
+                            EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
+                            int laneDirectionCategory = 0;
+                            ImageView laneDcmImageView = new ImageView(DataHolder.getActivity());
+                            for (LaneInformation.Direction direction : directions) {
+                                laneDirectionCategory += direction.value();
+                            }
+
+                            Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, DataHolder.getActivity());
+                            laneDcmImageView.setImageDrawable(laneDcmIcon);
+                            isLaneDisplaying = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
+                            laneDcmImageView.setCropToPadding(false);
+
+                            if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
+                                laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
+                            } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
+                                laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
+                            } else {
+                                laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
+                            }
+                            int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, DataHolder.getActivity());
+                            laneDcmLinearLayout.addView(laneDcmImageView);
+                            laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
+                        }
+                        laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
+                        ImageView downArrowImageView = new ImageView(DataHolder.getActivity());
+                        downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
+                        laneInfoLinearLayoutOverlay.addView(downArrowImageView);
+
+                        laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
+                            }
+                        });
+                        laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+
+                        if (!DataHolder.isRouteOverView && isLaneDisplaying) {
+                            try {
+                                DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }
+                case SCOOTER:
+                    list.forEach(laneInformation -> {
+                        Log.d(TAG, "laneInformation.getCrossingRestriction() :" + laneInformation.getCrossingRestriction());
+                        Log.d(TAG, "laneInformation.getDividerMarking() :" + laneInformation.getDividerMarking());
+                    });
             }
         }
     };
@@ -967,6 +977,13 @@ class MapFragmentView {
             Log.d(TAG, "getNavigationManager().getNextManeuver().getDistanceToNextManeuver():" + getNavigationManager().getNextManeuver().getDistanceToNextManeuver());
             Log.d(TAG, "getNavigationManager().getNextManeuver().getTurn():" + getNavigationManager().getNextManeuver().getTurn());
             Log.d(TAG, "getNavigationManager().getNextManeuver().getIcon().value():" + getNavigationManager().getNextManeuver().getIcon().name());
+            getNavigationManager().getNextManeuver().getRouteElements().forEach(it -> {
+                Log.d(TAG, "it.getRoadElement().getRoadName(): " + it.getRoadElement().getRoadName());
+                Log.d(TAG, "it.getRoadElement().getPluralType(): " + it.getRoadElement().getPluralType());
+                Log.d(TAG, "it.getRoadElement().getFormOfWay(): " + it.getRoadElement().getFormOfWay());
+                Log.d(TAG, "it.getRoadElement().getNumberOfLanes(): " + it.getRoadElement().getNumberOfLanes());
+                Log.d(TAG, "it.getRoadElement().getAttributes(): " + it.getRoadElement().getAttributes());
+            });
             if (!isVisible || isPipMode) {
                 new NavigationNotificationPusher(maneuverIconId);
             }
@@ -1743,6 +1760,8 @@ class MapFragmentView {
         RouteOptions routeOptions = new RouteOptions();
         switch (transportMode) {
             case CAR:
+                navigationControlButton.setEnabled(true);
+                navigationControlButton.setAlpha(1f);
                 routeOptions.setTransportMode(RouteOptions.TransportMode.CAR);
                 routeOptions.setHighwaysAllowed(true);
                 DataHolder.getMap().setMapScheme(Map.Scheme.NORMAL_DAY);
@@ -1750,6 +1769,8 @@ class MapFragmentView {
                 DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
                 break;
             case TRUCK:
+                navigationControlButton.setEnabled(true);
+                navigationControlButton.setAlpha(1f);
                 routeOptions.setTransportMode(RouteOptions.TransportMode.TRUCK);
                 routeOptions.setHighwaysAllowed(true);
                 EnumSet<Map.FleetFeature> fleetFeatureEnumSet = EnumSet.of(
@@ -1760,6 +1781,8 @@ class MapFragmentView {
                 DataHolder.getMap().setMapScheme(Map.Scheme.TRUCK_DAY);
                 break;
             case SCOOTER:
+                navigationControlButton.setEnabled(true);
+                navigationControlButton.setAlpha(1f);
                 routeOptions.setTransportMode(RouteOptions.TransportMode.SCOOTER);
                 routeOptions.setRouteType(RouteOptions.Type.FASTEST);
                 DataHolder.getMap().setMapScheme(Map.Scheme.REDUCED_DAY);
@@ -1767,6 +1790,8 @@ class MapFragmentView {
                 DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
                 break;
             case BICYCLE:
+                navigationControlButton.setEnabled(false);
+                navigationControlButton.setAlpha(0.3f);
                 routeOptions.setTransportMode(RouteOptions.TransportMode.BICYCLE);
                 routeOptions.setHighwaysAllowed(false);
                 DataHolder.getMap().setMapScheme(Map.Scheme.HYBRID_DAY);
@@ -1774,6 +1799,8 @@ class MapFragmentView {
                 DataHolder.getMap().setPedestrianFeaturesVisible(EnumSet.noneOf(Map.PedestrianFeature.class));
                 break;
             case PEDESTRIAN:
+                navigationControlButton.setEnabled(true);
+                navigationControlButton.setAlpha(1f);
                 routeOptions.setTransportMode(RouteOptions.TransportMode.PEDESTRIAN);
                 DataHolder.getMap().setPedestrianFeaturesVisible(pedestrianFeatureEnumSet);
                 DataHolder.getMap().setMapScheme(Map.Scheme.PEDESTRIAN_DAY);
