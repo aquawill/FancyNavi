@@ -1668,6 +1668,7 @@ class MapFragmentView {
                 NavigationManager.NaturalGuidanceMode.TRAFFIC_LIGHT
         );
         DataHolder.getNavigationManager().setTrafficAvoidanceMode(NavigationManager.TrafficAvoidanceMode.MANUAL);
+        DataHolder.getNavigationManager().setLaneAssistanceMode(NavigationManager.LaneAssistanceMode.CURRENT_VIEW);
 //        DataHolder.getNavigationManager().setRouteRequestInterval(180);
 //        DataHolder.getNavigationManager().setDistanceWithUTurnToTriggerStopoverReached(100);
 
