@@ -87,6 +87,7 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(0);
         DataHolder.getActivity().findViewById(R.id.download_button).setAlpha(0);
+        DataHolder.getActivity().findViewById(R.id.safety_cam_linear_layout).setAlpha(0);
         new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.7f);
         DataHolder.getAndroidXMapFragment().setOnTouchListener(emptyMapOnTouchListener);
         if (laneInformationMapOverlay != null) {
@@ -112,6 +113,7 @@ class MapModeChanger {
         DataHolder.getActivity().findViewById(R.id.guidance_current_street_view).setAlpha(1);
         DataHolder.getActivity().findViewById(R.id.log_button).setVisibility(View.VISIBLE);
         DataHolder.getActivity().findViewById(R.id.traffic_warning_text_view).setAlpha(1);
+        DataHolder.getActivity().findViewById(R.id.safety_cam_linear_layout).setAlpha(1);
         if (isNavigating) {
             new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
             DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);

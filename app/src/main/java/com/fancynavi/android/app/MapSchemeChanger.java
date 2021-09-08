@@ -14,6 +14,8 @@ class MapSchemeChanger {
 
     private final Map map;
     private NavigationManager navigationManager;
+    private boolean landmarkVisible;
+    private String mapScheme;
 
     MapSchemeChanger(Map map, NavigationManager navigationManager) {
         this.map = map;
@@ -44,6 +46,8 @@ class MapSchemeChanger {
     }
 
     void trafficMapOn() {
+        landmarkVisible = map.areLandmarksVisible();
+        mapScheme = map.getMapScheme();
         if (map.getMapScheme().contains("day")) {
             if (map.getMapScheme().contains("hybrid")) {
                 map.setMapScheme(Map.Scheme.HYBRID_TRAFFIC_DAY);
@@ -61,10 +65,16 @@ class MapSchemeChanger {
                 map.setMapScheme(Map.Scheme.NORMAL_TRAFFIC_NIGHT);
             }
         }
+        map.setLandmarksVisible(landmarkVisible);
+        map.setMapScheme(mapScheme);
     }
 
     void trafficMapOff() {
+        landmarkVisible = map.areLandmarksVisible();
+        mapScheme = map.getMapScheme();
         map.setMapScheme(map.getMapScheme().replace("traffic.", ""));
+        map.setLandmarksVisible(landmarkVisible);
+        map.setMapScheme(mapScheme);
     }
 
     void satelliteMapOff() {

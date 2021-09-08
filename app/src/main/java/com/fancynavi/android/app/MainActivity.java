@@ -16,6 +16,7 @@
 
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.FOREGROUND_SERVICE_ID;
 import static com.fancynavi.android.app.DataHolder.TAG;
 import static com.fancynavi.android.app.DataHolder.isDragged;
 import static com.fancynavi.android.app.DataHolder.isNavigating;
@@ -548,6 +549,7 @@ public class MainActivity extends AppCompatActivity {
     public void onPictureInPictureModeChanged(boolean isInPictureInPictureMode) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode);
         if (isInPictureInPictureMode) {
+            DataHolder.getNotificationManager().cancel(FOREGROUND_SERVICE_ID);
             getBaseContext().getResources().updateConfiguration(configuration, metrics);
 //            findViewById(R.id.guidance_next_maneuver_view).setVisibility(View.GONE);
 //            findViewById(R.id.map_constraint_layout).setVisibility(View.GONE);

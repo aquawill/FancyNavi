@@ -9,7 +9,7 @@
     <string name="start_navigation">Start Navi</string>
     <string name="retry">Retry</string>
     <string name="route_calculation_failed">Route Calculation Failed:\n</string>
-    <string name="found_better_route">Found a better route, follow?</string>
+    <string name="found_better_route">Found a better route.</string>
     <string name="reset">Reset</string>
     <string name="alternative_route_to_avoid_congestion">"An alternative route can save "</string>
     <string name="alternative_route_applied">Alternative route applied, drive carefully.</string>

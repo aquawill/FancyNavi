@@ -396,7 +396,7 @@ class MapFragmentView {
         @Override
         public void onManeuverEvent() {
             super.onManeuverEvent();
-            if (!isVisible || isPipMode) {
+            if (!isVisible) {
                 new NavigationNotificationPusher(maneuverIconId);
             }
         }
@@ -428,7 +428,7 @@ class MapFragmentView {
                         case NEAR_START:
                             if ((trafficNotificationInfoDistanceInMeters / 500) * 500 > 0) {
                                 warningText = trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion_display);
-                                textToSpeech.speak(trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+//                                textToSpeech.speak(trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                             } else {
                                 warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
                                 textToSpeech.speak(warningText, TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
@@ -437,7 +437,7 @@ class MapFragmentView {
                         case ON_HIGHWAY:
                             if ((trafficNotificationInfoDistanceInMeters / 500) * 500 > 0) {
                                 warningText = trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion_display);
-                                textToSpeech.speak(trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+//                                textToSpeech.speak(trafficNotificationInfoDistanceInLocalFormat + " " + DataHolder.getAndroidXMapFragment().getString(R.string.distance_to_road_congestion), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
                             } else {
                                 warningText = DataHolder.getAndroidXMapFragment().getString(R.string.passing_road_congestion);
                                 textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.passing_congestion_please_drive_patiently), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
@@ -460,34 +460,33 @@ class MapFragmentView {
         @Override
         public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
             super.onLaneInformation(list, roadElement);
-            switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
-                case TRUCK:
-                case CAR:
-                    isLaneDisplaying = false;
-                    if (laneInformationMapOverlay != null) {
-                        DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
+            isLaneDisplaying = false;
+            if (laneInformationMapOverlay != null) {
+                DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
+            }
+            laneDcmLinearLayout = new LinearLayout(DataHolder.getActivity());
+            laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+            laneDcmLinearLayout.setVisibility(View.VISIBLE);
+            laneInfoLinearLayoutOverlay = new LinearLayout(DataHolder.getActivity());
+            laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
+            laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
+            if (list.size() > 0) {
+                for (LaneInformation laneInformation : list) {
+                    LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
+                    EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
+                    int laneDirectionCategory = 0;
+                    ImageView laneDcmImageView = new ImageView(DataHolder.getActivity());
+                    for (LaneInformation.Direction direction : directions) {
+                        laneDirectionCategory += direction.value();
                     }
-                    laneDcmLinearLayout = new LinearLayout(DataHolder.getActivity());
-                    laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-                    laneDcmLinearLayout.setVisibility(View.VISIBLE);
-                    laneInfoLinearLayoutOverlay = new LinearLayout(DataHolder.getActivity());
-                    laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
-                    laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
-                    if (list.size() > 0) {
-                        for (LaneInformation laneInformation : list) {
-                            LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
-                            EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
-                            int laneDirectionCategory = 0;
-                            ImageView laneDcmImageView = new ImageView(DataHolder.getActivity());
-                            for (LaneInformation.Direction direction : directions) {
-                                laneDirectionCategory += direction.value();
-                            }
 
-                            Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, DataHolder.getActivity());
-                            laneDcmImageView.setImageDrawable(laneDcmIcon);
-                            isLaneDisplaying = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
-                            laneDcmImageView.setCropToPadding(false);
-
+                    Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, DataHolder.getActivity());
+                    laneDcmImageView.setImageDrawable(laneDcmIcon);
+                    isLaneDisplaying = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
+                    laneDcmImageView.setCropToPadding(false);
+                    switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
+                        case CAR:
+                        case TRUCK:
                             if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
                                 laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
                             } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
@@ -495,39 +494,37 @@ class MapFragmentView {
                             } else {
                                 laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
                             }
-                            int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, DataHolder.getActivity());
-                            laneDcmLinearLayout.addView(laneDcmImageView);
-                            laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
-                        }
-                        laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
-                        ImageView downArrowImageView = new ImageView(DataHolder.getActivity());
-                        downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
-                        laneInfoLinearLayoutOverlay.addView(downArrowImageView);
-
-                        laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                            @Override
-                            public void onGlobalLayout() {
-                                laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
-                            }
-                        });
-                        laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
-
-                        if (!DataHolder.isRouteOverView && isLaneDisplaying) {
-                            try {
-                                DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
+                        default:
+                            laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
                     }
-                case SCOOTER:
-                    list.forEach(laneInformation -> {
-                        Log.d(TAG, "laneInformation.getCrossingRestriction() :" + laneInformation.getCrossingRestriction());
-                        Log.d(TAG, "laneInformation.getDividerMarking() :" + laneInformation.getDividerMarking());
-                    });
+
+                    int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, DataHolder.getActivity());
+                    laneDcmLinearLayout.addView(laneDcmImageView);
+                    laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
+                }
+                laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
+                ImageView downArrowImageView = new ImageView(DataHolder.getActivity());
+                downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
+                laneInfoLinearLayoutOverlay.addView(downArrowImageView);
+
+                laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
+                    }
+                });
+                laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+
+                if (!DataHolder.isRouteOverView && isLaneDisplaying) {
+                    try {
+                        DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-        }
+            }
     };
 
     private final NavigationManager.PositionListener positionListener = new NavigationManager.PositionListener() {
@@ -867,10 +864,16 @@ class MapFragmentView {
                         DataHolder.getMap().removeMapObject(alternativeMapRoute);
                         DataHolder.getMap().setTilt(60);
                         trafficSignMapContainer.setVisible(true);
-                        if (DataHolder.getActivity().isInMultiWindowMode()) {
-                            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                        if (isPipMode) {
+                            DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM);
+                            DataHolder.getMap().setZoomLevel(17);
+                            MapModeChanger.setMapTilt(0);
                         } else {
-                            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                            if (DataHolder.getActivity().isInMultiWindowMode()) {
+                                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                            } else {
+                                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                            }
                         }
                     }
                 });
@@ -984,9 +987,9 @@ class MapFragmentView {
                 Log.d(TAG, "it.getRoadElement().getNumberOfLanes(): " + it.getRoadElement().getNumberOfLanes());
                 Log.d(TAG, "it.getRoadElement().getAttributes(): " + it.getRoadElement().getAttributes());
             });
-            if (!isVisible || isPipMode) {
-                new NavigationNotificationPusher(maneuverIconId);
-            }
+//            if (!isVisible) {
+//                new NavigationNotificationPusher(maneuverIconId);
+//            }
         }
     };
 
@@ -1641,7 +1644,6 @@ class MapFragmentView {
                     Rational aspectRatio = new Rational(23, 10);
                     PictureInPictureParams pictureInPictureParams = new PictureInPictureParams.Builder().setAspectRatio(aspectRatio).build();
                     DataHolder.getActivity().enterPictureInPictureMode(pictureInPictureParams);
-
                 }
             });
         }
@@ -3014,7 +3016,7 @@ class MapFragmentView {
         DataHolder.getNavigationManager().removeLaneInformationListener(navigationListeners.getLaneInformationListener());
         DataHolder.getNavigationManager().removeRerouteListener(navigationListeners.getRerouteListener());
         DataHolder.getNavigationManager().removeTrafficRerouteListener(navigationListeners.getTrafficRerouteListener());
-        DataHolder.getNavigationManager().removeNewInstructionEventListener(navigationListeners.getNewInstructionEventListener());
+//        DataHolder.getNavigationManager().removeNewInstructionEventListener(navigationListeners.getNewInstructionEventListener());
     }
 
     private void addNavigationListeners() {
@@ -3027,10 +3029,10 @@ class MapFragmentView {
         navigationListeners.setTrafficRerouteListener(trafficRerouteListener);
         navigationListeners.setSafetySpotListener(safetySpotListener);
         navigationListeners.setManeuverEventListener(maneuverEventListener);
-        navigationListeners.setNewInstructionEventListener(newInstructionEventListener);
+//        navigationListeners.setNewInstructionEventListener(newInstructionEventListener);
         navigationListeners.setAudioFeedbackListener(audioFeedbackListener);
 
-        DataHolder.getNavigationManager().addNewInstructionEventListener(new WeakReference<>(navigationListeners.getNewInstructionEventListener()));
+//        DataHolder.getNavigationManager().addNewInstructionEventListener(new WeakReference<>(navigationListeners.getNewInstructionEventListener()));
         DataHolder.getNavigationManager().addNavigationManagerEventListener(new WeakReference<>(navigationListeners.getNavigationManagerEventListener()));
         DataHolder.getNavigationManager().addSafetySpotListener(new WeakReference<>(navigationListeners.getSafetySpotListener()));
         DataHolder.getNavigationManager().setRealisticViewMode(NavigationManager.RealisticViewMode.DAY);
@@ -3083,6 +3085,7 @@ class MapFragmentView {
         private final Map map = DataHolder.getMap();
 
         SearchResultHandler(View view, GeoCoordinate geoCoordinate, String inputString, Map map) {
+            searchRequestResultMapContainer.removeAllMapObjects();
             if (selectedFeatureMapMarker != null) {
                 map.removeMapObject(selectedFeatureMapMarker);
             }
@@ -3131,6 +3134,7 @@ class MapFragmentView {
         }
 
         SearchResultHandler(View view, com.here.android.mpa.search.Location location, Map map) {
+            searchRequestResultMapContainer.removeAllMapObjects();
             if (selectedFeatureMapMarker != null) {
                 map.removeMapObject(selectedFeatureMapMarker);
             }
@@ -3139,6 +3143,7 @@ class MapFragmentView {
         }
 
         SearchResultHandler(View view, PointF pointF, Map map) {
+            searchRequestResultMapContainer.removeAllMapObjects();
 //            if (selectedFeatureMapMarker != null) {
 //                map.removeMapObject(selectedFeatureMapMarker);
 //            }

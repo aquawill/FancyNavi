@@ -1,5 +1,9 @@
 package com.fancynavi.android.app;
 
+import static com.fancynavi.android.app.DataHolder.CHANNEL;
+import static com.fancynavi.android.app.DataHolder.FOREGROUND_SERVICE_ID;
+import static com.fancynavi.android.app.DataHolder.TAG;
+
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.content.Intent;
@@ -12,10 +16,6 @@ import com.here.android.mpa.guidance.NavigationManager;
 import com.here.android.mpa.mapping.Map;
 import com.here.android.mpa.mapping.MapOffScreenRenderer;
 import com.here.android.mpa.routing.Maneuver;
-
-import static com.fancynavi.android.app.DataHolder.CHANNEL;
-import static com.fancynavi.android.app.DataHolder.FOREGROUND_SERVICE_ID;
-import static com.fancynavi.android.app.DataHolder.TAG;
 
 class NavigationNotificationPusher {
     NavigationNotificationPusher(int maneuverIconId) {
@@ -75,9 +75,9 @@ class NavigationNotificationPusher {
                                 .build();
                 DataHolder.getNotificationManager().cancel(FOREGROUND_SERVICE_ID);
                 DataHolder.getNotificationManager().notify(FOREGROUND_SERVICE_ID, notification);
+                DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM);
             }
         });
         mapOffScreenRenderer.stop();
-        mapOffScreenRenderer = null;
     }
 }

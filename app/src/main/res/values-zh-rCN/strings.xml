@@ -166,7 +166,7 @@
     <string name="route_calculation_failed">路线计算失败：</string>
     <string name="alternative_route_to_avoid_congestion">发现避开壅塞路线可节省</string>
     <string name="alternative_route_applied">路线已避开壅堵路段，请小心驾驶。</string>
-    <string name="found_better_route">发现更佳路线，是否使用？</string>
+    <string name="found_better_route">发现更佳路线</string>
     <string name="reset">取消</string>
     <string name="gpx_logging">纪录GPS轨迹：</string>
     <string name="cannot_initialize_map_with_error">错误！无法初始化地图 ：</string>
