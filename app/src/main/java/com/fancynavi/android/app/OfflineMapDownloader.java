@@ -112,21 +112,29 @@ class OfflineMapDownloader {
                 String rootMapPackageEnglishTitle = rootMapPackage.getEnglishTitle();
                 int rootMapPackageEnglishId = rootMapPackage.getId();
                 long rootMapPackageSize = rootMapPackage.getSize();
-                Log.d(TAG, "Root offline map title:" + rootMapPackageTitle + " | " + rootMapPackageEnglishTitle + " | id: " + rootMapPackageEnglishId + " | size: " + rootMapPackageSize + "KB");
+                Log.d(TAG, "Root offline map title: " + rootMapPackageTitle + " | " + rootMapPackageEnglishTitle + " | id: " + rootMapPackageEnglishId + " | size: " + rootMapPackageSize + "KB");
                 List<MapPackage> mapPackageLevel1List = rootMapPackage.getChildren();
                 for (MapPackage mapPackageLevel1 : mapPackageLevel1List) {
                     String level1MapPackageTitle = mapPackageLevel1.getTitle();
                     String level1MapPackageEnglishTitle = mapPackageLevel1.getEnglishTitle();
                     int level1MapPackageEnglishId = mapPackageLevel1.getId();
                     long level1MapPackageSize = mapPackageLevel1.getSize();
-                    Log.d(TAG, "\tL1 offline map title:" + level1MapPackageTitle + " | " + level1MapPackageEnglishTitle + " | id: " + level1MapPackageEnglishId + " | size: " + level1MapPackageSize + "KB");
+                    Log.d(TAG, "\tL1 offline map title: " + level1MapPackageTitle + " | " + level1MapPackageEnglishTitle + " | id: " + level1MapPackageEnglishId + " | size: " + level1MapPackageSize + "KB");
                     List<MapPackage> mapPackageLevel2List = mapPackageLevel1.getChildren();
                     for (MapPackage mapPackageLevel2 : mapPackageLevel2List) {
                         String level2MapPackageTitle = mapPackageLevel2.getTitle();
                         String level2MapPackageEnglishTitle = mapPackageLevel2.getEnglishTitle();
                         int level2MapPackageEnglishId = mapPackageLevel2.getId();
                         long level2MapPackageEnglishSize = mapPackageLevel2.getSize();
-                        Log.d(TAG, "\t\tL2 offline map title:" + level2MapPackageTitle + " | " + level2MapPackageEnglishTitle + " | id: " + level2MapPackageEnglishId + " | size: " + level2MapPackageEnglishSize + "KB");
+                        Log.d(TAG, "\t\tL2 offline map title: " + level2MapPackageTitle + " | " + level2MapPackageEnglishTitle + " | id: " + level2MapPackageEnglishId + " | size: " + level2MapPackageEnglishSize + "KB");
+                        List<MapPackage> mapPackageLevel3List = mapPackageLevel2.getChildren();
+                        for (MapPackage mapPackageLevel3 : mapPackageLevel3List) {
+                            String level3MapPackageTitle = mapPackageLevel3.getTitle();
+                            String level3MapPackageEnglishTitle = mapPackageLevel3.getEnglishTitle();
+                            int level3MapPackageEnglishId = mapPackageLevel3.getId();
+                            long level3MapPackageEnglishSize = mapPackageLevel3.getSize();
+                            Log.d(TAG, "\t\t\tL3 offline map title: " + level3MapPackageTitle + " | " + level3MapPackageEnglishTitle + " | id: " + level3MapPackageEnglishId + " | size: " + level3MapPackageEnglishSize + "KB");
+                        }
                     }
                 }
             }
@@ -279,6 +287,10 @@ class OfflineMapDownloader {
         }
     }
 
+    void downloadOfflineMapPackageByIdList(List list) {
+        mapLoader.installMapPackages(list);
+    }
+
     void downloadOfflineMapPackageOnMapCenter(GeoCoordinate geoCoordinate) {
         Log.d(TAG, "checking offline map at: " + geoCoordinate);
         isMapLoaderOperating = true;
@@ -290,6 +302,7 @@ class OfflineMapDownloader {
                 mapNameList.clear();
                 mapEnglishNameList.clear();
                 if (resultCode == MapLoader.ResultCode.OPERATION_SUCCESSFUL) {
+                    Log.d(TAG, "mapPackage == null : " + (mapPackage == null));
                     if (mapPackage != null) {
                         String rootMapPackageTitle = mapPackage.getTitle();
                         String rootMapPackageEnglishTitle = mapPackage.getEnglishTitle();
