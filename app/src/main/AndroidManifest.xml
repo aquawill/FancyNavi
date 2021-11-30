@@ -57,15 +57,15 @@
 Developers should put application credentials here.To obtain them, please register the application
          at https://developer.here.com/develop/mobile-sdks
         -->
-        <meta-data
-            android:name="com.here.android.maps.appid"
-            android:value="MdgrnOU2OsdYuPbPNz2t" />
-        <meta-data
-            android:name="com.here.android.maps.apptoken"
-            android:value="jeXznopbGvE8KRhVK3wkMw" />
-        <meta-data
-            android:name="com.here.android.maps.license.key"
-            android:value="UPTaWVOoRFajEFCEsbKeU90tlM+YxolaCWOX8pRWgNq9JVXegK83ohjN7ou/ix1kisqafUQ0/L1vTu0tXpN8V01n31OSmVp9ZWpWIILLc5sQTDKSewAMmmIoYAOd54Zf336wAuK9daZvrK3i4aDnHRrF0m81inch8cRxjTetOYWX4CFDyRXpsxbfvokFZTFoABIWs2GkBTBNXgwOS6o701o/5/ehvs9cjWttI/qSuUZAWD8wjEmtP0INaal6AlQpis5Bmm4cwl4z8qGM6gy2j+pZsEo9M41PAIgPwSDOgMdBqpUJwHjsN1uFEOCSYteAKBZXMX91JyPy670qc1jVBzv9EIDTnaleTr1xKJDDLhL7TmrJeXqMLiKPqjfcIXQhlwp4GIr5V4Hs9WF17aep49+YQgqr61WUZ5gPSGryeavV6zUMhZujZ9cXM0BPga+OHjuGgVk323XQBvOZhV9LQVx3FDpNbMk0NO4GhUfnQMxWKdVYygEN8EAUJw8e6gxDAMgxGy33wIWvKhZG1PTf/3DR/vyo1ywEQKftrdXCruf4mSVtzIB8DnPJvZ4vamxbf9vZQoT4DZbTYZxWiDlqws82GRQq687rek/mosA1Uq0nUgPMT4y9PpePuXQ78zVY3ttKF0wWpzh6jMSa6buBeKr/hszJlbqersym64V6cSU=" />
+        <!--        <meta-data-->
+        <!--            android:name="com.here.android.maps.appid"-->
+        <!--            android:value="MdgrnOU2OsdYuPbPNz2t" />-->
+        <!--        <meta-data-->
+        <!--            android:name="com.here.android.maps.apptoken"-->
+        <!--            android:value="jeXznopbGvE8KRhVK3wkMw" />-->
+        <!--        <meta-data-->
+        <!--            android:name="com.here.android.maps.license.key"-->
+        <!--            android:value="UPTaWVOoRFajEFCEsbKeU90tlM+YxolaCWOX8pRWgNq9JVXegK83ohjN7ou/ix1kisqafUQ0/L1vTu0tXpN8V01n31OSmVp9ZWpWIILLc5sQTDKSewAMmmIoYAOd54Zf336wAuK9daZvrK3i4aDnHRrF0m81inch8cRxjTetOYWX4CFDyRXpsxbfvokFZTFoABIWs2GkBTBNXgwOS6o701o/5/ehvs9cjWttI/qSuUZAWD8wjEmtP0INaal6AlQpis5Bmm4cwl4z8qGM6gy2j+pZsEo9M41PAIgPwSDOgMdBqpUJwHjsN1uFEOCSYteAKBZXMX91JyPy670qc1jVBzv9EIDTnaleTr1xKJDDLhL7TmrJeXqMLiKPqjfcIXQhlwp4GIr5V4Hs9WF17aep49+YQgqr61WUZ5gPSGryeavV6zUMhZujZ9cXM0BPga+OHjuGgVk323XQBvOZhV9LQVx3FDpNbMk0NO4GhUfnQMxWKdVYygEN8EAUJw8e6gxDAMgxGy33wIWvKhZG1PTf/3DR/vyo1ywEQKftrdXCruf4mSVtzIB8DnPJvZ4vamxbf9vZQoT4DZbTYZxWiDlqws82GRQq687rek/mosA1Uq0nUgPMT4y9PpePuXQ78zVY3ttKF0wWpzh6jMSa6buBeKr/hszJlbqersym64V6cSU=" />-->
         <!--
 Developers should always provide custom values for each of {YOUR_LABEL_NAME} and {YOUR_INTENT_NAME}.
         Do not reuse HERE SDK defaults.

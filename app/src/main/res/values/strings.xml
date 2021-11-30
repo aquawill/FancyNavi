@@ -14,7 +14,7 @@
     <string name="alternative_route_to_avoid_congestion">"An alternative route can save "</string>
     <string name="alternative_route_applied">Alternative route applied, drive carefully.</string>
     <string name="gpx_logging">GPX Logging: </string>
-    <string name="cannot_initialize_map_with_error">ERROR: Cannot initialize Map with error </string>
+    <string name="cannot_initialize_map_with_error">ERROR: Cannot initialize Map with error:</string>
     <string name="create_route">Create Route</string>
     <string name="no_result_returned">No result returned.</string>
     <string name="safety_camera_ahead">Safety Camera / </string>

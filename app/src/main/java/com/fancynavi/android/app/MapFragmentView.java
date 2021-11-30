@@ -61,6 +61,7 @@ import com.here.android.mpa.cluster.BasicClusterStyle;
 import com.here.android.mpa.cluster.ClusterLayer;
 import com.here.android.mpa.cluster.ClusterTheme;
 import com.here.android.mpa.cluster.ClusterViewObject;
+import com.here.android.mpa.common.ApplicationContext;
 import com.here.android.mpa.common.CopyrightLogoPosition;
 import com.here.android.mpa.common.DataNotReadyException;
 import com.here.android.mpa.common.GeoBoundingBox;
@@ -68,6 +69,7 @@ import com.here.android.mpa.common.GeoCoordinate;
 import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
+import com.here.android.mpa.common.MapEngine;
 import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
@@ -119,6 +121,7 @@ import com.here.android.mpa.mapping.TransitStopObject;
 import com.here.android.mpa.mapping.customization.CustomizableScheme;
 import com.here.android.mpa.mapping.customization.CustomizableVariables;
 import com.here.android.mpa.mapping.customization.ZoomRange;
+import com.here.android.mpa.prefetcher.MapDataPrefetcher;
 import com.here.android.mpa.routing.CoreRouter;
 import com.here.android.mpa.routing.DynamicPenalty;
 import com.here.android.mpa.routing.Route;
@@ -293,6 +296,78 @@ class MapFragmentView {
             }
         }
     };
+    static Route theRoute;
+    private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
+
+        @Override
+        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
+            super.onLaneInformation(list, roadElement);
+            isLaneDisplaying = false;
+            if (laneInformationMapOverlay != null) {
+                DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
+            }
+            laneDcmLinearLayout = new LinearLayout(DataHolder.getActivity());
+            laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
+            laneDcmLinearLayout.setVisibility(View.VISIBLE);
+            laneInfoLinearLayoutOverlay = new LinearLayout(DataHolder.getActivity());
+            laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
+            laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
+            if (list.size() > 0) {
+                for (LaneInformation laneInformation : list) {
+                    LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
+                    EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
+                    int laneDirectionCategory = 0;
+                    ImageView laneDcmImageView = new ImageView(DataHolder.getActivity());
+                    for (LaneInformation.Direction direction : directions) {
+                        laneDirectionCategory += direction.value();
+                    }
+
+                    Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, DataHolder.getActivity());
+                    laneDcmImageView.setImageDrawable(laneDcmIcon);
+                    isLaneDisplaying = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
+                    laneDcmImageView.setCropToPadding(false);
+                    switch (theRoute.getRoutePlan().getRouteOptions().getTransportMode()) {
+                        case CAR:
+                        case TRUCK:
+                            if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
+                                laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
+                            } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
+                                laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
+                            } else {
+                                laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
+                            }
+                        default:
+                            laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
+                    }
+
+                    int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, DataHolder.getActivity());
+                    laneDcmLinearLayout.addView(laneDcmImageView);
+                    laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
+                }
+                laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
+                ImageView downArrowImageView = new ImageView(DataHolder.getActivity());
+                downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
+                laneInfoLinearLayoutOverlay.addView(downArrowImageView);
+
+                laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
+                    }
+                });
+                laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
+
+                if (!DataHolder.isRouteOverView && isLaneDisplaying) {
+                    try {
+                        DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }
+    };
     private MapState previousMapState = null;
     private GeoJSONTileLoader roadkillGeoJSONTileLoader;
     private MapContainer roadkillGeoJsonTileMapContainer;
@@ -367,7 +442,95 @@ class MapFragmentView {
     private boolean trafficEnabled;
     private ProgressBar progressBar;
     private TextView progressingTextView;
-    static Route route;
+    private final NavigationManager.TrafficRerouteListener trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
+        @Override
+        public void onTrafficRerouted(RouteResult routeResult) {
+            super.onTrafficRerouted(routeResult);
+            int currentRouteDuration = DataHolder.getNavigationManager().getTta(Route.TrafficPenaltyMode.OPTIMAL, 0).getDuration();
+            int alternativeRouteDuration = routeResult.getRoute().getTtaIncludingTraffic(0).getDuration();
+            Log.d(TAG, "currentRouteDuration:" + currentRouteDuration);
+            Log.d(TAG, "alternativeRouteDuration:" + alternativeRouteDuration);
+            if (alternativeRouteDuration < currentRouteDuration - 60) {
+                int timeSavedInMinute = (currentRouteDuration - alternativeRouteDuration) / 60;
+
+                if (!isPipMode && !DataHolder.getActivity().isInMultiWindowMode()) {
+                    DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
+                    alternativeMapRoute = new MapRoute(routeResult.getRoute());
+                    alternativeMapRoute.setZIndex(90);
+                    alternativeMapRoute.setColor(Color.GREEN);
+                    alternativeMapRoute.setOutlineColor(Color.DKGRAY);
+
+                    GeoBoundingBox alternativeRouteGeoBoundingBox = routeResult.getRoute().getBoundingBox();
+                    GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(alternativeRouteGeoBoundingBox);
+                    alternativeRouteGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getHeightInMeters() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getWidthInMeters() * 0.6));
+                    DataHolder.getMap().zoomTo(alternativeRouteGeoBoundingBox, Map.Animation.BOW, 0);
+
+                    DataHolder.getMap().addMapObject(alternativeMapRoute);
+                    DataHolder.getMap().setTilt(0);
+                    trafficSignMapContainer.setVisible(false);
+                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.5f);
+                }
+
+                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
+                trafficReRoutedSnackBar.setDuration(10000);
+                trafficReRoutedSnackBar.setAction(R.string.detour, new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
+                        Log.d(TAG, "traffic rerouted.");
+                        theRoute = routeResult.getRoute();
+                        resetMapRoute(theRoute);
+                        safetyCameraAhead = false;
+                        safetyCameraMapMarker.setTransparency(0);
+                        safetyCamLinearLayout.setVisibility(View.GONE);
+                        cle2CorridorRequestForRoute(theRoute.getRouteGeometry(), 70);
+                        DataHolder.getNavigationManager().setRoute(theRoute);
+                    }
+                });
+                trafficReRoutedSnackBar.setCallback(new Snackbar.Callback() {
+                    @Override
+                    public void onDismissed(Snackbar transientBottomBar, int event) {
+                        super.onDismissed(transientBottomBar, event);
+                        DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
+                        DataHolder.getMap().removeMapObject(alternativeMapRoute);
+                        DataHolder.getMap().setTilt(60);
+                        trafficSignMapContainer.setVisible(true);
+                        if (isPipMode) {
+                            DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM);
+                            DataHolder.getMap().setZoomLevel(17);
+                            MapModeChanger.setMapTilt(0);
+                        } else {
+                            if (DataHolder.getActivity().isInMultiWindowMode()) {
+                                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
+                            } else {
+                                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
+                            }
+                        }
+                    }
+                });
+                trafficReRoutedSnackBar.show();
+            }
+        }
+
+        @Override
+        public void onTrafficRerouteFailed(TrafficNotification trafficNotification) {
+            Log.d(TAG, "onTrafficRerouteFailed");
+            super.onTrafficRerouteFailed(trafficNotification);
+        }
+
+        @Override
+        public void onTrafficRerouteBegin(TrafficNotification trafficNotification) {
+            Log.d(TAG, "onTrafficRerouteBegin");
+            super.onTrafficRerouteBegin(trafficNotification);
+        }
+
+        @Override
+        public void onTrafficRerouteState(TrafficEnabledRoutingState trafficEnabledRoutingState) {
+            super.onTrafficRerouteState(trafficEnabledRoutingState);
+
+        }
+    };
     static MapRoute mapRoute;
     private MapRoute alternativeMapRoute;
     private MapContainer trafficSignMapContainer;
@@ -454,77 +617,55 @@ class MapFragmentView {
             }
         }
     };
+    private final NavigationManager.RealisticViewListener realisticViewListener = new NavigationManager.RealisticViewListener() {
+        @Override
+        public void onRealisticViewNextManeuver(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
+            Log.d(TAG, "onRealisticViewNextManeuver: getDistanceToNextManeuver=" + DataHolder.getNavigationManager().getNextManeuverDistance());
 
-    private final NavigationManager.LaneInformationListener laneInformationListener = new NavigationManager.LaneInformationListener() {
+        }
 
         @Override
-        public void onLaneInformation(List<LaneInformation> list, RoadElement roadElement) {
-            super.onLaneInformation(list, roadElement);
-            isLaneDisplaying = false;
-            if (laneInformationMapOverlay != null) {
-                DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
+        public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
+            Log.d(TAG, "onRealisticViewShow: getNextManeuverDistance=" + DataHolder.getNavigationManager().getNextManeuverDistance());
+            int screenOrientation = DataHolder.getAndroidXMapFragment().getResources().getConfiguration().orientation;
+            if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {
+                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.7f, 0.75f);
             }
-            laneDcmLinearLayout = new LinearLayout(DataHolder.getActivity());
-            laneDcmLinearLayout.setOrientation(LinearLayout.HORIZONTAL);
-            laneDcmLinearLayout.setVisibility(View.VISIBLE);
-            laneInfoLinearLayoutOverlay = new LinearLayout(DataHolder.getActivity());
-            laneInfoLinearLayoutOverlay.setOrientation(LinearLayout.VERTICAL);
-            laneInfoLinearLayoutOverlay.setVisibility(View.VISIBLE);
-            if (list.size() > 0) {
-                for (LaneInformation laneInformation : list) {
-                    LaneInformation.RecommendationState recommendationState = laneInformation.getRecommendationState();
-                    EnumSet<LaneInformation.Direction> directions = laneInformation.getDirections();
-                    int laneDirectionCategory = 0;
-                    ImageView laneDcmImageView = new ImageView(DataHolder.getActivity());
-                    for (LaneInformation.Direction direction : directions) {
-                        laneDirectionCategory += direction.value();
-                    }
-
-                    Drawable laneDcmIcon = LaneDirectionCategoryPresenter.getLaneDirectionCategoryPresenter(laneDirectionCategory, DataHolder.getActivity());
-                    laneDcmImageView.setImageDrawable(laneDcmIcon);
-                    isLaneDisplaying = LaneDirectionCategoryPresenter.isLaneDirectionCategoryShowing();
-                    laneDcmImageView.setCropToPadding(false);
-                    switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
-                        case CAR:
-                        case TRUCK:
-                            if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
-                                laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
-                            } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
-                                laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
-                            } else {
-                                laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
-                            }
-                        default:
-                            laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
-                    }
-
-                    int laneDcmImageViewPadding = (int) DpConverter.convertDpToPixel(4, DataHolder.getActivity());
-                    laneDcmLinearLayout.addView(laneDcmImageView);
-                    laneDcmImageView.setPadding(laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding, laneDcmImageViewPadding);
-                }
-                laneInfoLinearLayoutOverlay.addView(laneDcmLinearLayout);
-                ImageView downArrowImageView = new ImageView(DataHolder.getActivity());
-                downArrowImageView.setImageResource(R.drawable.ic_arrow_point_to_down);
-                laneInfoLinearLayoutOverlay.addView(downArrowImageView);
-
-                laneInfoLinearLayoutOverlay.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        laneInfoLinearLayoutOverlay.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        laneInformationMapOverlay.setAnchorPoint(DataHolder.getMapOverlayAnchorPoint(laneInfoLinearLayoutOverlay.getWidth(), laneInfoLinearLayoutOverlay.getHeight()));
-                    }
-                });
-                laneInformationMapOverlay = new MapOverlay(laneInfoLinearLayoutOverlay, roadElement.getGeometry().get(roadElement.getGeometry().size() - 1));
-
-                if (!DataHolder.isRouteOverView && isLaneDisplaying) {
-                    try {
-                        DataHolder.getMap().addMapOverlay(laneInformationMapOverlay);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+            junctionViewImageView.requestLayout();
+            signpostImageView.requestLayout();
+            int jvViewWidth = mainLinearLayout.getWidth() / 3;
+            int jvViewHeight;
+            switch (aspectRatio) {
+                case AR_16x9:
+                    jvViewHeight = jvViewWidth / 16 * 9;
+                    break;
+                case AR_5x3:
+                    jvViewHeight = jvViewWidth / 5 * 3;
+                    break;
+                case AR_4x3:
+                    jvViewHeight = jvViewWidth / 4 * 3;
+                    break;
+                default:
+                    jvViewHeight = jvViewWidth * 2;
             }
-            }
+            junctionViewImageView.getLayoutParams().height = jvViewHeight;
+            junctionViewImageView.getLayoutParams().width = jvViewWidth;
+            signpostImageView.getLayoutParams().height = jvViewHeight;
+            signpostImageView.getLayoutParams().width = jvViewWidth;
+            Bitmap junctionBitmap = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
+            Bitmap signpostBitMap = signpost.getBitmap((int) signpost.getWidth(), (int) signpost.getHeight());
+            junctionViewImageView.setImageBitmap(junctionBitmap);
+            signpostImageView.setImageBitmap(signpostBitMap);
+            junctionViewImageView.setVisibility(View.VISIBLE);
+            signpostImageView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onRealisticViewHide() {
+            junctionViewImageView.setVisibility(View.GONE);
+            signpostImageView.setVisibility(View.GONE);
+            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
+        }
     };
 
     private final NavigationManager.PositionListener positionListener = new NavigationManager.PositionListener() {
@@ -809,230 +950,13 @@ class MapFragmentView {
         public void onCountryInfo(String s, String s1) {
         }
     };
-
-    private final NavigationManager.TrafficRerouteListener trafficRerouteListener = new NavigationManager.TrafficRerouteListener() {
-        @Override
-        public void onTrafficRerouted(RouteResult routeResult) {
-            super.onTrafficRerouted(routeResult);
-            int currentRouteDuration = DataHolder.getNavigationManager().getTta(Route.TrafficPenaltyMode.OPTIMAL, 0).getDuration();
-            int alternativeRouteDuration = routeResult.getRoute().getTtaIncludingTraffic(0).getDuration();
-            Log.d(TAG, "currentRouteDuration:" + currentRouteDuration);
-            Log.d(TAG, "alternativeRouteDuration:" + alternativeRouteDuration);
-            if (alternativeRouteDuration < currentRouteDuration - 60) {
-                int timeSavedInMinute = (currentRouteDuration - alternativeRouteDuration) / 60;
-
-                if (!isPipMode && !DataHolder.getActivity().isInMultiWindowMode()) {
-                    DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
-                    alternativeMapRoute = new MapRoute(routeResult.getRoute());
-                    alternativeMapRoute.setZIndex(90);
-                    alternativeMapRoute.setColor(Color.GREEN);
-                    alternativeMapRoute.setOutlineColor(Color.DKGRAY);
-
-                    GeoBoundingBox alternativeRouteGeoBoundingBox = routeResult.getRoute().getBoundingBox();
-                    GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(alternativeRouteGeoBoundingBox);
-                    alternativeRouteGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getHeightInMeters() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getWidthInMeters() * 0.6));
-                    DataHolder.getMap().zoomTo(alternativeRouteGeoBoundingBox, Map.Animation.BOW, 0);
-
-                    DataHolder.getMap().addMapObject(alternativeMapRoute);
-                    DataHolder.getMap().setTilt(0);
-                    trafficSignMapContainer.setVisible(false);
-                    new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.5f);
-                }
-
-                textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_to_avoid_congestion) + timeSavedInMinute + DataHolder.getAndroidXMapFragment().getString(R.string.minute), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                Snackbar trafficReRoutedSnackBar = Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), R.string.found_better_route, Snackbar.LENGTH_LONG);
-                trafficReRoutedSnackBar.setDuration(10000);
-                trafficReRoutedSnackBar.setAction(R.string.detour, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        textToSpeech.speak(DataHolder.getAndroidXMapFragment().getString(R.string.alternative_route_applied), TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
-                        Log.d(TAG, "traffic rerouted.");
-                        route = routeResult.getRoute();
-                        resetMapRoute(route);
-                        safetyCameraAhead = false;
-                        safetyCameraMapMarker.setTransparency(0);
-                        safetyCamLinearLayout.setVisibility(View.GONE);
-                        cle2CorridorRequestForRoute(route.getRouteGeometry(), 70);
-                        DataHolder.getNavigationManager().setRoute(route);
-                    }
-                });
-                trafficReRoutedSnackBar.setCallback(new Snackbar.Callback() {
-                    @Override
-                    public void onDismissed(Snackbar transientBottomBar, int event) {
-                        super.onDismissed(transientBottomBar, event);
-                        DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW);
-                        DataHolder.getMap().removeMapObject(alternativeMapRoute);
-                        DataHolder.getMap().setTilt(60);
-                        trafficSignMapContainer.setVisible(true);
-                        if (isPipMode) {
-                            DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.ROADVIEW_NOZOOM);
-                            DataHolder.getMap().setZoomLevel(17);
-                            MapModeChanger.setMapTilt(0);
-                        } else {
-                            if (DataHolder.getActivity().isInMultiWindowMode()) {
-                                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.6f);
-                            } else {
-                                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
-                            }
-                        }
-                    }
-                });
-                trafficReRoutedSnackBar.show();
-            }
-        }
-
-        @Override
-        public void onTrafficRerouteFailed(TrafficNotification trafficNotification) {
-            Log.d(TAG, "onTrafficRerouteFailed");
-            super.onTrafficRerouteFailed(trafficNotification);
-        }
-
-        @Override
-        public void onTrafficRerouteBegin(TrafficNotification trafficNotification) {
-            Log.d(TAG, "onTrafficRerouteBegin");
-            super.onTrafficRerouteBegin(trafficNotification);
-        }
-
-        @Override
-        public void onTrafficRerouteState(TrafficEnabledRoutingState trafficEnabledRoutingState) {
-            super.onTrafficRerouteState(trafficEnabledRoutingState);
-
-        }
-    };
-    private final NavigationManager.RerouteListener rerouteListener = new NavigationManager.RerouteListener() {
-        @Override
-        public void onRerouteBegin() {
-            Log.d(TAG, "onRerouteBegin");
-            super.onRerouteBegin();
-            safetyCameraAhead = false;
-            safetyCameraMapMarker.setTransparency(0);
-            safetyCamLinearLayout.setVisibility(View.GONE);
-//            gpsStatusImageView.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        public void onRerouteEnd(RouteResult routeResult, RoutingError routingError) {
-            super.onRerouteEnd(routeResult, routingError);
-            if (routingError == RoutingError.NONE) {
-                Log.d(TAG, "onRerouteEnd");
-                resetMapRoute(routeResult.getRoute());
-                cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
-            }
-        }
-    };
-    private final NavigationManager.RealisticViewListener realisticViewListener = new NavigationManager.RealisticViewListener() {
-        @Override
-        public void onRealisticViewNextManeuver(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-        }
-
-        @Override
-        public void onRealisticViewShow(NavigationManager.AspectRatio aspectRatio, Image junction, Image signpost) {
-            int screenOrientation = DataHolder.getAndroidXMapFragment().getResources().getConfiguration().orientation;
-            if (screenOrientation == Configuration.ORIENTATION_LANDSCAPE) {
-                new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.7f, 0.75f);
-            }
-            junctionViewImageView.requestLayout();
-            signpostImageView.requestLayout();
-            int jvViewWidth = mainLinearLayout.getWidth() / 3;
-            int jvViewHeight;
-            switch (aspectRatio) {
-                case AR_16x9:
-                    jvViewHeight = jvViewWidth / 16 * 9;
-                    break;
-                case AR_5x3:
-                    jvViewHeight = jvViewWidth / 5 * 3;
-                    break;
-                case AR_4x3:
-                    jvViewHeight = jvViewWidth / 4 * 3;
-                    break;
-                default:
-                    jvViewHeight = jvViewWidth * 2;
-            }
-            junctionViewImageView.getLayoutParams().height = jvViewHeight;
-            junctionViewImageView.getLayoutParams().width = jvViewWidth;
-            signpostImageView.getLayoutParams().height = jvViewHeight;
-            signpostImageView.getLayoutParams().width = jvViewWidth;
-            Bitmap junctionBitmap = junction.getBitmap((int) junction.getWidth(), (int) junction.getHeight());
-            Bitmap signpostBitMap = signpost.getBitmap((int) signpost.getWidth(), (int) signpost.getHeight());
-            junctionViewImageView.setImageBitmap(junctionBitmap);
-            signpostImageView.setImageBitmap(signpostBitMap);
-            junctionViewImageView.setVisibility(View.VISIBLE);
-            signpostImageView.setVisibility(View.VISIBLE);
-        }
-
-        @Override
-        public void onRealisticViewHide() {
-            junctionViewImageView.setVisibility(View.GONE);
-            signpostImageView.setVisibility(View.GONE);
-            new ShiftMapCenter().setTransformCenter(DataHolder.getMap(), 0.5f, 0.75f);
-        }
-    };
-    private final ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
-        @Override
-        public void onGlobalLayout() {
-        }
-    };
-    private final NavigationManager.NewInstructionEventListener newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
-        @Override
-        public void onNewInstructionEvent() {
-            super.onNewInstructionEvent();
-            Log.d(TAG, "getNavigationManager().getNextManeuver().getAction():" + getNavigationManager().getNextManeuver().getAction());
-            Log.d(TAG, "getNavigationManager().getNextManeuver().getDistanceToNextManeuver():" + getNavigationManager().getNextManeuver().getDistanceToNextManeuver());
-            Log.d(TAG, "getNavigationManager().getNextManeuver().getTurn():" + getNavigationManager().getNextManeuver().getTurn());
-            Log.d(TAG, "getNavigationManager().getNextManeuver().getIcon().value():" + getNavigationManager().getNextManeuver().getIcon().name());
-            getNavigationManager().getNextManeuver().getRouteElements().forEach(it -> {
-                Log.d(TAG, "it.getRoadElement().getRoadName(): " + it.getRoadElement().getRoadName());
-                Log.d(TAG, "it.getRoadElement().getPluralType(): " + it.getRoadElement().getPluralType());
-                Log.d(TAG, "it.getRoadElement().getFormOfWay(): " + it.getRoadElement().getFormOfWay());
-                Log.d(TAG, "it.getRoadElement().getNumberOfLanes(): " + it.getRoadElement().getNumberOfLanes());
-                Log.d(TAG, "it.getRoadElement().getAttributes(): " + it.getRoadElement().getAttributes());
-            });
-//            if (!isVisible) {
-//                new NavigationNotificationPusher(maneuverIconId);
-//            }
-        }
-    };
-
-    private final NavigationManager.AudioFeedbackListener audioFeedbackListener = new NavigationManager.AudioFeedbackListener() {
-        @Override
-        public void onAudioStart() {
-            super.onAudioStart();
-            int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
-            if (audioManager != null) {
-                audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
-                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
-            }
-        }
-
-        @Override
-        public void onAudioEnd() {
-            super.onAudioEnd();
-            if (audioManager != null) {
-                audioManager.abandonAudioFocus(onAudioFocusChangeListener);
-            }
-        }
-    };
-
-    private GeoCoordinate lastSecondLocation = null;
-
-    private final NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
-        @Override
-        public void onRoutingZoneUpdated(@NonNull List<RoutingZone> list) {
-            Log.d(TAG, "onRoutingZoneUpdated");
-            super.onRoutingZoneUpdated(list);
-        }
-
-        @Override
-        public void onRoutingZoneAhead(@NonNull RoutingZoneNotification routingZoneNotification) {
-            Log.d(TAG, "onRoutingZoneAhead");
-            super.onRoutingZoneAhead(routingZoneNotification);
-        }
-    };
-
     private final NavigationManager.SafetySpotListener safetySpotListener = new NavigationManager.SafetySpotListener() {
         @Override
         public void onSafetySpot(SafetySpotNotification safetySpotNotification) {
             super.onSafetySpot(safetySpotNotification);
+            VoiceCatalog voiceCatalog = voiceActivation.getVoiceCatalog();
+            VoiceGuidanceOptions voiceGuidanceOptions = DataHolder.getNavigationManager().getVoiceGuidanceOptions();
+            voiceGuidanceOptions.setVoiceSkin(voiceCatalog.getLocalVoiceSkin(100003001));
             safetyCameraAhead = true;
             List<SafetySpotNotificationInfo> safetySpotNotificationInfoList = safetySpotNotification.getSafetySpotNotificationInfos();
             for (int i = 0; i < safetySpotNotificationInfoList.size(); i++) {
@@ -1056,7 +980,27 @@ class MapFragmentView {
             }
         }
     };
-    private String routeLengthInLocalUnit;
+    private final NavigationManager.RerouteListener rerouteListener = new NavigationManager.RerouteListener() {
+        @Override
+        public void onRerouteBegin() {
+            Log.d(TAG, "onRerouteBegin");
+            super.onRerouteBegin();
+            safetyCameraAhead = false;
+            safetyCameraMapMarker.setTransparency(0);
+            safetyCamLinearLayout.setVisibility(View.GONE);
+//            gpsStatusImageView.setVisibility(View.VISIBLE);
+        }
+
+        @Override
+        public void onRerouteEnd(RouteResult routeResult, RoutingError routingError) {
+            super.onRerouteEnd(routeResult, routingError);
+            if (routingError == RoutingError.NONE) {
+                Log.d(TAG, "onRerouteEnd");
+                resetMapRoute(routeResult.getRoute());
+                cle2CorridorRequestForRoute(routeResult.getRoute().getRouteGeometry(), 70);
+            }
+        }
+    };
     private final MapGesture.OnGestureListener customOnGestureListener = new MapGesture.OnGestureListener() {
 
         @Override
@@ -1102,7 +1046,7 @@ class MapFragmentView {
             if (searchResultSnackbar != null) {
                 searchResultSnackbar.dismiss();
             }
-            searchRequestResultMapContainer.removeAllMapObjects();
+//            searchRequestResultMapContainer.removeAllMapObjects();
             InputMethodManager inputMethodManager = (InputMethodManager) DataHolder.getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
             inputMethodManager.hideSoftInputFromWindow(searchTextBar.getWindowToken(), 0);
             new SearchResultHandler(DataHolder.getActivity().findViewById(R.id.mapFragmentView), pointF, DataHolder.getMap());
@@ -1196,6 +1140,70 @@ class MapFragmentView {
             return false;
         }
     };
+    private final ViewTreeObserver.OnGlobalLayoutListener onGlobalLayoutListener = new ViewTreeObserver.OnGlobalLayoutListener() {
+        @Override
+        public void onGlobalLayout() {
+        }
+    };
+    private final NavigationManager.NewInstructionEventListener newInstructionEventListener = new NavigationManager.NewInstructionEventListener() {
+        @Override
+        public void onNewInstructionEvent() {
+            super.onNewInstructionEvent();
+            Log.d(TAG, "getNavigationManager().getNextManeuver().getAction():" + getNavigationManager().getNextManeuver().getAction());
+            Log.d(TAG, "getNavigationManager().getNextManeuver().getDistanceToNextManeuver():" + getNavigationManager().getNextManeuver().getDistanceToNextManeuver());
+            Log.d(TAG, "getNavigationManager().getNextManeuver().getTurn():" + getNavigationManager().getNextManeuver().getTurn());
+            Log.d(TAG, "getNavigationManager().getNextManeuver().getIcon().value():" + getNavigationManager().getNextManeuver().getIcon().name());
+            getNavigationManager().getNextManeuver().getRouteElements().forEach(it -> {
+                Log.d(TAG, "it.getRoadElement().getRoadName(): " + it.getRoadElement().getRoadName());
+                Log.d(TAG, "it.getRoadElement().getPluralType(): " + it.getRoadElement().getPluralType());
+                Log.d(TAG, "it.getRoadElement().getFormOfWay(): " + it.getRoadElement().getFormOfWay());
+                Log.d(TAG, "it.getRoadElement().getNumberOfLanes(): " + it.getRoadElement().getNumberOfLanes());
+                Log.d(TAG, "it.getRoadElement().getAttributes(): " + it.getRoadElement().getAttributes());
+            });
+//            if (!isVisible) {
+//                new NavigationNotificationPusher(maneuverIconId);
+//            }
+        }
+    };
+
+    private final NavigationManager.AudioFeedbackListener audioFeedbackListener = new NavigationManager.AudioFeedbackListener() {
+        @Override
+        public void onAudioStart() {
+            super.onAudioStart();
+            int streamId = NavigationManager.getInstance().getAudioPlayer().getStreamId();
+            if (audioManager != null) {
+                audioManager.requestAudioFocus(onAudioFocusChangeListener, streamId,
+                        AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+            }
+        }
+
+        @Override
+        public void onAudioEnd() {
+            super.onAudioEnd();
+            if (audioManager != null) {
+                audioManager.abandonAudioFocus(onAudioFocusChangeListener);
+            }
+        }
+    };
+
+    private GeoCoordinate lastSecondLocation = null;
+
+    private final NavigationManager.RoutingZoneListener routingZoneListener = new NavigationManager.RoutingZoneListener() {
+        @Override
+        public void onRoutingZoneUpdated(@NonNull List<RoutingZone> list) {
+            Log.d(TAG, "onRoutingZoneUpdated");
+            super.onRoutingZoneUpdated(list);
+        }
+
+        @Override
+        public void onRoutingZoneAhead(@NonNull RoutingZoneNotification routingZoneNotification) {
+            Log.d(TAG, "onRoutingZoneAhead");
+            super.onRoutingZoneAhead(routingZoneNotification);
+        }
+    };
+    private List<Thread> prefetchMapDataThreadList = new ArrayList<>();
+    private String routeLengthInLocalUnit;
+    private MapDataPrefetcher mapDataPrefetcher;
     MapMarker.OnDragListener mapMarkerOnDragListenerForRoute = new MapMarker.OnDragListener() {
         @Override
         public void onMarkerDrag(MapMarker mapMarker) {
@@ -1207,7 +1215,7 @@ class MapFragmentView {
             int mapMarkerIndex = Integer.valueOf(mapMarker.getTitle());
             wayPointIcons.get(mapMarkerIndex).setCoordinate(mapMarker.getCoordinate());
             waypointList.clear();
-            RoutePlan routePlan = route.getRoutePlan();
+            RoutePlan routePlan = theRoute.getRoutePlan();
             RouteOptions.TransportMode transportMode = routePlan.getRouteOptions().getTransportMode();
             routePlan.removeAllWaypoints();
             for (MapMarker waypointMapMarker : wayPointIcons) {
@@ -1229,7 +1237,40 @@ class MapFragmentView {
     MapFragmentView(AppCompatActivity activity) {
         DataHolder.setActivity(activity);
         keyguardManager = (KeyguardManager) DataHolder.getActivity().getSystemService(Context.KEYGUARD_SERVICE);
-        initAndroidXMapFragment();
+        MapEngine mapEngine = MapEngine.getInstance();
+        ApplicationContext applicationContext = new ApplicationContext(activity);
+        applicationContext.setAppIdCode("MdgrnOU2OsdYuPbPNz2t", "jeXznopbGvE8KRhVK3wkMw");
+        applicationContext.setLicenseKey("UPTaWVOoRFajEFCEsbKeU90tlM+YxolaCWOX8pRWgNq9JVXegK83ohjN7ou/ix1kisqafUQ0/L1vTu0tXpN8V01n31OSmVp9ZWpWIILLc5sQTDKSewAMmmIoYAOd54Zf336wAuK9daZvrK3i4aDnHRrF0m81inch8cRxjTetOYWX4CFDyRXpsxbfvokFZTFoABIWs2GkBTBNXgwOS6o701o/5/ehvs9cjWttI/qSuUZAWD8wjEmtP0INaal6AlQpis5Bmm4cwl4z8qGM6gy2j+pZsEo9M41PAIgPwSDOgMdBqpUJwHjsN1uFEOCSYteAKBZXMX91JyPy670qc1jVBzv9EIDTnaleTr1xKJDDLhL7TmrJeXqMLiKPqjfcIXQhlwp4GIr5V4Hs9WF17aep49+YQgqr61WUZ5gPSGryeavV6zUMhZujZ9cXM0BPga+OHjuGgVk323XQBvOZhV9LQVx3FDpNbMk0NO4GhUfnQMxWKdVYygEN8EAUJw8e6gxDAMgxGy33wIWvKhZG1PTf/3DR/vyo1ywEQKftrdXCruf4mSVtzIB8DnPJvZ4vamxbf9vZQoT4DZbTYZxWiDlqws82GRQq687rek/mosA1Uq0nUgPMT4y9PpePuXQ78zVY3ttKF0wWpzh6jMSa6buBeKr/hszJlbqersym64V6cSU=");
+        applicationContext.setMapVariant(MapEngine.MapVariant.GLOBAL);
+        applicationContext.enableEnhancedMapMatcher(true);
+        mapEngine.addMapDataDownloadListener(new MapEngine.OnMapDownloadListener() {
+            @Override
+            public void onMapDataDownloadStart() {
+                Log.d(TAG, "MapEngine onMapDataDownloadStart()");
+            }
+
+            @Override
+            public void onMapDataDownloadInProgress() {
+                Log.d(TAG, "MapEngine onMapDataDownloadInProgress()");
+
+            }
+
+            @Override
+            public void onMapDataDownloadEnd() {
+                Log.d(TAG, "MapEngine onMapDataDownloadEnd()");
+            }
+        });
+        mapEngine.init(applicationContext, new OnEngineInitListener() {
+            @Override
+            public void onEngineInitializationCompleted(Error error) {
+                if (error == OnEngineInitListener.Error.NONE) {
+                    initAndroidXMapFragment();
+                } else {
+                    Log.d(TAG, "error: " + error);
+                }
+            }
+        });
+
     }
 
     static void intoRouteOverView() {
@@ -1657,9 +1698,9 @@ class MapFragmentView {
         searchButton.setVisibility(View.GONE);
         downloadOfflineMapButton.setVisibility(View.GONE);
         switchUiControls(View.GONE);
-        initGuidanceManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
-        initGuidanceNextManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
-        initGuidanceStreetLabelView(DataHolder.getActivity(), DataHolder.getNavigationManager(), route);
+        initGuidanceManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), theRoute);
+        initGuidanceNextManeuverView(DataHolder.getActivity(), DataHolder.getNavigationManager(), theRoute);
+        initGuidanceStreetLabelView(DataHolder.getActivity(), DataHolder.getNavigationManager(), theRoute);
         switchUILocale(UnitLocale.getDefault());
         switchGuidanceUiViews(View.VISIBLE);
         switchGuidanceUiPresenters(true);
@@ -1687,7 +1728,7 @@ class MapFragmentView {
 //            DataHolder.getNavigationManager().setMapUpdateMode(NavigationManager.MapUpdateMode.NONE);
             MapModeChanger.intoFullMode();
         }
-        DataHolder.getNavigationManager().startNavigation(route);
+        DataHolder.getNavigationManager().startNavigation(theRoute);
         DataHolder.getPositioningManager().setMapMatchingEnabled(true);
         DataHolder.isRoadView = true;
         /* Voice Guidance init */
@@ -1747,7 +1788,7 @@ class MapFragmentView {
         DataHolder.getNavigationManager().getAudioPlayer().setDelegate(audioPlayerDelegate);
 //        DataHolder.getNavigationManager().getAudioPlayer().setVolume(0);
         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
-        routeShapePointGeoCoordinateList = route.getRouteGeometry();
+        routeShapePointGeoCoordinateList = theRoute.getRouteGeometry();
         cle2CorridorRequestForRoute(routeShapePointGeoCoordinateList, 70);
     }
 
@@ -1830,6 +1871,43 @@ class MapFragmentView {
         alertDialog.getButton(alertDialog.BUTTON_POSITIVE).setTextColor(DataHolder.getActivity().getResources().getColor(R.color.red));
     }
 
+    private void getRouteInfo(Route route) {
+        switch ((route.getRoutePlan().getRouteOptions().getTransportMode())) {
+            case CAR:
+            case TRUCK:
+                for (RoutingZone routingZone : route.getRoutingZones()) {
+                    Log.d(TAG, "routingZone.getId(): " + routingZone.getId());
+                    Log.d(TAG, "routingZone.getType().name(): " + routingZone.getType().name());
+                    Log.d(TAG, "routingZone.getName(): " + routingZone.getName());
+                    for (RoutingZoneRestriction routingZoneRestriction : routingZone.getRestrictions()) {
+                        for (RouteOptions.TransportMode transportMode : routingZoneRestriction.getTransportTypes()) {
+                            Log.d(TAG, "transportMode.name(): " + transportMode.name());
+                        }
+                    }
+                }
+                TollCostOptions tollCostOptions = new TollCostOptions();
+                tollCostOptions.setCurrency("TWD");
+                new TollCostRequest(route, tollCostOptions).execute(new TollCostRequest.Listener<TollCostResult>() {
+                    @Override
+                    public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
+                        if (tollCostError.getErrorCode() == TollCostError.ErrorCode.SUCCESS) {
+                            Log.d(TAG, "getTransportMode: " + route.getRoutePlan().getRouteOptions().getTransportMode());
+                            Log.d(TAG, "getErrorCode: " + tollCostError.getErrorCode());
+                            Log.d(TAG, "getErrorMessage: " + tollCostError.getErrorMessage());
+                            Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost());
+                            Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
+                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
+                        } else {
+                            Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit, Snackbar.LENGTH_LONG).show();
+                        }
+                    }
+                });
+                break;
+            default:
+                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit, Snackbar.LENGTH_LONG).show();
+        }
+    }
+
     private void getTrafficSignsForRoute(Route route) {
         trafficSignClusterLayer.removeMarkers(trafficSignClusterLayer.getMarkers());
         if (DataHolder.getMap().getZoomLevel() >= 12) {
@@ -1869,6 +1947,13 @@ class MapFragmentView {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void prefetchMapDataForRoute(Route route, int radius) {
+        mapDataPrefetcher.cancelAllRequests();
+        mapDataPrefetcher.clearMapDataCache();
+        MapDataPrefetcher.Request estimateMapDataSizeRequest = mapDataPrefetcher.estimateMapDataSize(route, radius);
+        MapDataPrefetcher.Request fetchMapDataRequest = mapDataPrefetcher.fetchMapData(route, radius);
     }
 
     private void calculateRoute(RouteOptions routeOptions) {
@@ -1928,35 +2013,22 @@ class MapFragmentView {
             @Override
             public void onCalculateRouteFinished(List<RouteResult> routeResults, RoutingError routingError) {
                 androidXMapFragment.setMapMarkerDragListener(mapMarkerOnDragListenerForRoute);
+
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
-                        switch ((routeResults.get(0).getRoute().getRoutePlan().getRouteOptions().getTransportMode())) {
-                            case CAR:
-                            case TRUCK:
-                                for (RoutingZone routingZone : routeResults.get(0).getRoute().getRoutingZones()) {
-                                    Log.d(TAG, "routingZone.getId(): " + routingZone.getId());
-                                    Log.d(TAG, "routingZone.getType().name(): " + routingZone.getType().name());
-                                    Log.d(TAG, "routingZone.getName(): " + routingZone.getName());
-                                    for (RoutingZoneRestriction routingZoneRestriction : routingZone.getRestrictions()) {
-                                        for (RouteOptions.TransportMode transportMode : routingZoneRestriction.getTransportTypes()) {
-                                            Log.d(TAG, "transportMode.name(): " + transportMode.name());
-                                        }
-                                    }
-                                }
-                        }
+                        theRoute = routeResults.get(0).getRoute();
 
                         trafficSignMapContainer.removeAllMapObjects();
-                        route = routeResults.get(0).getRoute();
                         DataHolder.isRouteOverView = true;
-                        destinationLocationGeoCoordinate = route.getRoutePlan().getWaypoint(route.getRoutePlan().getWaypointCount() - 1).getNavigablePosition();
+                        destinationLocationGeoCoordinate = theRoute.getRoutePlan().getWaypoint(theRoute.getRoutePlan().getWaypointCount() - 1).getNavigablePosition();
                         if (endGuidanceDirectionalMapPolyline != null) {
                             DataHolder.getMap().removeMapObject(endGuidanceDirectionalMapPolyline);
                             endGuidanceDirectionalMapPolyline = null;
                             endGuidanceDirectionalGeoPolyline = null;
                         }
                         endGuidanceDirectionalGeoPolyline = new GeoPolyline();
-                        endGuidanceDirectionalGeoPolyline.add(route.getRoutePlan().getWaypoint(0).getOriginalPosition());
-                        endGuidanceDirectionalGeoPolyline.add(route.getRoutePlan().getWaypoint(route.getRoutePlan().getWaypointCount() - 1).getNavigablePosition());
+                        endGuidanceDirectionalGeoPolyline.add(theRoute.getRoutePlan().getWaypoint(0).getOriginalPosition());
+                        endGuidanceDirectionalGeoPolyline.add(theRoute.getRoutePlan().getWaypoint(theRoute.getRoutePlan().getWaypointCount() - 1).getNavigablePosition());
                         endGuidanceDirectionalMapPolyline = new MapPolyline(endGuidanceDirectionalGeoPolyline);
 
                         endGuidanceDirectionalMapPolyline.setLineColor(Color.argb(128, 255, 0, 0));
@@ -1967,8 +2039,8 @@ class MapFragmentView {
                         DataHolder.getMap().addMapObject(endGuidanceDirectionalMapPolyline);
                         clearDistanceMarkerMapOverlay();
 
-                        resetMapRoute(route);
-                        mapRouteGeoBoundingBox = route.getBoundingBox();
+                        resetMapRoute(theRoute);
+                        mapRouteGeoBoundingBox = theRoute.getBoundingBox();
                         GeoBoundingBoxDimensionCalculator geoBoundingBoxDimensionCalculator = new GeoBoundingBoxDimensionCalculator(mapRouteGeoBoundingBox);
                         mapRouteGeoBoundingBox.expand((float) (geoBoundingBoxDimensionCalculator.getHeightInMeters() * 0.8), (float) (geoBoundingBoxDimensionCalculator.getWidthInMeters() * 0.6));
                         DataHolder.getMap().zoomTo(mapRouteGeoBoundingBox, Map.Animation.LINEAR, Map.MOVE_PRESERVE_ORIENTATION);
@@ -1976,43 +2048,33 @@ class MapFragmentView {
 
                         Log.d(TAG, "DataHolder.getNavigationManager().getDistanceUnit(): " + DataHolder.getNavigationManager().getDistanceUnit().name());
                         if (UnitLocale.getDefault() == UnitLocale.ImperialUs || UnitLocale.getDefault() == UnitLocale.Imperial) {
-                            routeLengthInLocalUnit = DistanceFormatter.formatLengthMetersToMileYard(route.getLength(), 2);
+                            routeLengthInLocalUnit = DistanceFormatter.formatLengthMetersToMileYard(theRoute.getLength(), 2);
                         } else {
-                            routeLengthInLocalUnit = DistanceFormatter.formatLengthMetersToKilometers(route.getLength(), 2);
+                            routeLengthInLocalUnit = DistanceFormatter.formatLengthMetersToKilometers(theRoute.getLength(), 2);
                         }
-                        Log.d(TAG, "route.getLength():" + route.getLength() + " m");
+                        Log.d(TAG, "route.getLength():" + theRoute.getLength() + " m");
                         Log.d(TAG, "routeLengthInLocalUnit:" + routeLengthInLocalUnit);
 
                         //Check TrafficSigns from route calculation result
-                        new Thread(() -> getTrafficSignsForRoute(route)).start();
-                        if (route != null) {
-                            switch (route.getRoutePlan().getRouteOptions().getTransportMode()) {
-                                case CAR:
-                                case TRUCK:
-                                    TollCostOptions tollCostOptions = new TollCostOptions();
-                                    tollCostOptions.setCurrency("TWD");
-                                    new TollCostRequest(route, tollCostOptions).execute(new TollCostRequest.Listener<TollCostResult>() {
-                                        @Override
-                                        public void onComplete(TollCostResult tollCostResult, TollCostError tollCostError) {
-                                            if (tollCostError.getErrorCode() == TollCostError.ErrorCode.SUCCESS) {
-                                                Log.d(TAG, "getTransportMode: " + route.getRoutePlan().getRouteOptions().getTransportMode());
-                                                Log.d(TAG, "getErrorCode: " + tollCostError.getErrorCode());
-                                                Log.d(TAG, "getErrorMessage: " + tollCostError.getErrorMessage());
-                                                Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                                Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTotalTollCost());
-                                                Log.d(TAG, "getTollCostByCountry: " + tollCostResult.getTollCostByCountry());
-                                                Log.d(TAG, "getTotalTollCost: " + tollCostResult.getTotalTollCost().doubleValue());
-                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit + " / " + DataHolder.getAndroidXMapFragment().getString(R.string.toll_fee) + tollCostResult.getTotalTollCost().doubleValue(), Snackbar.LENGTH_LONG).show();
-                                            } else {
-                                                Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit, Snackbar.LENGTH_LONG).show();
-                                            }
-                                        }
-                                    });
-                                    break;
-                                default:
-                                    Snackbar.make(DataHolder.getActivity().findViewById(R.id.mapFragmentView), DataHolder.getAndroidXMapFragment().getString(R.string.route_of) + " " + route.getRoutePlan().getRouteOptions().getTransportMode() + " / " + routeLengthInLocalUnit, Snackbar.LENGTH_LONG).show();
+                        new Thread(() -> getTrafficSignsForRoute(theRoute)).start();
+
+                        //Check toll costs and routing zones
+                        new Thread(() -> getRouteInfo(theRoute)).start();
+
+                        //Prefetch map data for route
+                        if (prefetchMapDataThreadList.size() > 0) {
+                            for (Thread thread : prefetchMapDataThreadList) {
+                                thread.interrupt();
+                                thread = null;
                             }
                         }
+                        prefetchMapDataThreadList.clear();
+                        Thread prefetchMapDataThread = new Thread(() -> prefetchMapDataForRoute(theRoute, 1000));
+                        prefetchMapDataThreadList.add(prefetchMapDataThread);
+                        for (Thread thread : prefetchMapDataThreadList) {
+                            thread.start();
+                        }
+
                         androidXMapFragment.getMapGesture().removeOnGestureListener(customOnGestureListener);
 
 
@@ -2042,11 +2104,12 @@ class MapFragmentView {
     }
 
     private void initAndroidXMapFragment() {
-        DataHolder.setAndroidXMapFragment(getMapFragment());
-        androidXMapFragment = DataHolder.getAndroidXMapFragment();
-        androidXMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
 
+        DataHolder.setAndroidXMapFragment(getMapFragment());
         /* Use app default cache path */
+        androidXMapFragment = DataHolder.getAndroidXMapFragment();
+
+        androidXMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
         String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
 //        String diskCacheRoot = DataHolder.getActivity().getExternalCacheDir().getParent() + File.separator + "files" + File.separator + ".here-maps";
         Log.d(TAG, "defaultCachePath: " + diskCacheRoot);
@@ -2074,9 +2137,13 @@ class MapFragmentView {
         if (androidXMapFragment != null) androidXMapFragment.init(new OnEngineInitListener() {
             @Override
             public void onEngineInitializationCompleted(Error error) {
+                Log.d(TAG, "onEngineInitializationCompleted error: " + error);
                 if (error == Error.NONE) {
                     /* Entrance */
                     DataHolder.setMap(androidXMapFragment.getMap());
+//                    TrafficUpdater trafficUpdater = TrafficUpdater.getInstance();
+//                    Log.d(TAG, "trafficUpdater.isAutoUpdateEnabled(): " + trafficUpdater.isAutoUpdateEnabled());
+//                    trafficUpdater.setRefreshInterval(120);
 //                    DataHolder.getMap().setProjectionMode(Map.Projection.MERCATOR);
                     mainLinearLayout = DataHolder.getActivity().findViewById(R.id.main_linear_layout);
 
@@ -2637,7 +2704,7 @@ class MapFragmentView {
                     navigationControlButton = DataHolder.getActivity().findViewById(R.id.startGuidance);
                     navigationControlButton.setText(R.string.create_route);
                     navigationControlButton.setOnClickListener(v -> {
-                        if (route != null) {
+                        if (theRoute != null) {
 //                                stopNavigationManager();
                             if (laneInformationMapOverlay != null) {
                                 DataHolder.getMap().removeMapOverlay(laneInformationMapOverlay);
@@ -2649,7 +2716,7 @@ class MapFragmentView {
                             }
                             DataHolder.getMap().setTilt(0);
                             switchGuidanceUiPresenters(false);
-                            startNavigation(route, true);
+                            startNavigation(theRoute, true);
                         } else {
                             calculateRoute(prepareRouteOptions(RouteOptions.TransportMode.CAR));
                             carRouteButton.setAlpha(1.0f);
@@ -2752,6 +2819,45 @@ class MapFragmentView {
 //                    DataHolder.getNavigationManager().startTracking();
                     downloadOfflineMapButton.setVisibility(View.VISIBLE);
 
+                    /*Implementation of MapDataPrefetcher*/
+                    mapDataPrefetcher = MapDataPrefetcher.getInstance();
+                    ProgressBar mapDataPrefetchProgressBar = DataHolder.getActivity().findViewById(R.id.mapDataPrefetchProgressBar);
+                    MapDataPrefetcher.Listener mapDataPrefetcherListener = new MapDataPrefetcher.Listener() {
+                        @Override
+                        public void onProgress(int i, float v) {
+                            Log.d(TAG, "MapDataPrefetcher.Listener().onProgress(): requestID: " + i + " progress: " + v);
+                            if (v < 100 && v > 0) {
+                                mapDataPrefetchProgressBar.setVisibility(View.VISIBLE);
+                                mapDataPrefetchProgressBar.setProgress((int) v);
+                            } else {
+                                mapDataPrefetchProgressBar.setVisibility(View.GONE);
+                            }
+                        }
+
+                        @Override
+                        public void onStatus(int i, PrefetchStatus prefetchStatus) {
+                            Log.d(TAG, "MapDataPrefetcher.Listener().onStatus(): " + i + " prefetchStatus: " + prefetchStatus.name());
+                            switch (prefetchStatus) {
+                                case PREFETCH_SUCCESS:
+                                case PREFETCH_FAILURE:
+                                case PREFETCH_CANCELLED:
+                                    mapDataPrefetchProgressBar.setVisibility(View.GONE);
+                                    break;
+
+                            }
+                        }
+
+                        @Override
+                        public void onCachePurged(boolean b) {
+                            Log.d(TAG, "MapDataPrefetcher.Listener().onCachePurged(): success: " + b);
+                        }
+
+                        @Override
+                        public void onDataSizeEstimated(int i, boolean b, long l) {
+                            Log.d(TAG, "MapDataPrefetcher.Listener().onDataSizeEstimated(): requestId: " + i + " success: " + b + " dataSizeKB: " + l);
+                        }
+                    };
+                    mapDataPrefetcher.addListener(mapDataPrefetcherListener);
                     /*Custom Route test code*/
 
 //                    RouteWaypoint start = new RouteWaypoint(new GeoCoordinate(43.080341960303485, 12.355455933138728));
@@ -2813,7 +2919,7 @@ class MapFragmentView {
                 navigationControlButton.setText(R.string.restart);
                 intoNavigationMode();
                 DataHolder.isRouteOverView = false;
-                NavigationManager.Error error = DataHolder.getNavigationManager().startNavigation(MapFragmentView.route);
+                NavigationManager.Error error = DataHolder.getNavigationManager().startNavigation(theRoute);
                 trafficWarner = DataHolder.getNavigationManager().getTrafficWarner();
                 trafficWarner.init();
                 trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
@@ -2856,7 +2962,7 @@ class MapFragmentView {
         trafficWarner.init();
         trafficWarner.addListener(new WeakReference<>(trafficWarnerListener));
         mapSchemeChanger.navigationMapOn();
-        NavigationManager.Error error = DataHolder.getNavigationManager().simulate(route, simulationSpeedMs);
+        NavigationManager.Error error = DataHolder.getNavigationManager().simulate(theRoute, simulationSpeedMs);
         Log.e("Error: ", "NavigationManager.Error: " + error);
         navigationControlButton.setVisibility(View.GONE);
         clearButton.setVisibility(View.GONE);
@@ -2959,7 +3065,7 @@ class MapFragmentView {
         androidXMapFragment.setOnTouchListener(null);
 
         navigationControlButton.setText(R.string.create_route);
-        route = null;
+        theRoute = null;
         switchGuidanceUiPresenters(false);
 
         if (DataHolder.getActivity().isInMultiWindowMode()) {
@@ -3143,7 +3249,7 @@ class MapFragmentView {
         }
 
         SearchResultHandler(View view, PointF pointF, Map map) {
-            searchRequestResultMapContainer.removeAllMapObjects();
+//            searchRequestResultMapContainer.removeAllMapObjects();
 //            if (selectedFeatureMapMarker != null) {
 //                map.removeMapObject(selectedFeatureMapMarker);
 //            }
@@ -3216,7 +3322,7 @@ class MapFragmentView {
                         selectedMapMarker.setSvgIconScaling(2f);
                         Log.d(TAG, selectedMapMarker.getTitle() + " " + selectedMapMarker.getDescription());
                         if (selectedMapMarker.getTitle() != null && selectedMapMarker.getDescription() != null) {
-                            searchResultString = "路殺熱點：" + selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
+                            searchResultString = selectedMapMarker.getTitle() + " | " + selectedMapMarker.getDescription();
 //                            showSelectionFocus(selectedMapMarker.getCoordinate(), selectedMapMarker.getTitle(), selectedMapMarker.getDescription());
                             showResultSnackbar(selectedMapMarker.getCoordinate(), searchResultString, view, Snackbar.LENGTH_INDEFINITE);
                         }

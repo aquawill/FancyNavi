@@ -33,8 +33,8 @@ import static com.fancynavi.android.app.MapFragmentView.mapRoute;
 import static com.fancynavi.android.app.MapFragmentView.mapRouteGeoBoundingBox;
 import static com.fancynavi.android.app.MapFragmentView.navigationControlButton;
 import static com.fancynavi.android.app.MapFragmentView.onAudioFocusChangeListener;
-import static com.fancynavi.android.app.MapFragmentView.route;
 import static com.fancynavi.android.app.MapFragmentView.signpostImageView;
+import static com.fancynavi.android.app.MapFragmentView.theRoute;
 import static com.fancynavi.android.app.MapFragmentView.trafficWarningTextView;
 
 import android.Manifest;
@@ -588,7 +588,7 @@ public class MainActivity extends AppCompatActivity {
         isNavigating = false;
         isRouteOverView = false;
         mapRoute = null;
-        route = null;
+        theRoute = null;
         mapRouteGeoBoundingBox = null;
         audioManager = null;
         super.onDestroy();
