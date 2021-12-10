@@ -33,7 +33,6 @@ import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
-import android.os.Environment;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
@@ -2110,8 +2109,11 @@ class MapFragmentView {
         androidXMapFragment = DataHolder.getAndroidXMapFragment();
 
         androidXMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
-        String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
-//        String diskCacheRoot = DataHolder.getActivity().getExternalCacheDir().getParent() + File.separator + "files" + File.separator + ".here-maps";
+//        String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
+
+        /* Starting from Android 10 (see Scoped storage), disk cache path must be set under application-specific file directory. */
+
+        String diskCacheRoot = DataHolder.getActivity().getFilesDir().getParent() + File.separator + "files" + File.separator + ".here-maps";
         Log.d(TAG, "defaultCachePath: " + diskCacheRoot);
         MapSettings.setDiskCacheRootPath(diskCacheRoot);
 
@@ -2122,7 +2124,7 @@ class MapFragmentView {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        // Retrieve intent name from manifest
+//         Retrieve intent name from manifest
         String intentName = "";
         try {
             ApplicationInfo ai = DataHolder.getActivity().getPackageManager().getApplicationInfo(DataHolder.getActivity().getPackageName(), PackageManager.GET_META_DATA);
