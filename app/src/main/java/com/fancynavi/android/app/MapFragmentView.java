@@ -69,7 +69,6 @@ import com.here.android.mpa.common.GeoPolyline;
 import com.here.android.mpa.common.GeoPosition;
 import com.here.android.mpa.common.Image;
 import com.here.android.mpa.common.MapEngine;
-import com.here.android.mpa.common.MapSettings;
 import com.here.android.mpa.common.OnEngineInitListener;
 import com.here.android.mpa.common.PositioningManager;
 import com.here.android.mpa.common.PositioningManager.OnPositionChangedListener;
@@ -171,7 +170,6 @@ import org.json.JSONException;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -2105,25 +2103,22 @@ class MapFragmentView {
     private void initAndroidXMapFragment() {
 
         DataHolder.setAndroidXMapFragment(getMapFragment());
-        /* Use app default cache path */
         androidXMapFragment = DataHolder.getAndroidXMapFragment();
-
         androidXMapFragment.setCopyrightLogoPosition(CopyrightLogoPosition.TOP_CENTER);
+
 //        String diskCacheRoot = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath() + File.separator + "here_offline_cache";
-
         /* Starting from Android 10 (see Scoped storage), disk cache path must be set under application-specific file directory. */
-
-        String diskCacheRoot = DataHolder.getActivity().getFilesDir().getParent() + File.separator + "files" + File.separator + ".here-maps";
-        Log.d(TAG, "defaultCachePath: " + diskCacheRoot);
-        MapSettings.setDiskCacheRootPath(diskCacheRoot);
-
+//        String diskCacheRoot = DataHolder.getActivity().getFilesDir().getParent() + File.separator + "files" + File.separator + ".here-maps";
+//        Log.d(TAG, "defaultCachePath: " + diskCacheRoot);
+//        MapSettings.setDiskCacheRootPath(diskCacheRoot);
         /* Preload voice skins of zh_TW, zh_CN and en_US */
-        try {
-            InputStream inputStream = DataHolder.getActivity().getAssets().open("voices/voices-download.zip");
-            Unzip.unzip(inputStream, new File(diskCacheRoot + File.separator + "voices-download"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            InputStream inputStream = DataHolder.getActivity().getAssets().open("voices/voices-download.zip");
+//            Unzip.unzip(inputStream, new File(diskCacheRoot + File.separator + "voices-download"));
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+
 //         Retrieve intent name from manifest
         String intentName = "";
         try {
