@@ -326,13 +326,17 @@ class MapFragmentView {
                     switch (theRoute.getRoutePlan().getRouteOptions().getTransportMode()) {
                         case CAR:
                         case TRUCK:
-                            if (recommendationState == LaneInformation.RecommendationState.HIGHLY_RECOMMENDED) {
-                                laneDcmImageView.setBackgroundColor(Color.argb(255, 0, 160, 0));
-                            } else if (recommendationState == LaneInformation.RecommendationState.RECOMMENDED) {
-                                laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
-                            } else {
-                                laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
+                            switch (recommendationState) {
+                                case HIGHLY_RECOMMENDED:
+                                    laneDcmImageView.setBackgroundColor(Color.argb(192, 0, 160, 0));
+                                    break;
+                                case RECOMMENDED:
+                                    laneDcmImageView.setBackgroundColor(Color.argb(64, 0, 128, 0));
+                                    break;
+                                default:
+                                    laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
                             }
+                            break;
                         default:
                             laneDcmImageView.setBackgroundColor(Color.argb(32, 64, 64, 64));
                     }
