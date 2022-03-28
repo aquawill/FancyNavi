@@ -242,7 +242,8 @@ public class MainActivity extends AppCompatActivity {
 //                if (textToSpeech.isLanguageAvailable(Locale.TAIWAN) == TextToSpeech.LANG_AVAILABLE) {
 //                    textToSpeech.setLanguage(Locale.TAIWAN);
 //                }
-                textToSpeech.setLanguage(Locale.getDefault());
+//                textToSpeech.setLanguage(Locale.getDefault());
+                textToSpeech.setLanguage(new Locale("aze"));
                 Log.d(TAG, "textToSpeech.getDefaultEngine(): " + textToSpeech.getDefaultEngine());
                 Log.d(TAG, "textToSpeech.getDefaultVoice().getName(): " + textToSpeech.getDefaultVoice().getName());
                 Log.d(TAG, "textToSpeech.getDefaultVoice().getLocale().getCountry(): " + textToSpeech.getDefaultVoice().getLocale().getCountry());
@@ -266,6 +267,7 @@ public class MainActivity extends AppCompatActivity {
 
                     }
                 });
+                textToSpeech.speak("Naviqasiya sisteminə xoş gəlmisiniz", TextToSpeech.QUEUE_FLUSH, null, TextToSpeech.ACTION_TTS_QUEUE_PROCESSING_COMPLETED);
             }
         });
 

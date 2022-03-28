@@ -106,6 +106,8 @@ class HereRouter {
                 } else if (i == waypoints.size() - 1) {
                     if (routeOptions.getTransportMode() == RouteOptions.TransportMode.SCOOTER) {
                         routeWaypoint.setFuzzyMatchingRadius(30);
+                    } else if (routeOptions.getTransportMode() == RouteOptions.TransportMode.TRUCK) {
+                        routeOptions.setSpeedProfile(RouteOptions.SpeedProfile.FAST);
                     }
                     icon.setBitmap(VectorDrawableConverter.getBitmapFromVectorDrawable(context, R.drawable.ic_dest));
                     waypointMapMarker.setCoordinate(routeWaypoint.getOriginalPosition());
@@ -114,6 +116,7 @@ class HereRouter {
             }
             outputWaypointIcons.add(waypointMapMarker);
             routePlan.addWaypoint(routeWaypoint);
+
             routePlan.setRouteOptions(routeOptions);
         }
     }

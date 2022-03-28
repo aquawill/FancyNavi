@@ -2018,7 +2018,12 @@ class MapFragmentView {
                 if (routingError == RoutingError.NONE) {
                     if (routeResults.get(0).getRoute() != null) {
                         theRoute = routeResults.get(0).getRoute();
-
+                        int theRouteTtaDurationExcludintTraffic = theRoute.getTtaExcludingTraffic(0).getDuration();
+                        int routeTtaDurationIncludintTraffic = theRoute.getTtaIncludingTraffic(0).getDuration();
+                        RouteOptions.TransportMode theRouteTransportMode = theRoute.getRoutePlan().getRouteOptions().getTransportMode();
+                        RouteOptions.SpeedProfile theRouteSpeedProfile = theRoute.getRoutePlan().getRouteOptions().getSpeedProfile();
+                        Log.d(TAG, theRouteTransportMode + " / " + theRouteSpeedProfile + " --> ttaExcludingTraffic: " + theRouteTtaDurationExcludintTraffic);
+                        Log.d(TAG, theRouteTransportMode + " / " + theRouteSpeedProfile + " --> ttaIncludingTraffic: " + routeTtaDurationIncludintTraffic);
                         trafficSignMapContainer.removeAllMapObjects();
                         DataHolder.isRouteOverView = true;
                         destinationLocationGeoCoordinate = theRoute.getRoutePlan().getWaypoint(theRoute.getRoutePlan().getWaypointCount() - 1).getNavigablePosition();
