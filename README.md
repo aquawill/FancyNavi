@@ -1,5 +1,12 @@
 # HERE Android SDK Premium + UI Kit
 
+## Note:
+
+* This service is no longer being actively developed. We will only provide critical fixes for this service in future. Instead, use the new HERE SDK 4.x (https://developer.here.com/documentation/android-sdk-navigate/).
+* HERE Premium SDK (3.x) is superseded by new 4.x SDK variants and the Premium SDK will be maintained until 31 December 2023 with only critical bug fixes and no feature development / enhancements.
+* Current users of the HERE Premium SDK (3.x) are encouraged to migrate to Explore or Navigate HERE SDK (4.x) variants based on licensed use cases before 31st Dec 2023. Most of the Premium SDK features are already available in the new SDK variants.
+* To learn how to migrate from HERE Premium SDK (3.x) to HERE SDK (4.x), see the migration guide (https://developer.here.com/documentation/android-sdk-navigate/dev_guide/topics/migration.html).
+
 ## Demo Functions:
 1. 3D Mapping with safety camera display.
 2. Custom gesture event handling.
